@@ -684,12 +684,15 @@ export default function Pos() {
                 onClose={() => setIsPrintModalOpen(false)}
                 selectedPrintOptions={selectedPrintOptions}
                 setSelectedPrintOptions={setSelectedPrintOptions}
-                orderType={orderType}
-                beeperNumber={beeperNumber}
                 onDone={() => {
-                    // Reset all form fields
+                    setIsPrintModalOpen(false);
                     resetForm();
                 }}
+                orderType={orderType}
+                beeperNumber={beeperNumber}
+                order={order}
+                orderNumber={flash?.order_number || 'N/A'}
+                totalAmount={Number(calculateFinalTotal())}
             />
         </div>
     );
