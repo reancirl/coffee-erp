@@ -18,6 +18,7 @@ export interface Product {
     addOns?: Product[];
     isAddOn?: boolean;
     type?: 'product' | 'addon';
+    is_alternative_milk?: boolean; // For distinguishing alternative milk products with teal styling
 };
 
 export type ProductCategory = {
@@ -34,6 +35,8 @@ export type MenuData = {
             iced: number | null;
         };
         type?: 'product' | 'addon';
+        is_alternative_milk?: boolean; // For alternative milk styling
+        customizations?: Customization[]; // Support for variant options in cookies and other items
     }>;
 };
 

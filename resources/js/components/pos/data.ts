@@ -7,7 +7,7 @@ const generateId = () => productId++;
 
 export const menuData: MenuData = {
     "Coffee": [
-        { name: "Espresso", prices: { hot: 90, iced: null }, type: 'product' },
+        { name: "Espresso", prices: { hot: 95, iced: null }, type: 'product' },
         { name: "Americano", prices: { hot: 125, iced: 125 }, type: 'product' },
         { name: "Double Americano", prices: { hot: 140, iced: 140 }, type: 'product' },
         { name: "Latte", prices: { hot: 145, iced: 145 }, type: 'product' },

@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProductCategory from '../components/pos/ProductCategory';
 import OrderSummary from '../components/pos/OrderSummary';
 import CustomizationModal from '../components/pos/CustomizationModal';
@@ -8,8 +8,8 @@ import PaymentModal from '../components/pos/PaymentModal';
 import CustomerModal from '../components/pos/CustomerModal';
 import PrintModal from '../components/pos/PrintModal';
 import AddOnModal from '../components/pos/AddOnModal';
-import { paymentMethods, menuData, isAddOn } from '../components/pos/data';
-import { Product, primaryColor } from '../components/pos/types';
+import { paymentMethods } from '../components/pos/data';
+import { Product, MenuData, primaryColor } from '../components/pos/types';
 
 interface PageProps {
     flash: {
@@ -40,8 +40,8 @@ export default function Pos() {
     const [selectedAddOn, setSelectedAddOn] = useState<{ product: Product; } | null>(null);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<{id: string, name: string} | null>(null);
-    const [cashAmountGiven, setCashAmountGiven] = useState('');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<{ id: string; name: string } | null>(null);
+    const [cashAmountGiven, setCashAmountGiven] = useState<string>("");
     const [receiptImage, setReceiptImage] = useState<File | null>(null);
     const [qrCodeImage, setQrCodeImage] = useState<File | null>(null);
     const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
@@ -51,10 +51,62 @@ export default function Pos() {
     const [selectedPrintOptions, setSelectedPrintOptions] = useState<string[]>([]);
     const [customers] = useState<Customer[]>(dummyCustomers);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    // New state variables for order type and beeper number
+    const [orderType, setOrderType] = useState<string>("dine-in");
+    const [beeperNumber, setBeeperNumber] = useState<string>("");
+
+    
+    // API data state
+    const [menuData, setMenuData] = useState<MenuData>({});
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
     
     // Notification state
     const [showNotification, setShowNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
+    
+    // Helper function to check if product is an add-on
+    const isAddOn = (product: any): boolean => {
+        // Primary check: use the explicit type property
+        if (product.type !== undefined) {
+            return product.type === 'addon';
+        }
+        
+        // Fallback: name-based detection for backward compatibility
+        const knownAddOns = ['Oat Milk', 'Espresso', 'Extra Shot', 'Vanilla Syrup', 'Caramel Syrup'];
+        return knownAddOns.includes(product.name);
+    };
+    
+    // Helper function to check if product is an alternative milk
+    const isAlternativeMilk = (product: any): boolean => {
+        if (!isAddOn(product)) return false;
+        return product.name.toLowerCase().includes('milk');
+    };
+    
+    // Fetch products from the API
+    useEffect(() => {
+        const fetchProducts = async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch('/pos/products');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                setMenuData(data.menuData);
+                setError(null);
+            } catch (err) {
+                setError('Failed to load products. Please refresh the page.');
+                console.error('Error fetching products:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        fetchProducts();
+    }, []);
     
     // Handle flash messages
     React.useEffect(() => {
@@ -99,10 +151,16 @@ export default function Pos() {
         setIsCustomerModalOpen(true);
     };
 
-    const handleCustomerComplete = () => {
+    const handleCustomerComplete = (orderTypeValue: string, beeperNumberValue: string) => {
+        // Set order type and beeper number
+        setOrderType(orderTypeValue);
+        setBeeperNumber(beeperNumberValue);
+        
         // Build multipart form data
         const form = new FormData()
         form.append('payment_method', selectedPaymentMethod!.name)
+        form.append('order_type', orderTypeValue) // Add order type to form
+        form.append('beeper_number', beeperNumberValue) // Add beeper number to form
       
         order.forEach((item, i) => {
           // Convert id to string to ensure it's properly formatted
@@ -299,15 +357,50 @@ export default function Pos() {
         }
         setIsPaymentModalOpen(true);
     };
+    
+    // Reset all form fields and state values after transaction completion
+    const resetForm = () => {
+        // Just force a full page refresh for a completely clean state
+        // This is the most reliable way to reset everything
+        window.location.reload();
+        
+        // If we didn't reload, we would need to reset all these states:
+        // setIsPrintModalOpen(false);
+        // setIsPaymentModalOpen(false);
+        // setIsCustomerModalOpen(false);
+        // setIsDiscountModalOpen(false);
+        // setOrder([]);
+        // setSelectedProduct(null);
+        // setSelectedAddOn(null);
+        // setSelectedPaymentMethod(null);
+        // setCashAmountGiven('');
+        // setReceiptImage(null);
+        // setQrCodeImage(null);
+        // setSelectedCustomer(null);
+        // setSelectedPrintOptions([]);
+        // setOrderType('dine-in');
+        // setBeeperNumber('');
+    };
+
+    // Safe conversion to numeric value
+    const safeNumber = (value: any): number => {
+        if (value === undefined || value === null) return 0;
+        const num = Number(value);
+        return isNaN(num) ? 0 : num;
+    };
+
+    // This duplicate resetForm function has been removed to fix the error
 
     const calculateFinalTotal = () => {
         const subtotal = order.reduce((sum, item) => {
-            // Add item price
-            let itemTotal = item.price;
+            // Add item price (safely convert to number)
+            let itemTotal = safeNumber(item.price);
             
-            // Add any add-ons
-            if (item.addOns) {
-                itemTotal += item.addOns.reduce((addOnSum, addOn) => addOnSum + addOn.price, 0);
+            // Add any add-ons (safely convert to number)
+            if (item.addOns && Array.isArray(item.addOns)) {
+                itemTotal += item.addOns.reduce((addOnSum, addOn) => {
+                    return addOnSum + safeNumber(addOn.price);
+                }, 0);
             }
             
             return sum + itemTotal;
@@ -315,7 +408,7 @@ export default function Pos() {
         
         // Apply 20% discount if applicable
         // const discount = subtotal * 0.2;
-        return (subtotal).toFixed(2);
+        return subtotal.toFixed(2);
     };
 
     const handleConfirmPayment = (method: { id: string; name: string; }) => {
@@ -350,16 +443,15 @@ export default function Pos() {
             
             {/* Notification */}
             {showNotification && (
-                <div className="fixed top-4 right-4 z-50 p-4 rounded shadow-lg bg-white border-l-4 border-green-500">
-                    <div className="flex items-center">
-                        <div className="font-medium">{notificationMessage}</div>
-                        <button 
-                            onClick={() => setShowNotification(false)}
-                            className="ml-3 text-gray-500 hover:text-gray-800"
-                        >
-                            &times;
-                        </button>
-                    </div>
+                <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded-md shadow-lg z-50">
+                    {notificationMessage}
+                </div>
+            )}
+            
+            {/* Error Message */}
+            {error && (
+                <div className="fixed top-4 left-4 bg-red-500 text-white p-4 rounded-md shadow-lg z-50">
+                    {error}
                 </div>
             )}
             <div className="flex flex-col lg:flex-row h-full">
@@ -368,94 +460,148 @@ export default function Pos() {
                     className="lg:w-2/3 w-full p-4 border-b lg:border-b-0 lg:border-r overflow-y-auto"
                     style={{ backgroundColor: primaryColor }}
                 >
-                    {/* Coffee Section */}
-                    <ProductCategory
-                        title="Coffee"
-                        products={menuData["Coffee"].map((item, index) => ({
-                            id: index + 1, // Assign sequential IDs starting from 1
-                            ...item,
-                            price: item.prices?.hot || item.prices?.iced || 0,
-                            customizations: item.prices ? [
-                                { name: 'Variant', options: [
-                                    ...(item.prices.hot !== null ? ['Hot'] : []),
-                                    ...(item.prices.iced !== null ? ['Iced'] : [])
-                                ], required: true }
-                            ] : []
-                        }))}
-                        onProductClick={handleProductClick}
-                    />
+                    {/* Loading State */}
+                    {isLoading ? (
+                        <div className="flex justify-center items-center h-32 my-4">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Coffee Section */}
+                            {menuData["Coffee"] && (
+                                <ProductCategory
+                                    title="Coffee"
+                                    products={menuData["Coffee"].map((item, index) => ({
+                                        id: index + 1, // Assign sequential IDs starting from 1
+                                        ...item,
+                                        price: item.prices?.hot || item.prices?.iced || 0,
+                                        customizations: item.prices ? [
+                                            { name: 'Variant', options: [
+                                                ...(item.prices.hot !== null ? ['Hot'] : []),
+                                                ...(item.prices.iced !== null ? ['Iced'] : [])
+                                            ], required: true }
+                                        ] : []
+                                    }))}
+                                    onProductClick={handleProductClick}
+                                />
+                            )}
+                        </>
+                    )}
 
                     {/* Blended Drinks */}
-                    <ProductCategory
-                        title="Blended Drinks"
-                        products={menuData["Blended Drinks"].map((item, index) => ({
-                            id: 100 + index, // Using 100s range to avoid conflicts
-                            ...item,
-                            price: item.price || 0
-                        }))}
-                        onProductClick={handleProductClick}
-                    />
+                    {menuData["Blended Drinks"] && (
+                        <ProductCategory
+                            title="Blended Drinks"
+                            products={menuData["Blended Drinks"].map((item, index) => ({
+                                id: 100 + index, // Using 100s range to avoid conflicts
+                                ...item,
+                                price: item.price || 0
+                            }))}
+                            onProductClick={handleProductClick}
+                        />
+                    )}
 
                     {/* River Fizz */}
-                    <ProductCategory
-                        title="River Fizz"
-                        products={menuData["River Fizz"].map((item, index) => ({
-                            id: 200 + index, // Using 200s range to avoid conflicts
-                            ...item,
-                            price: item.price || 0
-                        }))}
-                        onProductClick={handleProductClick}
-                    />
+                    {menuData["River Fizz"] && (
+                        <ProductCategory
+                            title="River Fizz"
+                            products={menuData["River Fizz"].map((item, index) => ({
+                                id: 200 + index, // Using 200s range to avoid conflicts
+                                ...item,
+                                price: item.price || 0
+                            }))}
+                            onProductClick={handleProductClick}
+                        />
+                    )}
 
                     {/* Black Trails */}
-                    <ProductCategory
-                        title="Black Trails"
-                        products={menuData["Black Trails"].map((item, index) => ({
-                            id: 300 + index, // Using 300s range to avoid conflicts
-                            ...item,
-                            price: item.price || 0
-                        }))}
-                        onProductClick={handleProductClick}
-                    />
+                    {menuData["Black Trails"] && (
+                        <ProductCategory
+                            title="Black Trails"
+                            products={menuData["Black Trails"].map((item, index) => ({
+                                id: 300 + index, // Using 300s range to avoid conflicts
+                                ...item,
+                                price: item.price || 0
+                            }))}
+                            onProductClick={handleProductClick}
+                        />
+                    )}
 
                     {/* Greens & Grains */}
-                    <ProductCategory
-                        title="Greens & Grains"
-                        products={menuData["Greens & Grains"].map((item, index) => ({
-                            id: 400 + index, // Using 400s range to avoid conflicts
-                            ...item,
-                            price: item.prices?.hot || item.prices?.iced || item.price || 0,
-                            customizations: item.prices ? [
-                                { name: 'Variant', options: [
-                                    ...(item.prices.hot !== null ? ['Hot'] : []),
-                                    ...(item.prices.iced !== null ? ['Iced'] : [])
-                                ], required: true }
-                            ] : []
-                        }))}
-                        onProductClick={handleProductClick}
-                    />
+                    {menuData["Greens & Grains"] && (
+                        <ProductCategory
+                            title="Greens & Grains"
+                            products={menuData["Greens & Grains"].map((item, index) => ({
+                                id: 400 + index, // Using 400s range to avoid conflicts
+                                ...item,
+                                price: item.prices?.hot || item.prices?.iced || item.price || 0,
+                                customizations: item.prices ? [
+                                    { name: 'Variant', options: [
+                                        ...(item.prices.hot !== null ? ['Hot'] : []),
+                                        ...(item.prices.iced !== null ? ['Iced'] : [])
+                                    ], required: true }
+                                ] : []
+                            }))}
+                            onProductClick={handleProductClick}
+                        />
+                    )}
 
                     {/* Add-Ons */}
-                    <ProductCategory
-                        title="Add-Ons"
-                        products={menuData["Add-Ons"].map((item, index) => ({
-                            id: 500 + index, // Using 500s range to avoid conflicts
-                            ...item,
-                            price: item.price || 0
-                        }))}
-                        onProductClick={handleProductClick}
-                    />
+                    {menuData["Add-Ons"] && (
+                        <ProductCategory
+                            title="Add-Ons"
+                            products={menuData["Add-Ons"].map((item, index) => ({
+                                id: 500 + index, // Using 500s range to avoid conflicts
+                                ...item,
+                                price: item.price || 0,
+                                type: 'addon' // Marking explicitly as an add-on for amber/orange border with ADD-ON badge
+                            }))}
+                            onProductClick={handleProductClick}
+                        />
+                    )}
 
                     {/* Alternative Milk */}
-                    <ProductCategory
-                        title="Alternative Milk"
-                        products={menuData["Alternative Milk"].map((item, index) => ({
-                            id: 1000 + index, // Assign unique ID (using different range to avoid conflicts)
-                            name: item.name,
-                            price: item.price || 0
-                        }))}
-                        onProductClick={handleProductClick}
-                    />
+                    {menuData["Alternative Milk"] && (
+                        <ProductCategory
+                            title="Alternative Milk"
+                            products={menuData["Alternative Milk"].map((item, index) => ({
+                                id: 1000 + index, // Assign unique ID (using different range to avoid conflicts)
+                                name: item.name,
+                                price: item.price || 0,
+                                type: 'addon',  // Mark as add-on
+                                is_alternative_milk: true  // For teal border and ALT MILK badge
+                            }))}
+                            onProductClick={handleProductClick}
+                        />
+                    )}
+
+                    {/* Beverage */}
+                    {menuData["Beverage"] && (
+                        <ProductCategory
+                            title="Beverage"
+                            products={menuData["Beverage"].map((item, index) => ({
+                                id: 1500 + index, // Using 1500s range to avoid conflicts
+                                ...item,
+                                price: item.price || 0
+                            }))}
+                            onProductClick={handleProductClick}
+                        />
+                    )}
+
+                    {/* Food */}
+                    {menuData["Food"] && (
+                        <ProductCategory
+                            title="Food"
+                            products={menuData["Food"].map((item, index) => ({
+                                id: 1600 + index, // Using 1600s range to avoid conflicts
+                                ...item,
+                                price: item.price || 0,
+                                // If item has customizations (like cookie variants), preserve them
+                                customizations: item.customizations || []
+                            }))}
+                            onProductClick={handleProductClick}
+                        />
+                    )}
                 </div>
 
                 {/* Order Summary Section */}
@@ -538,15 +684,11 @@ export default function Pos() {
                 onClose={() => setIsPrintModalOpen(false)}
                 selectedPrintOptions={selectedPrintOptions}
                 setSelectedPrintOptions={setSelectedPrintOptions}
+                orderType={orderType}
+                beeperNumber={beeperNumber}
                 onDone={() => {
-                    setIsPrintModalOpen(false);
-                    setSelectedPrintOptions([]);
-                    setOrder([]);
-                    setSelectedCustomer(null);
-                    setSelectedPaymentMethod(null);
-                    setCashAmountGiven('');
-                    setReceiptImage(null);
-                    setQrCodeImage(null);
+                    // Reset all form fields
+                    resetForm();
                 }}
             />
         </div>

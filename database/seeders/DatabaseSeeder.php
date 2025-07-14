@@ -39,5 +39,11 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('password'),
             'tenant_id' => $tenant->id,
         ]);
+        
+        // Call the category and product seeders
+        $this->call([
+            CategorySeeder::class,
+            ProductSeeder::class,
+        ]);
     }
 }

@@ -16,6 +16,17 @@ const AddOnModal: React.FC<AddOnModalProps> = ({
     addOn,
     onSelectItem 
 }) => {
+    // Helper function to safely convert any value to a number
+    const safeNumber = (value: any): number => {
+        if (value === undefined || value === null) return 0;
+        const num = Number(value);
+        return isNaN(num) ? 0 : num;
+    };
+    
+    // Helper function for safe price formatting
+    const formatPrice = (price: any): string => {
+        return safeNumber(price).toFixed(2);
+    };
     if (!isOpen) return null;
 
     return (
@@ -54,7 +65,7 @@ const AddOnModal: React.FC<AddOnModalProps> = ({
                                             </span>
                                         )}
                                     </span>
-                                    <span>₱{item.price.toFixed(2)}</span>
+                                    <span>₱{formatPrice(item.price)}</span>
                                 </div>
                             </button>
                         ))

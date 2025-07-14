@@ -15,7 +15,9 @@ class Order extends Model
         'payment_method',
         'payment_status',
         'status',
-        'notes'
+        'notes',
+        'order_type',
+        'beeper_number'
     ];
 
     protected $casts = [

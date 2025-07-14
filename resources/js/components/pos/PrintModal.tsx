@@ -7,6 +7,8 @@ interface PrintModalProps {
     selectedPrintOptions: string[];
     setSelectedPrintOptions: (options: string[]) => void;
     onDone: () => void;
+    orderType: string; // Added order type (dine-in or takeout)
+    beeperNumber: string; // Added beeper number
 }
 
 const PrintModal: React.FC<PrintModalProps> = ({
@@ -14,6 +16,8 @@ const PrintModal: React.FC<PrintModalProps> = ({
     selectedPrintOptions,
     setSelectedPrintOptions,
     onDone,
+    orderType,
+    beeperNumber,
 }) => {
     if (!isOpen) return null;
 
@@ -43,8 +47,15 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 style={{ backgroundColor: primaryColor, color: accentColor }}
             >
                 <h2 className="text-xl font-semibold mb-4">Print Options</h2>
+                
+                {/* Display order details */}
+                <div className="mb-4 p-3 bg-gray-100 rounded">
+                    <p className="font-medium text-black">Order Details:</p>
+                    <p className="text-black"><span className="font-medium">Type:</span> {orderType}</p>
+                    {beeperNumber && <p className="text-black"><span className="font-medium">Beeper #:</span> {beeperNumber}</p>}
+                </div>
                 <div className="grid grid-cols-1 gap-4">
-                    {['Order Slip', 'Receipt', 'Skip Printing'].map((option) => {
+                    {['Order Slip', 'Skip Printing'].map((option) => {
                         const isSelected = selectedPrintOptions.includes(option);
                         return (
                             <div

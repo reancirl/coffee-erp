@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('payment_method');
             $table->string('payment_status')->default('pending');
             $table->string('status')->default('pending');
+            $table->string('order_type')->default('dine-in'); // Added for dine-in/takeout selection
+            $table->string('beeper_number')->nullable(); // Added for beeper number
             $table->text('notes')->nullable();
             $table->timestamps();
         });

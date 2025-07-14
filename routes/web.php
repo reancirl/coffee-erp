@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // POS Routes
     Route::get('pos', [OrderController::class, 'index'])->name('pos');
+    Route::get('pos/products', [\App\Http\Controllers\ProductController::class, 'getProductsForPOS'])->name('pos.products');
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
