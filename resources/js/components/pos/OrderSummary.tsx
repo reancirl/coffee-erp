@@ -177,7 +177,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
 
             {Object.keys(discountSelections).length > 0 && (
                 <div className="mb-4">
-                    <p className="font-semibold">
+                    <p className="font-semibold text-white">
                         {discountType} Discount: -₱{calculateDiscountTotal()}
                     </p>
                 </div>

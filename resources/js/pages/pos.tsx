@@ -391,24 +391,30 @@ export default function Pos() {
     // This duplicate resetForm function has been removed to fix the error
 
     const calculateFinalTotal = () => {
-        const subtotal = order.reduce((sum, item) => {
-            // Add item price (safely convert to number)
-            let itemTotal = safeNumber(item.price);
-            
-            // Add any add-ons (safely convert to number)
-            if (item.addOns && Array.isArray(item.addOns)) {
-                itemTotal += item.addOns.reduce((addOnSum, addOn) => {
-                    return addOnSum + safeNumber(addOn.price);
-                }, 0);
-            }
-            
-            return sum + itemTotal;
-        }, 0);
+    // Calculate subtotal
+    const subtotal = order.reduce((sum, item) => {
+        // Add item price (safely convert to number)
+        let itemTotal = safeNumber(item.price);
         
-        // Apply 20% discount if applicable
-        // const discount = subtotal * 0.2;
-        return subtotal.toFixed(2);
-    };
+        // Add any add-ons (safely convert to number)
+        if (item.addOns && Array.isArray(item.addOns)) {
+            itemTotal += item.addOns.reduce((addOnSum, addOn) => {
+                return addOnSum + safeNumber(addOn.price);
+            }, 0);
+        }
+        
+        return sum + itemTotal;
+    }, 0);
+    
+    // Calculate discount for items that have discount applied
+    const discount = order.reduce(
+        (acc, item) => (discountSelections[item.id] ? acc + safeNumber(item.price) * 0.2 : acc),
+        0
+    );
+    
+    // Return final total (subtotal - discount)
+    return (subtotal - discount).toFixed(2);
+};
 
     const handleConfirmPayment = (method: { id: string; name: string; }) => {
         // Validate payment based on method

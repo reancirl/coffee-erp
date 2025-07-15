@@ -15,13 +15,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // POS Routes
-    Route::get('pos', [OrderController::class, 'index'])->name('pos');
+    Route::get('pos', [OrderController::class, 'pos'])->name('pos');
     Route::get('pos/products', [\App\Http\Controllers\ProductController::class, 'getProductsForPOS'])->name('pos.products');
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
     // Customer routes
     Route::resource('customers', CustomerController::class);
+    
+    // Orders routes - only for viewing (no create/edit)
+    Route::resource('orders', OrderController::class)->except(['create', 'edit']);
+    
+    // Reports routes
+    Route::get('reports/z-report', [\App\Http\Controllers\ReportController::class, 'showZReportForm'])->name('reports.z-report');
+    Route::get('reports/z-report/generate', [\App\Http\Controllers\ReportController::class, 'generateZReport'])->name('reports.z-report.generate');
 });
 
 require __DIR__.'/settings.php';

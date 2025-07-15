@@ -146,7 +146,7 @@ const OrderSlip: React.FC<OrderSlipProps> = ({
             
             {/* Footer */}
             <div style={{ ...headerStyle, marginTop: '5mm' }}>
-                <div>KITCHEN COPY</div>
+                <div>BARISTA COPY</div>
                 <div>Thank you!</div>
             </div>
         </div>

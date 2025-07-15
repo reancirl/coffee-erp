@@ -15,9 +15,45 @@ class OrderController extends Controller
     /**
      * Display the POS interface
      */
-    public function index()
+    public function pos()
     {
         return Inertia::render('pos');
+    }
+    
+    /**
+     * Display a listing of all orders
+     * With optional date filtering
+     */
+    public function index(Request $request)
+    {
+        $query = Order::with('items');
+        
+        // Apply date filters if provided
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+        
+        // Get results with pagination
+        $orders = $query->latest()->paginate(10)->withQueryString();
+            
+        return Inertia::render('orders/index', [
+            'orders' => [
+                'data' => $orders->items(),
+                'meta' => [
+                    'current_page' => $orders->currentPage(),
+                    'last_page' => $orders->lastPage(),
+                    'total' => $orders->total(),
+                ],
+            ],
+            'filters' => [
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ]
+        ]);
     }
 
     /**
