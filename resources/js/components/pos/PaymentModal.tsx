@@ -93,7 +93,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </div>
                 )}
 
-                {(selectedPaymentMethod?.id === 'g-cash' || selectedPaymentMethod?.id === 'debit') && (
+                {(selectedPaymentMethod?.id === 'debit') && (
                     <div className="mt-4">
                         <label className="block mb-2">Upload Receipt</label>
                         <input

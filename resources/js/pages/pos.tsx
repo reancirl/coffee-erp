@@ -426,7 +426,7 @@ export default function Pos() {
                 alert('Please enter an amount that covers the total.');
                 return;
             }
-        } else if ((method.id.toLowerCase() === 'g-cash' || method.id.toLowerCase() === 'debit') && !receiptImage) {
+        } else if (method.id.toLowerCase() === 'debit' && !receiptImage) {
             alert('Please upload a receipt for this payment.');
             return;
         } else if (method.id.toLowerCase() === 'pmna' && !qrCodeImage) {
