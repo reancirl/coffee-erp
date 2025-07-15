@@ -68,6 +68,9 @@ const PrintModal: React.FC<PrintModalProps> = ({
         
         setIsPrinting(true);
         
+        // Debug the order data
+        console.log('Printing order:', { order, orderType, beeperNumber, orderNumber, totalAmount });
+        
         try {
             // Create a new window for printing
             const printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -236,14 +239,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 >
                     <h2 className="text-xl font-semibold mb-4">Print Options</h2>
                     
-                    {/* Display order details */}
-                    <div className="mb-4 p-3 bg-gray-100 rounded">
-                        <p className="font-medium text-black">Order Details:</p>
-                        <p className="text-black"><span className="font-medium">Type:</span> {orderType || 'Unknown'}</p>
-                        {beeperNumber && <p className="text-black"><span className="font-medium">Beeper #:</span> {beeperNumber}</p>}
-                        <p className="text-black"><span className="font-medium">Order #:</span> {orderNumber !== 'N/A' ? orderNumber : 'Pending'}</p>
-                        <p className="text-black"><span className="font-medium">Total:</span> ₱{(!isNaN(totalAmount) && totalAmount > 0 ? totalAmount : 0).toFixed(2)}</p>
-                    </div>
+
                     
                     <div className="grid grid-cols-1 gap-4">
                         {['Order Slip', 'Skip Printing'].map((option) => {

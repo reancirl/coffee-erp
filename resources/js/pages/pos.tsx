@@ -54,6 +54,8 @@ export default function Pos() {
     // New state variables for order type and beeper number
     const [orderType, setOrderType] = useState<string>("dine-in");
     const [beeperNumber, setBeeperNumber] = useState<string>("");
+    // Save the current order for printing after submission
+    const [savedOrderForPrinting, setSavedOrderForPrinting] = useState<Product[]>([]);
 
     
     // API data state
@@ -211,16 +213,13 @@ export default function Pos() {
         router.post('/orders', form, {
           forceFormData: true,
           onSuccess: () => {
-            alert(`Order completed for ${selectedCustomer?.name || 'Guest'}!`)
-            // reset state
-            setOrder([])
-            setSelectedPaymentMethod(null)
-            setCashAmountGiven('')
-            setReceiptImage(null)
-            setQrCodeImage(null)
-            setSelectedCustomer(null)
-            setIsCustomerModalOpen(false)
-            setIsPrintModalOpen(true)
+            // Save the current order for printing before it gets reset
+            setSavedOrderForPrinting([...order]);
+            alert(`Order completed for ${selectedCustomer?.name || 'Guest'}!`);
+            // Open print modal
+            setIsCustomerModalOpen(false);
+            setIsPrintModalOpen(true);
+            // We'll reset the rest of the state after printing is done
           },
           onError: (errors) => {
             console.error('Error creating order:', errors)
@@ -686,11 +685,16 @@ export default function Pos() {
                 setSelectedPrintOptions={setSelectedPrintOptions}
                 onDone={() => {
                     setIsPrintModalOpen(false);
-                    resetForm();
+                    setOrder([]);
+                    setSelectedPaymentMethod(null);
+                    setCashAmountGiven('');
+                    setReceiptImage(null);
+                    setQrCodeImage(null);
+                    setSelectedCustomer(null);
                 }}
                 orderType={orderType}
                 beeperNumber={beeperNumber}
-                order={order}
+                order={savedOrderForPrinting}
                 orderNumber={flash?.order_number || 'N/A'}
                 totalAmount={Number(calculateFinalTotal())}
             />

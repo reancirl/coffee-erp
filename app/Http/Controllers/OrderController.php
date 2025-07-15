@@ -27,6 +27,8 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'payment_method' => 'required|string',
+            'order_type' => 'nullable|string',
+            'beeper_number' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required',  // Remove exists:products,id since we're using static data
             'items.*.product_name' => 'required|string',
@@ -74,6 +76,8 @@ class OrderController extends Controller
                 'payment_method' => $validated['payment_method'],
                 'payment_status' => 'completed',
                 'status' => 'completed',
+                'order_type' => $validated['order_type'] ?? 'dine-in',
+                'beeper_number' => $validated['beeper_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id(),
             ]);
