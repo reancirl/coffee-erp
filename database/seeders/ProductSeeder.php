@@ -94,8 +94,8 @@ class ProductSeeder extends Seeder
         $blendedDrinks = [
             ['name' => 'Java Chip Frappe', 'price' => 200],
             ['name' => 'Strawberry Milkshake', 'price' => 180],
-            ['name' => 'Oreo Milkshake', 'price' => 150],
-            ['name' => 'Chocolate Milkshake', 'price' => 175]
+            ['name' => 'Oreo Milkshake', 'price' => 195],
+            ['name' => 'Chocolate Milkshake', 'price' => 205]
         ];
         
         foreach ($blendedDrinks as $drink) {
@@ -254,11 +254,11 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Baked Mac', 
-                'price' => 200
+                'price' => 160
             ],
             [
                 'name' => 'Cookies', 
-                'price' => 140,
+                'price' => 120,
                 'customizations' => [
                     [
                         'name' => 'Variant',
