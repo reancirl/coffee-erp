@@ -89,12 +89,9 @@ const PrintModal: React.FC<PrintModalProps> = ({
                   size: 80mm auto;
                 }
                 body {
-                  /* Use a crisp, standard sans-serif font */
                   font-family: Arial, sans-serif;
-                  /* Increase base size for readability */
-                  font-size: 14px;
-                  line-height: 1.3;
-                  /* Enable font smoothing where supported */
+                  font-size: 16px;        /* ↑ bumped from 14px */
+                  line-height: 1.4;       /* ↑ slight increase */
                   -webkit-font-smoothing: antialiased;
                   -moz-osx-font-smoothing: grayscale;
                   width: 72mm;
@@ -106,7 +103,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
                   margin-bottom: 8px;
                 }
                 .title {
-                  font-size: 16px; /* slightly bigger */
+                  font-size: 18px;        /* ↑ bumped from 16px */
                   font-weight: bold;
                 }
                 .divider {
@@ -116,12 +113,12 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 .section-title {
                   font-weight: bold;
                   margin: 8px 0 4px;
-                  font-size: 15px;
+                  font-size: 17px;        /* ↑ bumped from 15px */
                 }
                 .row, .product-row, .total-row {
                   display: flex;
                   justify-content: space-between;
-                  margin-bottom: 3px;
+                  margin-bottom: 4px;     /* ↑ slight spacing */
                 }
                 .product-name {
                   flex-grow: 1;
@@ -130,24 +127,20 @@ const PrintModal: React.FC<PrintModalProps> = ({
                   text-overflow: ellipsis;
                   max-width: 70%;
                 }
-                .quantity {
-                  width: 30px;
-                  text-align: right;
-                  margin-right: 5px;
-                }
                 .amount {
                   width: 60px;
                   text-align: right;
                 }
                 .total-row {
-                  font-size: 15px;
+                  font-size: 17px;        /* ↑ bumped from 15px */
                   font-weight: bold;
-                  margin-top: 6px;
+                  margin-top: 8px;        /* ↑ more breathing room */
                 }
                 .footer {
                   text-align: center;
-                  margin-top: 10px;
-                  font-size: 11px;
+                  margin-top: 12px;       /* ↑ more breathing room */
+                  font-size: 14px;        /* ↑ bumped from 11px */
+                  line-height: 1.3;
                 }
               </style>
               <script>
@@ -168,11 +161,17 @@ const PrintModal: React.FC<PrintModalProps> = ({
               <div class="divider"></div>
       
               <div class="section-title">ORDER INFO</div>
-              <div class="row"><span>Date:</span><span>${new Date().toLocaleString('en-US', {
-                year: 'numeric', month: 'short', day: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-              })}</span></div>
-              <div class="row"><span>Type:</span><span>${(orderType||'Unknown').toUpperCase()}</span></div>
+              <div class="row">
+                <span>Date:</span>
+                <span>${new Date().toLocaleString('en-US', {
+                  year: 'numeric', month: 'short', day: 'numeric',
+                  hour: '2-digit', minute: '2-digit'
+                })}</span>
+              </div>
+              <div class="row">
+                <span>Type:</span>
+                <span>${(orderType||'Unknown').toUpperCase()}</span>
+              </div>
               ${beeperNumber ? `<div class="row"><span>Beeper #:</span><span>${beeperNumber}</span></div>` : ''}
       
               <div class="divider"></div>
@@ -180,7 +179,8 @@ const PrintModal: React.FC<PrintModalProps> = ({
               <div class="section-title">ORDER ITEMS</div>
               ${(order||[]).map((item:any) => {
                 const fmt = (p:any) => {
-                  const n=Number(p); return isNaN(n)?'0.00':n.toFixed(2);
+                  const n = Number(p);
+                  return isNaN(n) ? '0.00' : n.toFixed(2);
                 };
                 let details = '';
                 if (item.selectedVariant) {
@@ -188,18 +188,20 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 }
                 if (item.selectedCustomizations) {
                   Object.entries(item.selectedCustomizations).forEach(([k,v]) => {
-                    if (k!=='Variant') details += `<div class="row" style="padding-left:10px;"><span>- ${k}:</span><span>${v}</span></div>`;
+                    if (k !== 'Variant') {
+                      details += `<div class="row" style="padding-left:10px;"><span>- ${k}:</span><span>${v}</span></div>`;
+                    }
                   });
                 }
                 if (item.addOns?.length) {
                   item.addOns.forEach((a:any) => {
-                    const type = a.type==='alt-milk'?'ALT MILK':'ADD-ON';
+                    const type = a.type === 'alt-milk' ? 'ALT MILK' : 'ADD-ON';
                     details += `<div class="row" style="padding-left:10px;"><span>- ${type}: ${a.name}</span><span>+₱${fmt(a.price)}</span></div>`;
                   });
                 }
                 return `
                   <div class="product-row">
-                    <span class="product-name">${item.quantity}x ${item.name}</span>
+                    <span class="product-name">${item.name}</span>
                     <span class="amount">₱${fmt(item.price)}</span>
                   </div>
                   ${details}
