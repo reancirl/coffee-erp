@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -31,10 +32,14 @@ class OrderController extends Controller
         // Apply date filters if provided
         if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
+        } else {
+            $query->whereDate('created_at', '>=', Carbon::now()->startOfDay());
         }
         
         if ($request->filled('end_date')) {
             $query->whereDate('created_at', '<=', $request->end_date);
+        } else {
+            $query->whereDate('created_at', '<=', Carbon::now()->endOfDay());
         }
         
         // Get results with pagination

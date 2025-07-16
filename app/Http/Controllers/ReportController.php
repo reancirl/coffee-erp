@@ -34,8 +34,9 @@ class ReportController extends Controller
         $startDate = Carbon::parse($date)->startOfDay();
         $endDate = Carbon::parse($date)->endOfDay();
 
-        // Get all orders for the specified date
+        // Get only completed orders for the specified date
         $orders = Order::whereBetween('created_at', [$startDate, $endDate])
+            ->where('status', 'completed')
             ->with('items.addOns')
             ->get();
 
