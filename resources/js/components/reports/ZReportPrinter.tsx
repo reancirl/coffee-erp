@@ -175,7 +175,7 @@ const ZReportPrinter: React.FC<ZReportPrinterProps> = ({ reportData, onPrintStar
                 <div class="divider"></div>
                 
                 <div class="section-title">PRODUCTS SOLD</div>
-                ${reportData.allProductsSold.map(product => `
+                ${reportData.allProductsSold && reportData.allProductsSold.map(product => `
                     <div class="product-row">
                         <span class="product-name">${product.product_name}</span>
                         <span class="quantity">${product.quantity_sold}</span>

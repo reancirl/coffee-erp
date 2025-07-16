@@ -186,7 +186,7 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {reportData.allProductsSold.map((product, idx) => (
+                      {reportData.allProductsSold && reportData.allProductsSold.map((product, idx) => (
                         <tr key={idx} className="hover:bg-gray-50">
                           <td className="px-6 py-3 text-base text-gray-800">{product.product_name}</td>
                           <td className="px-6 py-3 text-base text-gray-800 text-right">{product.quantity_sold}</td>
