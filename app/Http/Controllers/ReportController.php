@@ -55,25 +55,12 @@ class ReportController extends Controller
                 ];
             });
 
-        // Calculate top selling products
-        $topProducts = OrderItem::whereIn('order_id', $orders->pluck('id'))
+        // Get all products sold ordered by top-selling first
+        $allProductsSold = OrderItem::whereIn('order_id', $orders->pluck('id'))
             ->select('product_name', DB::raw('SUM(quantity) as quantity_sold'), DB::raw('SUM(total) as total_sales'))
             ->groupBy('product_name')
             ->orderByDesc('quantity_sold')
-            ->limit(5)
             ->get();
-
-        // Calculate sales by hour
-        $salesByHour = $orders->groupBy(function ($order) {
-            return Carbon::parse($order->created_at)->format('H:00');
-        })->map(function ($orderGroup) {
-            return [
-                'count' => $orderGroup->count(),
-                'total' => $orderGroup->sum('total'),
-            ];
-        })->sortBy(function ($value, $key) {
-            return (int) explode(':', $key)[0];
-        });
 
         $reportData = [
             'date' => $date,
@@ -82,8 +69,7 @@ class ReportController extends Controller
             'discounts' => $discounts,
             'netSales' => $netSales,
             'paymentMethodTotals' => $paymentMethodTotals,
-            'topProducts' => $topProducts,
-            'salesByHour' => $salesByHour,
+            'allProductsSold' => $allProductsSold,
         ];
 
         // Return an Inertia response with the report data

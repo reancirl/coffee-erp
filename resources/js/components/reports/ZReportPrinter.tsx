@@ -23,8 +23,7 @@ interface ZReportData {
     discounts: number;
     netSales: number;
     paymentMethodTotals: Record<string, PaymentMethodTotal>;
-    topProducts: ProductSales[];
-    salesByHour: Record<string, HourlySales>;
+    allProductsSold: ProductSales[];
 }
 
 interface ZReportPrinterProps {
@@ -175,31 +174,14 @@ const ZReportPrinter: React.FC<ZReportPrinterProps> = ({ reportData, onPrintStar
                 
                 <div class="divider"></div>
                 
-                <div class="section-title">TOP SELLING PRODUCTS</div>
-                ${reportData.topProducts.map(product => `
+                <div class="section-title">PRODUCTS SOLD</div>
+                ${reportData.allProductsSold.map(product => `
                     <div class="product-row">
                         <span class="product-name">${product.product_name}</span>
                         <span class="quantity">${product.quantity_sold}</span>
                         <span class="amount">${formatCurrency(product.total_sales)}</span>
                     </div>
                 `).join('')}
-                
-                <div class="divider"></div>
-                
-                <div class="section-title">HOURLY SALES</div>
-                ${Object.entries(reportData.salesByHour)
-                    .sort((a, b) => {
-                        // Sort by hour
-                        const hourA = parseInt(a[0].split(':')[0]);
-                        const hourB = parseInt(b[0].split(':')[0]);
-                        return hourA - hourB;
-                    })
-                    .map(([hour, data]) => `
-                        <div class="row">
-                            <span>${hour} (${data.count} orders):</span>
-                            <span>${formatCurrency(data.total)}</span>
-                        </div>
-                    `).join('')}
                 
                 <div class="divider"></div>
                 

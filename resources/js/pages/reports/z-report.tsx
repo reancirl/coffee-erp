@@ -28,8 +28,7 @@ interface ZReportData {
   discounts: number;
   netSales: number;
   paymentMethodTotals: Record<string, PaymentMethodTotal>;
-  topProducts: ProductSales[];
-  salesByHour: Record<string, HourlySales>;
+  allProductsSold: ProductSales[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -171,7 +170,7 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
 
                 {/* Top Products */}
                 <div className="bg-white border rounded-lg p-6">
-                  <h4 className="text-xl font-semibold mb-4">Top Selling Products</h4>
+                  <h4 className="text-xl font-semibold mb-4">Products Sold</h4>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead>
                       <tr>
@@ -187,7 +186,7 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {reportData.topProducts.map((product, idx) => (
+                      {reportData.allProductsSold.map((product, idx) => (
                         <tr key={idx} className="hover:bg-gray-50">
                           <td className="px-6 py-3 text-base text-gray-800">{product.product_name}</td>
                           <td className="px-6 py-3 text-base text-gray-800 text-right">{product.quantity_sold}</td>
@@ -201,41 +200,7 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
                 </div>
               </div>
 
-              {/* Hourly Sales */}
-              <div className="bg-white border rounded-lg p-6 mt-8">
-                <h4 className="text-xl font-semibold mb-4">Hourly Sales</h4>
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-base font-medium text-gray-700 uppercase tracking-wide">
-                        Hour
-                      </th>
-                      <th className="px-6 py-3 text-right text-base font-medium text-gray-700 uppercase tracking-wide">
-                        Orders
-                      </th>
-                      <th className="px-6 py-3 text-right text-base font-medium text-gray-700 uppercase tracking-wide">
-                        Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {Object.entries(reportData.salesByHour)
-                      .sort((a, b) => {
-                        // Sort by hour
-                        const hourA = parseInt(a[0].split(':')[0]);
-                        const hourB = parseInt(b[0].split(':')[0]);
-                        return hourA - hourB;
-                      })
-                      .map(([hour, data], idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-6 py-3 text-base text-gray-800">{hour}</td>
-                          <td className="px-6 py-3 text-base text-gray-800 text-right">{data.count}</td>
-                          <td className="px-6 py-3 text-base text-gray-800 text-right">{formatCurrency(data.total)}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
+
             </>
           )}
         </div>
