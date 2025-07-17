@@ -116,7 +116,12 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 .section-title {
                   font-weight: bold;
                   margin: 8px 0 4px;
-                  font-size: 17px;        /* ↑ bumped from 15px */
+                  font-size: 17px;
+                }
+                .section-beeper-number {
+                  font-weight: bold;
+                  margin: 8px 0 4px;
+                  font-size: 19px;
                 }
                 .row, .product-row, .total-row {
                   display: flex;
@@ -157,13 +162,12 @@ const PrintModal: React.FC<PrintModalProps> = ({
             </head>
             <body>
               <div class="header">
+                ${beeperNumber ? `<div class="section-beeper-number">#${beeperNumber}</div>` : ''}
                 <div class="title">EASTLONE cafe</div>
                 <div>ORDER SLIP</div>
               </div>
       
               <div class="divider"></div>
-              
-              ${beeperNumber ? `<div class="section-title">BEEPER #: ${beeperNumber}</div>` : ''}
               
               <div class="section-title">ORDER INFO</div>
               <div class="row">
