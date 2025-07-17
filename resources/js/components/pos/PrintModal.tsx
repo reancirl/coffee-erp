@@ -92,9 +92,9 @@ const PrintModal: React.FC<PrintModalProps> = ({
                   size: 80mm auto;
                 }
                 body {
-                  font-family: 'Courier New', Courier, monospace; /* Better for thermal printers */
-                  font-size: 12px;        /* Smaller font size */
-                  line-height: 1.2;       /* Tighter line spacing */
+                  font-family: Arial, sans-serif;
+                  font-size: 14px;
+                  line-height: 1.2;
                   -webkit-font-smoothing: antialiased;
                   -moz-osx-font-smoothing: grayscale;
                   width: 70mm;
@@ -162,7 +162,9 @@ const PrintModal: React.FC<PrintModalProps> = ({
               </div>
       
               <div class="divider"></div>
-      
+              
+              ${beeperNumber ? `<div class="section-title">BEEPER #: ${beeperNumber}</div>` : ''}
+              
               <div class="section-title">ORDER INFO</div>
               <div class="row">
                 <span>Date:</span>
@@ -175,7 +177,6 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 <span>Type:</span>
                 <span>${orderType ? orderType.toUpperCase() : 'UNKNOWN'}</span>
               </div>
-              ${beeperNumber ? `<div class="row"><span>Beeper #:</span><span>${beeperNumber}</span></div>` : ''}
       
               <div class="divider"></div>
       
@@ -202,7 +203,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
                   displayName = `${item.name} - ${variant}`;
                 } else {
                   // For other products, keep the current format "Coffee HOT"
-                  displayName = variant ? `${item.name} ${variant}` : item.name;
+                  displayName = variant ? `${variant} - ${item.name}` : item.name;
                 }
                 
                 let details = '';
