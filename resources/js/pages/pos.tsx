@@ -737,6 +737,7 @@ export default function Pos() {
                     setReceiptImage(null);
                     setQrCodeImage(null);
                     setSelectedCustomer(null);
+                    setBeeperNumber(''); // Clear beeper number when transaction is done
                 }}
                 orderType={orderType}
                 beeperNumber={beeperNumber}

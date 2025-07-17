@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { primaryColor, secondaryColor, accentColor } from './types';
 
 interface PaymentMethod {
@@ -37,6 +37,18 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     qrCodeImage,
     setQrCodeImage,
 }) => {
+    // Create a ref for the cash input field
+    const cashInputRef = useRef<HTMLInputElement>(null);
+    
+    // Focus on the cash input when cash is selected
+    useEffect(() => {
+        if (selectedPaymentMethod?.id === 'cash' && cashInputRef.current) {
+            // Short timeout to ensure the DOM is ready
+            setTimeout(() => {
+                cashInputRef.current?.focus();
+            }, 50);
+        }
+    }, [selectedPaymentMethod]);
     if (!isOpen) return null;
 
     return (
@@ -70,6 +82,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     <div className="mt-4">
                         <label className="block mb-2">Amount Given</label>
                         <input
+                            ref={cashInputRef}
                             type="number"
                             value={cashAmountGiven}
                             onChange={(e) => setCashAmountGiven(e.target.value)}

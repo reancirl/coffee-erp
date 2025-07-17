@@ -44,20 +44,23 @@ const PrintModal: React.FC<PrintModalProps> = ({
 
     const togglePrintOption = (option: string) => {
         if (option === 'Skip Printing') {
-            if (selectedPrintOptions.includes('Skip Printing')) {
-                setSelectedPrintOptions([]);
-            } else {
-                setSelectedPrintOptions(['Skip Printing']);
-            }
+            // When Skip Printing is selected, close the modal and reset the order
+            setSelectedPrintOptions(['Skip Printing']);
+            // Brief delay to show selection before closing
+            setTimeout(() => {
+                onDone();
+            }, 300);
         } else {
-            if (selectedPrintOptions.includes('Skip Printing')) {
-                setSelectedPrintOptions([]);
-            }
-            if (selectedPrintOptions.includes(option)) {
-                setSelectedPrintOptions(selectedPrintOptions.filter((o) => o !== option));
-            } else {
-                setSelectedPrintOptions([...selectedPrintOptions, option]);
-            }
+            // When Order Slip is selected, print immediately
+            setSelectedPrintOptions(['Order Slip']);
+            // Brief delay to show selection before printing
+            setTimeout(() => {
+                printOrderSlip();
+                // Allow time for print dialog to appear before closing modal
+                setTimeout(() => {
+                    onDone();
+                }, 800);
+            }, 300);
         }
     };
     
@@ -89,21 +92,21 @@ const PrintModal: React.FC<PrintModalProps> = ({
                   size: 80mm auto;
                 }
                 body {
-                  font-family: Arial, sans-serif;
-                  font-size: 16px;        /* ↑ bumped from 14px */
-                  line-height: 1.4;       /* ↑ slight increase */
+                  font-family: 'Courier New', Courier, monospace; /* Better for thermal printers */
+                  font-size: 12px;        /* Smaller font size */
+                  line-height: 1.2;       /* Tighter line spacing */
                   -webkit-font-smoothing: antialiased;
                   -moz-osx-font-smoothing: grayscale;
-                  width: 72mm;
+                  width: 70mm;
                   margin: 0 auto;
-                  padding: 4mm 0;
+                  padding: 3mm 0;
                 }
                 .header {
                   text-align: center;
                   margin-bottom: 8px;
                 }
                 .title {
-                  font-size: 18px;        /* ↑ bumped from 16px */
+                  font-size: 16px;        /* smaller */
                   font-weight: bold;
                 }
                 .divider {
@@ -170,7 +173,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
               </div>
               <div class="row">
                 <span>Type:</span>
-                <span>${(orderType||'Unknown').toUpperCase()}</span>
+                <span>${orderType ? orderType.toUpperCase() : 'UNKNOWN'}</span>
               </div>
               ${beeperNumber ? `<div class="row"><span>Beeper #:</span><span>${beeperNumber}</span></div>` : ''}
       
@@ -182,29 +185,54 @@ const PrintModal: React.FC<PrintModalProps> = ({
                   const n = Number(p);
                   return isNaN(n) ? '0.00' : n.toFixed(2);
                 };
-                let details = '';
+                
+                // Get the variant (hot/iced) to display next to the item name
+                let variant = '';
                 if (item.selectedVariant) {
-                  details += `<div class="row" style="padding-left:10px;"><span>- Variant:</span><span>${item.selectedVariant}</span></div>`;
+                  variant = item.selectedVariant === 'hot' || item.selectedVariant === 'iced' ? 
+                    item.selectedVariant.toUpperCase() : item.selectedVariant;
+                } else if (item.selectedCustomizations && item.selectedCustomizations['Variant']) {
+                  variant = item.selectedCustomizations['Variant'].toUpperCase();
                 }
+                
+                // Format the item name with variant
+                const displayName = variant ? `${item.name} ${variant}` : item.name;
+                
+                let details = '';
+                // Show other customizations except variant (which is now with the name)
                 if (item.selectedCustomizations) {
                   Object.entries(item.selectedCustomizations).forEach(([k,v]) => {
-                    if (k !== 'Variant') {
+                    if (k !== 'Variant') { // Skip variant as it's already shown with name
                       details += `<div class="row" style="padding-left:10px;"><span>- ${k}:</span><span>${v}</span></div>`;
                     }
                   });
                 }
+                
+                // Display add-ons with their variants too
                 if (item.addOns?.length) {
                   item.addOns.forEach((a:any) => {
+                    // Get add-on variant if available
+                    let addOnVariant = '';
+                    if (a.selectedVariant) {
+                      addOnVariant = a.selectedVariant === 'hot' || a.selectedVariant === 'iced' ? 
+                        a.selectedVariant.toUpperCase() : a.selectedVariant;
+                    } else if (a.selectedCustomizations && a.selectedCustomizations['Variant']) {
+                      addOnVariant = a.selectedCustomizations['Variant'].toUpperCase();
+                    }
+                    
+                    // Format add-on name with variant
+                    const addOnName = addOnVariant ? `${a.name} ${addOnVariant}` : a.name;
                     const type = a.type === 'alt-milk' ? 'ALT MILK' : 'ADD-ON';
-                    details += `<div class="row" style="padding-left:10px;"><span>- ${type}: ${a.name}</span><span>+₱${fmt(a.price)}</span></div>`;
+                    details += `<div class="row" style="padding-left:10px;"><span>- ${type}: ${addOnName}</span><span>+₱${fmt(a.price)}</span></div>`;
                   });
                 }
+                
                 return `
-                  <div class="product-row">
-                    <span class="product-name">${item.name}</span>
-                    <span class="amount">₱${fmt(item.price)}</span>
-                  </div>
-                  ${details}
+                <div class="product-row">
+                  <span class="product-name">${displayName}</span>
+                  <span class="amount">₱${fmt(item.price)}</span>
+                </div>
+                ${details}
                 `;
               }).join('')}
       
@@ -273,38 +301,10 @@ const PrintModal: React.FC<PrintModalProps> = ({
                         })}
                     </div>
                     
-                    <div className="flex justify-between mt-4">
-                        {selectedPrintOptions.includes('Order Slip') && (
-                            <button
-                                className="px-4 py-2 rounded text-sm font-semibold bg-green-500 text-white hover:bg-green-600"
-                                onClick={printOrderSlip}
-                            >
-                                Print Order Slip
-                            </button>
-                        )}
-                        <button
-                            className="px-4 py-2 rounded text-sm font-semibold ml-auto"
-                            style={{
-                                backgroundColor: secondaryColor,
-                                color: accentColor,
-                                border: `1px solid ${accentColor}`,
-                            }}
-                            onClick={() => {
-                                // If Order Slip is selected but not yet printed, print it now
-                                if (selectedPrintOptions.includes('Order Slip')) {
-                                    printOrderSlip();
-                                    // Wait a bit for printing to start before completing
-                                    setTimeout(() => {
-                                        onDone();
-                                    }, 500);
-                                } else {
-                                    onDone();
-                                }
-                            }}
-                        >
-                            Done
-                        </button>
-                    </div>
+                    {/* Buttons removed - actions now happen automatically when an option is selected */}
+                    <p className="mt-4 text-sm text-center italic">
+                        Click an option to continue
+                    </p>
                 </div>
             </div>
         </>

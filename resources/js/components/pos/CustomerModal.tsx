@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { primaryColor, secondaryColor, accentColor } from './types';
 import CustomerSelection from './CustomerSelection';
 
@@ -27,6 +27,13 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
     // State for dine-in/takeout selection and beeper number
     const [orderType, setOrderType] = useState<string>('dine-in');
     const [beeperNumber, setBeeperNumber] = useState<string>('');
+    
+    // Reset beeper number field when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setBeeperNumber(''); // Clear beeper number field when modal opens
+        }
+    }, [isOpen]);
     
     if (!isOpen) return null;
 
