@@ -275,10 +275,13 @@ export default function Pos() {
         } else {
             // For regular products
             // Check if this product can be added directly (no customizations or only one option per customization)
+            // Special check for cookies to ensure variant selection is always shown
+            const isCookie = product.name.toLowerCase() === 'cookies';
+            
             const canAddDirectly = 
-                !product.customizations || 
-                product.customizations.length === 0 || 
-                (product.customizations.every(c => c.options.length === 1));
+                (!isCookie && !product.customizations) || 
+                (!isCookie && product.customizations?.length === 0) || 
+                (!isCookie && product.customizations && product.customizations.every(c => c.options.length === 1));
             
             if (canAddDirectly) {
                 // Add directly to order without showing modal
@@ -314,7 +317,29 @@ export default function Pos() {
                 setTimeout(() => setShowNotification(false), 2000);
             } else {
                 // Show customization modal for complex customizations
-                setSelectedProduct(product);
+                // Check if this is the Cookies product and ensure it has customizations
+                if (product.name.toLowerCase() === 'cookies' && (!product.customizations || product.customizations.length === 0)) {
+                    // Add cookie variants if they're missing
+                    const cookieWithVariants = {
+                        ...product,
+                        customizations: [
+                            {
+                                name: 'Variant',
+                                options: ['Matcha', 'Chocolate', 'Peanut Butter', 'Red Velvet'],
+                                required: true
+                            }
+                        ]
+                    };
+                    
+                    // Debug
+                    console.log('Cookie product with added variants:', cookieWithVariants);
+                    
+                    setSelectedProduct(cookieWithVariants);
+                } else {
+                    // Debug
+                    console.log('Product being set for modal:', product);
+                    setSelectedProduct(product);
+                }
             }
         }
     };

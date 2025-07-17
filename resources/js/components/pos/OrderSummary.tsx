@@ -98,7 +98,10 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
                                             {/* Display variant badge if it's in selectedVariant or in customizations */}
                                             {(item.selectedVariant || (item.selectedCustomizations && item.selectedCustomizations['Variant'])) && (
                                                 <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">
-                                                    {item.selectedVariant === 'hot' || item.selectedCustomizations?.['Variant'] === 'Hot' ? 'Hot' : 'Iced'}
+                                                    {item.name.toLowerCase() === 'cookies' 
+                                                        ? item.selectedCustomizations?.['Variant'] // For cookies, show the actual variant
+                                                        : (item.selectedVariant === 'hot' || item.selectedCustomizations?.['Variant'] === 'Hot' ? 'Hot' : 'Iced') // For other products
+                                                    }
                                                 </span>
                                             )}
                                         </div>

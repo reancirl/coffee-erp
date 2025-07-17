@@ -196,7 +196,14 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 }
                 
                 // Format the item name with variant
-                const displayName = variant ? `${item.name} ${variant}` : item.name;
+                let displayName;
+                if (item.name.toLowerCase() === 'cookies' && variant) {
+                  // For cookies, format as "Cookies - MATCHA" for better visual separation
+                  displayName = `${item.name} - ${variant}`;
+                } else {
+                  // For other products, keep the current format "Coffee HOT"
+                  displayName = variant ? `${item.name} ${variant}` : item.name;
+                }
                 
                 let details = '';
                 // Show other customizations except variant (which is now with the name)

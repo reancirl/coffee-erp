@@ -13,6 +13,10 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
         product.prices?.hot !== null ? 'hot' : product.prices?.iced !== null ? 'iced' : null
     );
     
+    // Debug product data
+    console.log('Product in modal:', product);
+    console.log('Product customizations:', product.customizations);
+    
     // Auto-proceed logic for add-ons with only one option
     React.useEffect(() => {
         // Check if it's an add-on type and has exactly one customization with only one option
@@ -85,7 +89,36 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
                     </button>
                 </div>
                 
-                {product.customizations?.map((customization) => {
+                {/* Cookie variants selection */}
+                {product.name === 'Cookies' && (
+                    <div className="mb-4">
+                        <label className="block font-semibold mb-2">
+                            Cookie Variant *
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {['Matcha', 'Chocolate', 'Peanut Butter', 'Red Velvet'].map((option) => {
+                                const isSelected = customizationSelections['Variant'] === option;
+                                return (
+                                    <div
+                                        key={option}
+                                        onClick={() => {
+                                            handleCustomizationChange('Variant', isSelected ? '' : option);
+                                        }}
+                                        className={`p-4 border rounded cursor-pointer text-center ${
+                                            isSelected
+                                                ? 'bg-blue-500 text-white border-blue-500'
+                                                : 'bg-gray-200 text-black'
+                                        }`}
+                                    >
+                                        {option}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+                
+                {product.name !== 'Cookies' && product.customizations?.map((customization) => {
                     // Auto-select the only option if there's only one and it's required
                     if (customization.options.length === 1 && customization.required && 
                         !customizationSelections[customization.name]) {
