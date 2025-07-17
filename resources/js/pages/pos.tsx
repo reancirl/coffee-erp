@@ -6,7 +6,6 @@ import CustomizationModal from '../components/pos/CustomizationModal';
 import DiscountModal from '../components/pos/DiscountModal';
 import PaymentModal from '../components/pos/PaymentModal';
 import CustomerModal from '../components/pos/CustomerModal';
-import PrintModal from '../components/pos/PrintModal';
 import AddOnModal from '../components/pos/AddOnModal';
 import { paymentMethods } from '../components/pos/data';
 import { Product, MenuData, primaryColor } from '../components/pos/types';
@@ -47,15 +46,11 @@ export default function Pos() {
     const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
     const [discountType, setDiscountType] = useState<string>('Senior Citizen');
     const [discountSelections, setDiscountSelections] = useState<{ [orderItemId: number]: boolean }>({});
-    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-    const [selectedPrintOptions, setSelectedPrintOptions] = useState<string[]>([]);
     const [customers] = useState<Customer[]>(dummyCustomers);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-    // New state variables for order type and beeper number
+    // State variables for order type and beeper number
     const [orderType, setOrderType] = useState<string>("dine-in");
     const [beeperNumber, setBeeperNumber] = useState<string>("");
-    // Save the current order for printing after submission
-    const [savedOrderForPrinting, setSavedOrderForPrinting] = useState<Product[]>([]);
 
     
     // API data state
@@ -66,6 +61,9 @@ export default function Pos() {
     // Notification state
     const [showNotification, setShowNotification] = useState(false);
     const [notificationMessage, setNotificationMessage] = useState('');
+    
+    // Order processing state - to prevent double submissions
+    const [isProcessingOrder, setIsProcessingOrder] = useState(false);
     
     // Helper function to check if product is an add-on
     const isAddOn = (product: any): boolean => {
@@ -154,6 +152,17 @@ export default function Pos() {
     };
 
     const handleCustomerComplete = (orderTypeValue: string, beeperNumberValue: string) => {
+        // Prevent double order submission
+        if (isProcessingOrder) {
+            setNotificationMessage('Order is already being processed. Please wait...');
+            setShowNotification(true);
+            setTimeout(() => setShowNotification(false), 3000);
+            return;
+        }
+        
+        // Set order processing flag
+        setIsProcessingOrder(true);
+        
         // Set order type and beeper number
         setOrderType(orderTypeValue);
         setBeeperNumber(beeperNumberValue);
@@ -213,17 +222,133 @@ export default function Pos() {
         router.post('/orders', form, {
           forceFormData: true,
           onSuccess: () => {
-            // Save the current order for printing before it gets reset
-            setSavedOrderForPrinting([...order]);
-            alert(`Order completed for ${selectedCustomer?.name || 'Guest'}!`);
-            // Open print modal
+            // Close the customer modal
             setIsCustomerModalOpen(false);
-            setIsPrintModalOpen(true);
-            // We'll reset the rest of the state after printing is done
+            
+            // Show success message
+            setNotificationMessage(`Order completed for ${selectedCustomer?.name || 'Guest'}!`);
+            setShowNotification(true);
+            setTimeout(() => setShowNotification(false), 3000);
+            
+            // Automatically print receipt
+            const receiptWindow = window.open('', '_blank');
+            if (receiptWindow) {
+              // Format receipt content
+              const orderDate = new Date().toLocaleString();
+              const orderItems = order.map(item => {
+                const itemPrice = Number(item.price).toFixed(2);
+                
+                // Get variant information - check all possible properties where variant info might be stored
+                let variantInfo = '';
+                if (item.selectedVariant) {
+                  // Direct variant property
+                  variantInfo = item.selectedVariant === 'hot' || item.selectedVariant === 'iced' ? 
+                    ` (${item.selectedVariant.charAt(0).toUpperCase() + item.selectedVariant.slice(1)})` : 
+                    ` (${item.selectedVariant})`;
+                } else if (item.selectedCustomizations && item.selectedCustomizations['Variant']) {
+                  // Variant stored in customizations
+                  variantInfo = ` (${item.selectedCustomizations['Variant']})`;
+                }
+                
+                // Format item name with variant
+                let itemDetails = `${item.name}${variantInfo} - ₱${itemPrice}`;
+                
+                // Add other customizations if any
+                if (item.selectedCustomizations) {
+                  Object.entries(item.selectedCustomizations).forEach(([key, value]) => {
+                    // Skip 'Variant' as it's already included
+                    if (key !== 'Variant') {
+                      itemDetails += `\n  * ${key}: ${value}`;
+                    }
+                  });
+                }
+                
+                // Add add-ons if any
+                if (item.addOns && item.addOns.length > 0) {
+                  item.addOns.forEach(addOn => {
+                    let addOnVariant = '';
+                    if (addOn.selectedVariant) {
+                      addOnVariant = ` (${addOn.selectedVariant})`;
+                    } else if (addOn.selectedCustomizations && addOn.selectedCustomizations['Variant']) {
+                      addOnVariant = ` (${addOn.selectedCustomizations['Variant']})`;
+                    }
+                    
+                    itemDetails += `\n  + ${addOn.name}${addOnVariant} - ₱${Number(addOn.price).toFixed(2)}`;
+                    
+                    // Add add-on customizations if any
+                    if (addOn.selectedCustomizations) {
+                      Object.entries(addOn.selectedCustomizations).forEach(([key, value]) => {
+                        if (key !== 'Variant') {
+                          itemDetails += `\n    * ${key}: ${value}`;
+                        }
+                      });
+                    }
+                  });
+                }
+                
+                return itemDetails;
+              }).join('\n');
+              
+              const total = calculateFinalTotal();
+              
+              // Create receipt HTML
+              receiptWindow.document.write(`
+                <html>
+                <head>
+                  <title>Receipt</title>
+                  <style>
+                    body { font-family: monospace; width: 300px; margin: 0 auto; }
+                    .header { text-align: center; margin-bottom: 10px; }
+                    .items { margin: 15px 0; }
+                    .total { font-weight: bold; margin-top: 10px; }
+                    .footer { text-align: center; margin-top: 20px; font-size: 12px; }
+                  </style>
+                </head>
+                <body onload="window.print(); setTimeout(() => window.close(), 500);">
+                  <div class="header">
+                    <h2>Coffee ERP</h2>
+                    <p>Order #${flash?.order_number || 'N/A'}</p>
+                    <p>${orderDate}</p>
+                    <p>Order Type: ${orderType}</p>
+                    ${beeperNumber ? `<p>Beeper: ${beeperNumber}</p>` : ''}
+                    <p>Customer: ${selectedCustomer?.name || 'Guest'}</p>
+                  </div>
+                  <div class="items">
+                    <p>${orderItems}</p>
+                  </div>
+                  <div class="total">
+                    <p>Total: ₱${total}</p>
+                    <p>Payment: ${selectedPaymentMethod?.name || 'Unknown'}</p>
+                  </div>
+                  <div class="footer">
+                    <p>Thank you for your order!</p>
+                  </div>
+                </body>
+                </html>
+              `);
+            }
+            
+            // Reset the order and other state
+            setOrder([]);
+            setSelectedPaymentMethod(null);
+            setCashAmountGiven('');
+            setReceiptImage(null);
+            setQrCodeImage(null);
+            setSelectedCustomer(null);
+            
+            // Reset the order processing flag after a delay to prevent immediate resubmission
+            setTimeout(() => {
+              setIsProcessingOrder(false);
+            }, 5000); // 5-second lock to prevent double orders
           },
           onError: (errors) => {
             console.error('Error creating order:', errors)
-            alert('Failed to create order. Please try again.')
+            setNotificationMessage('Failed to create order. Please try again.');
+            setShowNotification(true);
+            setTimeout(() => setShowNotification(false), 3000);
+            
+            // Reset the order processing flag to allow retry
+            setIsProcessingOrder(false);
           },
         })
       }
@@ -350,8 +475,18 @@ export default function Pos() {
     };
 
     const handleProceedToPayment = () => {
+        // Check if an order is already being processed
+        if (isProcessingOrder) {
+            setNotificationMessage('An order is currently being processed. Please wait...');
+            setShowNotification(true);
+            setTimeout(() => setShowNotification(false), 3000);
+            return;
+        }
+        
         if (order.length === 0) {
-            alert('No items in the order. Please add items before proceeding to payment.');
+            setNotificationMessage('No items in the order. Please add items before proceeding to payment.');
+            setShowNotification(true);
+            setTimeout(() => setShowNotification(false), 3000);
             return;
         }
         setIsPaymentModalOpen(true);
@@ -684,26 +819,7 @@ export default function Pos() {
                 setSelectedCustomer={setSelectedCustomer}
             />
 
-            <PrintModal
-                isOpen={isPrintModalOpen}
-                onClose={() => setIsPrintModalOpen(false)}
-                selectedPrintOptions={selectedPrintOptions}
-                setSelectedPrintOptions={setSelectedPrintOptions}
-                onDone={() => {
-                    setIsPrintModalOpen(false);
-                    setOrder([]);
-                    setSelectedPaymentMethod(null);
-                    setCashAmountGiven('');
-                    setReceiptImage(null);
-                    setQrCodeImage(null);
-                    setSelectedCustomer(null);
-                }}
-                orderType={orderType}
-                beeperNumber={beeperNumber}
-                order={savedOrderForPrinting}
-                orderNumber={flash?.order_number || 'N/A'}
-                totalAmount={Number(calculateFinalTotal())}
-            />
+            {/* PrintModal removed - automatic printing implemented */}
         </div>
     );
 }
