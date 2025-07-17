@@ -6,6 +6,7 @@ import CustomizationModal from '../components/pos/CustomizationModal';
 import DiscountModal from '../components/pos/DiscountModal';
 import PaymentModal from '../components/pos/PaymentModal';
 import CustomerModal from '../components/pos/CustomerModal';
+import PrintModal from '../components/pos/PrintModal';
 import AddOnModal from '../components/pos/AddOnModal';
 import { paymentMethods } from '../components/pos/data';
 import { Product, MenuData, primaryColor } from '../components/pos/types';
@@ -46,11 +47,15 @@ export default function Pos() {
     const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
     const [discountType, setDiscountType] = useState<string>('Senior Citizen');
     const [discountSelections, setDiscountSelections] = useState<{ [orderItemId: number]: boolean }>({});
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+    const [selectedPrintOptions, setSelectedPrintOptions] = useState<string[]>([]);
     const [customers] = useState<Customer[]>(dummyCustomers);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
     // State variables for order type and beeper number
     const [orderType, setOrderType] = useState<string>("dine-in");
     const [beeperNumber, setBeeperNumber] = useState<string>("");
+    // Save the current order for printing after submission
+    const [savedOrderForPrinting, setSavedOrderForPrinting] = useState<Product[]>([]);
 
     
     // API data state
@@ -218,6 +223,9 @@ export default function Pos() {
         if (receiptImage) form.append('receipt_image', receiptImage)
         if (qrCodeImage)   form.append('qr_code_image', qrCodeImage)
       
+        // Save current order for printing
+        setSavedOrderForPrinting([...order]);
+        
         // Send as multipart
         router.post('/orders', form, {
           forceFormData: true,
@@ -230,201 +238,15 @@ export default function Pos() {
             setShowNotification(true);
             setTimeout(() => setShowNotification(false), 3000);
             
-            // Automatically print receipt - optimized for thermal printers
-            const receiptWindow = window.open('', '_blank');
-            if (receiptWindow) {
-              // Format receipt content in a compact way that works with thermal printers
-              const orderDate = new Date().toLocaleString();
-              const orderItems = order.map(item => {
-                const itemPrice = Number(item.price).toFixed(2);
-                
-                // Get variant information
-                let variant = '';
-                if (item.selectedVariant) {
-                  variant = item.selectedVariant === 'hot' || item.selectedVariant === 'iced' ? 
-                    item.selectedVariant.toUpperCase() : item.selectedVariant;
-                } else if (item.selectedCustomizations && item.selectedCustomizations['Variant']) {
-                  variant = item.selectedCustomizations['Variant'].toUpperCase();
-                }
-                
-                // Format basic item details - simplified formatting for thermal printers
-                let itemLine = `${item.name}`;
-                if (variant) {
-                  itemLine += ` ${variant}`;
-                }
-                itemLine += `...₱${itemPrice}`;
-                
-                // Add add-ons if any - with simplified format
-                if (item.addOns && item.addOns.length > 0) {
-                  item.addOns.forEach(addOn => {
-                    let addOnVariant = '';
-                    if (addOn.selectedVariant) {
-                      addOnVariant = addOn.selectedVariant.toUpperCase();
-                    } else if (addOn.selectedCustomizations && addOn.selectedCustomizations['Variant']) {
-                      addOnVariant = addOn.selectedCustomizations['Variant'].toUpperCase();
-                    }
-                    
-                    let addOnLine = `  + ${addOn.name}`;
-                    if (addOnVariant) {
-                      addOnLine += ` ${addOnVariant}`;
-                    }
-                    addOnLine += `...₱${Number(addOn.price).toFixed(2)}`;
-                    itemLine += '\n' + addOnLine;
-                  });
-                }
-                
-                return itemLine;
-              }).join('\n');
-              
-              const total = calculateFinalTotal();
-              
-              // Create receipt HTML with simplified, thermal-printer friendly styling
-              receiptWindow.document.write(`
-                <html>
-                <head>
-                  <title>Print Receipt</title>
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <style>
-                    @page {
-                      size: 80mm 297mm; /* Standard thermal receipt width */
-                      margin: 0;
-                    }
-                    body {
-                      font-family: 'Courier New', Courier, monospace; /* Best font for thermal printers */
-                      font-size: 12px;
-                      line-height: 1.2;
-                      width: 72mm;
-                      margin: 2mm;
-                      white-space: pre-wrap;
-                      padding: 0;
-                      color: #000;
-                      -webkit-print-color-adjust: exact;
-                    }
-                    .header {
-                      text-align: center;
-                      margin-bottom: 5px;
-                    }
-                    .header h2 {
-                      font-size: 14px;
-                      margin: 5px 0;
-                    }
-                    .header p {
-                      margin: 2px 0;
-                    }
-                    .divider {
-                      border-top: 1px dashed #000;
-                      margin: 5px 0;
-                    }
-                    .items {
-                      margin: 5px 0;
-                    }
-                    .total {
-                      margin-top: 5px;
-                      font-weight: bold;
-                    }
-                    .footer {
-                      text-align: center;
-                      margin-top: 10px;
-                      font-size: 10px;
-                    }
-                    /* Hide from display but show in print */
-                    @media screen {
-                      #print-info {
-                        display: block;
-                        margin: 10px;
-                        padding: 10px;
-                        border: 1px solid #ccc;
-                        background: #f8f8f8;
-                        font-family: Arial, sans-serif;
-                      }
-                      #receipt-container {
-                        border: 1px dashed #ccc;
-                        padding: 5px;
-                      }
-                      .print-button {
-                        background: #4CAF50;
-                        color: white;
-                        border: none;
-                        padding: 10px 15px;
-                        text-align: center;
-                        text-decoration: none;
-                        display: inline-block;
-                        font-size: 16px;
-                        margin: 10px 2px;
-                        cursor: pointer;
-                        border-radius: 4px;
-                      }
-                    }
-                    @media print {
-                      #print-info { display: none; }
-                      .print-button { display: none; }
-                    }
-                  </style>
-                </head>
-                <body>
-                  <div id="print-info">
-                    <h3>Thermal Printer Setup Required</h3>
-                    <p>For automatic printing without prompts:</p>
-                    <ol>
-                      <li>Set your thermal printer as the default printer</li>
-                      <li>In Chrome settings &gt; Printing, enable "Use system dialog"</li>
-                      <li>For automatic printing, adjust your browser settings to allow this site to print without confirmation</li>
-                    </ol>
-                    <button class="print-button" onclick="window.print(); return false;">Print Receipt</button>
-                  </div>
-                  
-                  <div id="receipt-container">
-                    <div class="header">
-                      <h2>COFFEE ERP</h2>
-                      <p>ORDER #${flash?.order_number || 'N/A'}</p>
-                      <p>${orderDate}</p>
-                      <p>TYPE: ${orderType.toUpperCase()}</p>
-                      ${beeperNumber ? `<p>BEEPER: ${beeperNumber}</p>` : ''}
-                      <p>CUSTOMER: ${selectedCustomer?.name || 'Guest'}</p>
-                    </div>
-                    <div class="divider"></div>
-                    <div class="items">
-                      ${orderItems}
-                    </div>
-                    <div class="divider"></div>
-                    <div class="total">
-                      <p>TOTAL: ₱${total}</p>
-                      <p>PAYMENT: ${selectedPaymentMethod?.name || 'Unknown'}</p>
-                    </div>
-                    <div class="divider"></div>
-                    <div class="footer">
-                      <p>Thank you for your order!</p>
-                    </div>
-                  </div>
-                  
-                  <script>
-                    // Auto-print attempt - browser security may still show a dialog
-                    document.addEventListener('DOMContentLoaded', function() {
-                      // Try to print automatically
-                      setTimeout(function() {
-                        window.print();
-                      }, 500);
-                    });
-                  </script>
-                </body>
-                </html>
-              `);
-            }
+            // Open print modal for order slip printing
+            setIsPrintModalOpen(true);
             
-            // Reset the order and other state
-            setOrder([]);
-            setSelectedPaymentMethod(null);
-            setCashAmountGiven('');
-            setReceiptImage(null);
-            setQrCodeImage(null);
-            setSelectedCustomer(null);
-            
-            // Reset the order processing flag after a delay to prevent immediate resubmission
+            // Reset processing flag after a delay to prevent double submissions
             setTimeout(() => {
-              setIsProcessingOrder(false);
-            }, 5000); // 5-second lock to prevent double orders
+              setIsProcessingOrder(false); // Allow new orders after 5 seconds
+            }, 5000);
           },
-          onError: (errors) => {
+          onError: (errors: any) => {
             console.error('Error creating order:', errors)
             setNotificationMessage('Failed to create order. Please try again.');
             setShowNotification(true);
@@ -432,7 +254,7 @@ export default function Pos() {
             
             // Reset the order processing flag to allow retry
             setIsProcessingOrder(false);
-          },
+          }
         })
       }
 
@@ -902,7 +724,26 @@ export default function Pos() {
                 setSelectedCustomer={setSelectedCustomer}
             />
 
-            {/* PrintModal removed - automatic printing implemented */}
+            <PrintModal
+                isOpen={isPrintModalOpen}
+                onClose={() => setIsPrintModalOpen(false)}
+                selectedPrintOptions={selectedPrintOptions}
+                setSelectedPrintOptions={setSelectedPrintOptions}
+                onDone={() => {
+                    setIsPrintModalOpen(false);
+                    setOrder([]);
+                    setSelectedPaymentMethod(null);
+                    setCashAmountGiven('');
+                    setReceiptImage(null);
+                    setQrCodeImage(null);
+                    setSelectedCustomer(null);
+                }}
+                orderType={orderType}
+                beeperNumber={beeperNumber}
+                order={savedOrderForPrinting}
+                orderNumber={flash?.order_number || 'N/A'}
+                totalAmount={Number(calculateFinalTotal())}
+            />
         </div>
     );
 }
