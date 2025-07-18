@@ -27,39 +27,49 @@ class DashboardController extends Controller
             ->whereBetween('created_at', [$startTimestamp, $endTimestamp])
             ->sum('total');
             
-        // Categories to track (using IDs)
-        $trackedCategories = [1, 2, 3, 4, 5];
-        
-        $categoryNames = Category::whereIn('id', $trackedCategories)->pluck('name')->toArray();
-        
-        // Get cup counts by category using a direct query
-        $categoryCounts = DB::table('order_items')
+        // Get product-level cup counts
+        $productCounts = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'products.id', '=', 'order_items.product_id')
-            ->select('products.category', DB::raw('SUM(order_items.quantity) as total_cups'))
+            ->select('products.name', DB::raw('SUM(order_items.quantity) as total_cups'))
             ->where('orders.status', 'completed')
             ->whereBetween('orders.created_at', [$startTimestamp, $endTimestamp])
-            ->whereIn('products.category', $trackedCategories)
-            ->groupBy('products.category')
-            ->pluck('total_cups', 'category')
+            ->groupBy('products.name')
+            ->orderBy('total_cups', 'desc')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [$item->name => $item->total_cups];
+            })
             ->toArray();
-            
-        // Fill in any missing categories with zero
-        foreach ($trackedCategories as $categoryId) {
-            if (!isset($categoryCounts[$categoryId])) {
-                $categoryCounts[$categoryId] = 0;
-            }
-        }
 
         // Get total cup count
-        $totalCups = array_sum($categoryCounts);
+        $totalCups = array_sum($productCounts);
         
-        // Map category IDs back to names for frontend display
-        $namedCategoryCounts = [];
-        foreach ($categoryCounts as $id => $count) {
-            $name = $categoryNames[$id] ?? "Category {$id}";
-            $namedCategoryCounts[$name] = $count;
-        }
+        // Get total cups for the current week
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $endOfWeek = Carbon::now()->endOfWeek();
+        
+        $totalCupsThisWeek = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', 'completed')
+            ->whereBetween('orders.created_at', [$startOfWeek, $endOfWeek])
+            ->sum('order_items.quantity');
+            
+        // Get daily cups data for the graph
+        $dailyCups = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->select(DB::raw('DATE(orders.created_at) as date'), DB::raw('SUM(order_items.quantity) as cups'))
+            ->where('orders.status', 'completed')
+            ->whereBetween('orders.created_at', [$startTimestamp, $endTimestamp])
+            ->groupBy(DB::raw('DATE(orders.created_at)'))
+            ->orderBy('date')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'date' => $item->date,
+                    'cups' => (int) $item->cups
+                ];
+            });
         
         // Format dates for display
         $formattedStartDate = $startDate->format('Y-m-d');
@@ -69,7 +79,9 @@ class DashboardController extends Controller
             'salesData' => [
                 'rangeSales' => $rangeSales,
                 'totalCups' => $totalCups,
-                'categoryCounts' => $namedCategoryCounts,
+                'totalCupsThisWeek' => $totalCupsThisWeek,
+                'productCounts' => $productCounts,
+                'dailyCups' => $dailyCups,
                 'startDate' => $formattedStartDate,
                 'endDate' => $formattedEndDate
             ]

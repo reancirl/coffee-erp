@@ -2,6 +2,30 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    BarElement,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+// Register Chart.js components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -14,7 +38,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface SalesData {
     rangeSales: number;
     totalCups: number;
-    categoryCounts: Record<string, number>;
+    totalCupsThisWeek: number;
+    productCounts: Record<string, number>;
+    dailyCups: Array<{date: string, cups: number}>;
     startDate: string;
     endDate: string;
 }
@@ -56,23 +82,27 @@ const StatCard = ({ title, value, icon, color }: { title: string; value: string;
     </div>
 );
 
-// Category cup count component
-const CategoryCupCount = ({ 
-    category, 
+// Product cup count component
+const ProductCupCount = ({ 
+    product, 
     count, 
-    totalCups 
+    totalCups,
+    index
 }: { 
-    category: string; 
+    product: string; 
     count: number; 
-    totalCups: number 
+    totalCups: number;
+    index: number;
 }) => {
     const percentage = totalCups > 0 ? Math.round((count / totalCups) * 100) : 0;
-    const colorClass = categoryColors[category] || 'bg-gray-500';
+    // Rotate through colors
+    const colors = Object.values(categoryColors);
+    const colorClass = colors[index % colors.length];
     
     return (
         <div className="mb-4">
             <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium">{category}</span>
+                <span className="text-sm font-medium">{product}</span>
                 <span className="text-sm text-gray-600">{count} cups ({percentage}%)</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -86,7 +116,7 @@ const CategoryCupCount = ({
 };
 
 export default function Dashboard({ salesData }: DashboardProps) {
-    const { rangeSales, totalCups, categoryCounts, startDate, endDate } = salesData;
+    const { rangeSales, totalCups, totalCupsThisWeek, productCounts, dailyCups, startDate, endDate } = salesData;
     
     // Form for date filtering
     const { data, setData, get, processing } = useForm({
@@ -105,10 +135,10 @@ export default function Dashboard({ salesData }: DashboardProps) {
         ? `${new Date(startDate).toLocaleDateString()}` 
         : `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`;
     
-    // Sort categories by cup count (descending)
-    const sortedCategories = Object.entries(categoryCounts)
+    // Sort products by cup count (descending)
+    const sortedProducts = Object.entries(productCounts)
         .sort(([, countA], [, countB]) => countB - countA)
-        .map(([category]) => category);
+        .map(([product, count]) => ({ product, count }));
     
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -166,42 +196,92 @@ export default function Dashboard({ salesData }: DashboardProps) {
                         color="bg-amber-600"
                     />
                     <StatCard 
-                        title="Average Per Cup" 
-                        value={totalCups > 0 ? formatCurrency(rangeSales / totalCups) : formatCurrency(0)}
-                        icon="📊"
+                        title="Total Cups This Week" 
+                        value={`${totalCupsThisWeek}`}
+                        icon="📈"
                         color="bg-indigo-600"
                     />
                 </div>
                 
-                {/* Cup counts by category */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Daily Cups Graph */}
+                <div className="grid grid-cols-1 gap-6">
                     <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-                        <h2 className="text-lg font-semibold mb-4">Cup Count by Category</h2>
-                        {sortedCategories.map(category => (
-                            <CategoryCupCount 
-                                key={category}
-                                category={category} 
-                                count={categoryCounts[category]}
+                        <h2 className="text-lg font-semibold mb-4">Daily Cups Served</h2>
+                        {dailyCups.length > 0 ? (
+                            <div style={{ height: '300px' }}>
+                                <Line
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                position: 'top' as const,
+                                            },
+                                            tooltip: {
+                                                callbacks: {
+                                                    label: function(context) {
+                                                        return `${context.parsed.y} cups`;
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                title: {
+                                                    display: true,
+                                                    text: 'Cups Served'
+                                                },
+                                                ticks: {
+                                                    precision: 0
+                                                }
+                                            },
+                                            x: {
+                                                title: {
+                                                    display: true,
+                                                    text: 'Date'
+                                                }
+                                            }
+                                        }
+                                    }}
+                                    data={{
+                                        labels: dailyCups.map(day => {
+                                            const date = new Date(day.date);
+                                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                        }),
+                                        datasets: [
+                                            {
+                                                label: 'Cups Served',
+                                                data: dailyCups.map(day => day.cups),
+                                                borderColor: 'rgb(153, 102, 51)',
+                                                backgroundColor: 'rgba(153, 102, 51, 0.5)',
+                                                tension: 0.3,
+                                                pointRadius: 5,
+                                                pointHoverRadius: 7,
+                                            },
+                                        ],
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div className="text-center py-10 text-gray-500">No data available for the selected date range</div>
+                        )}
+                    </div>
+                </div>
+                
+                {/* Cup counts by product */}
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                        <h2 className="text-lg font-semibold mb-4">Cups Per Product</h2>
+                        {sortedProducts.map((item, index) => (
+                            <ProductCupCount 
+                                key={item.product}
+                                product={item.product} 
+                                count={item.count}
                                 totalCups={totalCups}
+                                index={index}
                             />
                         ))}
-                    </div>
-                    
-                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-                        <h2 className="text-lg font-semibold mb-4">Best Selling Categories</h2>
-                        <div className="space-y-4">
-                            {sortedCategories.slice(0, 5).map((category, index) => (
-                                <div key={category} className="flex items-center">
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white mr-3 font-bold" style={{ backgroundColor: Object.values(categoryColors)[index % 5] }}>
-                                        {index + 1}
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-medium">{category}</h3>
-                                        <div className="text-sm text-gray-500">{categoryCounts[category]} cups</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
             </div>
