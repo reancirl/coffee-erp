@@ -77,7 +77,8 @@ class ProductController extends Controller
                 $formattedProducts = $categoryProducts->map(function ($product) {
                     $data = [
                         'name' => $product->name,
-                        'type' => $product->is_add_on ? 'addon' : 'product'
+                        'type' => $product->is_add_on ? 'addon' : 'product',
+                        'id' => $product->id,
                     ];
                     
                     // Handle prices based on whether it has variants

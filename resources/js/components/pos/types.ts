@@ -29,6 +29,7 @@ export type ProductCategory = {
 export type MenuData = {
     [category: string]: Array<{
         name: string;
+        id: number;
         price?: number;
         prices?: {
             hot: number | null;

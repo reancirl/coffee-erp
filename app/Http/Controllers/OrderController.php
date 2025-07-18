@@ -71,7 +71,7 @@ class OrderController extends Controller
             'order_type' => 'nullable|string',
             'beeper_number' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required',  // Remove exists:products,id since we're using static data
+            'items.*.product_id' => 'required',
             'items.*.product_name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
@@ -79,7 +79,7 @@ class OrderController extends Controller
             'items.*.customizations' => 'nullable|array',
             'items.*.discount' => 'nullable|numeric|min:0',
             'items.*.add_ons' => 'nullable|array',
-            'items.*.add_ons.*.product_id' => 'required',  // Remove exists:products,id since we're using static data
+            'items.*.add_ons.*.product_id' => 'required',
             'items.*.add_ons.*.product_name' => 'required|string',
             'items.*.add_ons.*.price' => 'required|numeric|min:0',
             'items.*.add_ons.*.variant' => 'nullable|string|in:hot,iced',
@@ -127,8 +127,11 @@ class OrderController extends Controller
             foreach ($validated['items'] as $itemData) {
                 $itemTotal = ($itemData['price'] * $itemData['quantity']) - ($itemData['discount'] ?? 0);
                 
+                // Determine product category based on ID ranges from frontend
+                $categoryId = $this->getCategoryIdFromProductId($itemData['product_id']);
+                
                 $orderItem = $order->items()->create([
-                    'product_id' => $itemData['product_id'],
+                    'product_id' => $itemData['product_id'], // Store frontend ID for consistency
                     'product_name' => $itemData['product_name'],
                     'quantity' => $itemData['quantity'],
                     'price' => $itemData['price'],
@@ -136,11 +139,14 @@ class OrderController extends Controller
                     'customizations' => $itemData['customizations'] ?? null,
                     'discount' => $itemData['discount'] ?? 0,
                     'total' => $itemTotal,
+                    'category' => $categoryId, // Store the category ID
                 ]);
 
                 // Add add-ons if any
                 if (!empty($itemData['add_ons'])) {
                     foreach ($itemData['add_ons'] as $addOnData) {
+                        $addOnCategoryId = $this->getCategoryIdFromProductId($addOnData['product_id']);
+                        
                         $orderItem->addOns()->create([
                             'product_id' => $addOnData['product_id'],
                             'product_name' => $addOnData['product_name'],
@@ -148,6 +154,7 @@ class OrderController extends Controller
                             'price' => $addOnData['price'],
                             'variant' => $addOnData['variant'] ?? null,
                             'customizations' => $addOnData['customizations'] ?? null,
+                            'category' => $addOnCategoryId, // Also save category for add-ons
                         ]);
                     }
                 }
@@ -173,5 +180,62 @@ class OrderController extends Controller
         return Inertia::render('orders/show', [
             'order' => $order->load('items.addOns')
         ]);
+    }
+    
+    /**
+     * Map frontend product ID ranges to category IDs
+     * The frontend assigns IDs based on category ranges:
+     * - 1-99: Coffee (category ID: 1)
+     * - 100-199: Blended Drinks (category ID: 2)
+     * - 200-299: River Fizz (category ID: 3)
+     * - 300-399: Black Trails (category ID: 4)
+     * - 400-499: Greens & Grains (category ID: 5)
+     * - 500-999: Add-Ons (no specific category)
+     * - 1000+: Alternative Milk (no specific category)
+     * 
+     * @param string $productId Frontend product ID
+     * @return int Category ID (1-5) or 0 for non-categorized products
+     */
+    private function getCategoryIdFromProductId($productId)
+    {
+        $id = (int) $productId;
+        
+        if ($id >= 1 && $id < 100) {
+            return 1; // Coffee
+        } else if ($id >= 100 && $id < 200) {
+            return 2; // Blended Drinks
+        } else if ($id >= 200 && $id < 300) {
+            return 3; // River Fizz
+        } else if ($id >= 300 && $id < 400) {
+            return 4; // Black Trails
+        } else if ($id >= 400 && $id < 500) {
+            return 5; // Greens & Grains
+        } else {
+            return 0; // Add-ons or others
+        }
+    }
+    
+    /**
+     * Void the specified order.
+     */
+    public function voidOrder(Order $order)
+    {
+        try {
+            DB::beginTransaction();
+            
+            $order->update([
+                'status' => 'voided',
+                'payment_status' => 'voided'
+            ]);
+            
+            DB::commit();
+            return redirect()->back()->with('message', 'Order has been voided successfully');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error voiding order: ' . $e->getMessage());
+            
+            return redirect()->back()->with('message', 'Failed to void order');
+        }
     }
 }

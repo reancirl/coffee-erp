@@ -177,7 +177,6 @@ export default function Pos() {
         form.append('payment_method', selectedPaymentMethod!.name)
         form.append('order_type', orderTypeValue) // Add order type to form
         form.append('beeper_number', beeperNumberValue) // Add beeper number to form
-      
         order.forEach((item, i) => {
           // Convert id to string to ensure it's properly formatted
           const productId = String(item.id);
@@ -332,12 +331,10 @@ export default function Pos() {
                     };
                     
                     // Debug
-                    console.log('Cookie product with added variants:', cookieWithVariants);
                     
                     setSelectedProduct(cookieWithVariants);
                 } else {
                     // Debug
-                    console.log('Product being set for modal:', product);
                     setSelectedProduct(product);
                 }
             }
@@ -362,7 +359,8 @@ export default function Pos() {
                     price: finalPrice,
                     selectedCustomizations: customizations,
                     selectedVariant: variant,
-                    isAddOn: true
+                    isAddOn: true,
+                    id: product.id,
                 };
                 
                 if (!targetItem.addOns) {
@@ -378,7 +376,7 @@ export default function Pos() {
             // Add as new item
             const customizedProduct = { 
                 ...product, 
-                id: Date.now(),
+                id: product.id,
                 price: finalPrice,
                 selectedCustomizations: customizations,
                 selectedVariant: variant,
@@ -541,10 +539,10 @@ export default function Pos() {
                             {menuData["Coffee"] && (
                                 <ProductCategory
                                     title="Coffee"
-                                    products={menuData["Coffee"].map((item, index) => ({
-                                        id: index + 1, // Assign sequential IDs starting from 1
+                                    products={menuData["Coffee"].map((item) => ({
                                         ...item,
                                         price: item.prices?.hot || item.prices?.iced || 0,
+                                        id: item.id, // Assign sequential IDs starting from 1
                                         customizations: item.prices ? [
                                             { name: 'Variant', options: [
                                                 ...(item.prices.hot !== null ? ['Hot'] : []),
@@ -562,10 +560,10 @@ export default function Pos() {
                     {menuData["Blended Drinks"] && (
                         <ProductCategory
                             title="Blended Drinks"
-                            products={menuData["Blended Drinks"].map((item, index) => ({
-                                id: 100 + index, // Using 100s range to avoid conflicts
+                            products={menuData["Blended Drinks"].map((item) => ({
                                 ...item,
-                                price: item.price || 0
+                                price: item.price || 0,
+                                id: item.id, // Using 100s range to avoid conflicts
                             }))}
                             onProductClick={handleProductClick}
                         />
@@ -575,9 +573,9 @@ export default function Pos() {
                     {menuData["River Fizz"] && (
                         <ProductCategory
                             title="River Fizz"
-                            products={menuData["River Fizz"].map((item, index) => ({
-                                id: 200 + index, // Using 200s range to avoid conflicts
+                            products={menuData["River Fizz"].map((item) => ({
                                 ...item,
+                                id: item.id, // Using 200s range to avoid conflicts
                                 price: item.price || 0
                             }))}
                             onProductClick={handleProductClick}
@@ -588,9 +586,9 @@ export default function Pos() {
                     {menuData["Black Trails"] && (
                         <ProductCategory
                             title="Black Trails"
-                            products={menuData["Black Trails"].map((item, index) => ({
-                                id: 300 + index, // Using 300s range to avoid conflicts
+                            products={menuData["Black Trails"].map((item) => ({
                                 ...item,
+                                id: item.id, // Using 300s range to avoid conflicts
                                 price: item.price || 0
                             }))}
                             onProductClick={handleProductClick}
@@ -601,9 +599,9 @@ export default function Pos() {
                     {menuData["Greens & Grains"] && (
                         <ProductCategory
                             title="Greens & Grains"
-                            products={menuData["Greens & Grains"].map((item, index) => ({
-                                id: 400 + index, // Using 400s range to avoid conflicts
+                            products={menuData["Greens & Grains"].map((item) => ({
                                 ...item,
+                                id: item.id, // Using 400s range to avoid conflicts
                                 price: item.prices?.hot || item.prices?.iced || item.price || 0,
                                 customizations: item.prices ? [
                                     { name: 'Variant', options: [
@@ -620,9 +618,9 @@ export default function Pos() {
                     {menuData["Add-Ons"] && (
                         <ProductCategory
                             title="Add-Ons"
-                            products={menuData["Add-Ons"].map((item, index) => ({
-                                id: 500 + index, // Using 500s range to avoid conflicts
+                            products={menuData["Add-Ons"].map((item) => ({
                                 ...item,
+                                id: item.id, // Using 500s range to avoid conflicts
                                 price: item.price || 0,
                                 type: 'addon' // Marking explicitly as an add-on for amber/orange border with ADD-ON badge
                             }))}
@@ -634,8 +632,8 @@ export default function Pos() {
                     {menuData["Alternative Milk"] && (
                         <ProductCategory
                             title="Alternative Milk"
-                            products={menuData["Alternative Milk"].map((item, index) => ({
-                                id: 1000 + index, // Assign unique ID (using different range to avoid conflicts)
+                            products={menuData["Alternative Milk"].map((item) => ({
+                                id: item.id, // Assign unique ID (using different range to avoid conflicts)
                                 name: item.name,
                                 price: item.price || 0,
                                 type: 'addon',  // Mark as add-on
@@ -649,9 +647,9 @@ export default function Pos() {
                     {menuData["Beverage"] && (
                         <ProductCategory
                             title="Beverage"
-                            products={menuData["Beverage"].map((item, index) => ({
-                                id: 1500 + index, // Using 1500s range to avoid conflicts
+                            products={menuData["Beverage"].map((item) => ({
                                 ...item,
+                                id: item.id, // Using 1500s range to avoid conflicts
                                 price: item.price || 0
                             }))}
                             onProductClick={handleProductClick}
@@ -662,9 +660,9 @@ export default function Pos() {
                     {menuData["Food"] && (
                         <ProductCategory
                             title="Food"
-                            products={menuData["Food"].map((item, index) => ({
-                                id: 1600 + index, // Using 1600s range to avoid conflicts
+                            products={menuData["Food"].map((item) => ({
                                 ...item,
+                                id: item.id, // Using 1600s range to avoid conflicts
                                 price: item.price || 0,
                                 // If item has customizations (like cookie variants), preserve them
                                 customizations: item.customizations || []

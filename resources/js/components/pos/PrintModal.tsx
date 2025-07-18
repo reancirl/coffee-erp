@@ -68,9 +68,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
     const printOrderSlip = () => {
         if (isPrinting) return;
         setIsPrinting(true);
-      
-        console.log('Printing order:', { order, orderType, beeperNumber, orderNumber, totalAmount });
-      
+            
         try {
           const printWindow = window.open('', '_blank', 'width=800,height=600');
           printWindowRef.current = printWindow;

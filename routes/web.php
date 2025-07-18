@@ -4,15 +4,14 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // POS Routes
     Route::get('pos', [OrderController::class, 'pos'])->name('pos');
@@ -25,6 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Orders routes - only for viewing (no create/edit)
     Route::resource('orders', OrderController::class)->except(['create', 'edit']);
+    Route::patch('orders/{order}/void', [OrderController::class, 'voidOrder'])->name('orders.void');
     
     // Reports routes
     Route::get('reports/z-report', [\App\Http\Controllers\ReportController::class, 'showZReportForm'])->name('reports.z-report');

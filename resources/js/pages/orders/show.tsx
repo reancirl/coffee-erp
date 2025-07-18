@@ -1,7 +1,8 @@
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 interface OrderAddOn {
     id: number;
@@ -67,18 +68,48 @@ const formatCurrency = (amount: number): string => {
 };
 
 export default function Show({ order }: Props) {
+    const [showVoidConfirm, setShowVoidConfirm] = useState(false);
+    const [isVoiding, setIsVoiding] = useState(false);
+    
+    // Handle void order
+    const handleVoidOrder = () => {
+        if (isVoiding) return;
+        
+        setIsVoiding(true);
+        router.patch(route('orders.void', order.id), {}, {
+            onSuccess: () => {
+                setShowVoidConfirm(false);
+                setIsVoiding(false);
+            },
+            onError: () => {
+                setIsVoiding(false);
+            }
+        });
+    };
+    
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Order ${order.order_number}`} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold">Order {order.order_number}</h2>
-                    <Link
-                        href={route('orders.index')}
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Back to Orders
-                    </Link>
+                    <div className="flex space-x-2">
+                        {order.status !== 'voided' && (
+                            <button
+                                onClick={() => setShowVoidConfirm(true)}
+                                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                                disabled={isVoiding}
+                            >
+                                {isVoiding ? 'Processing...' : 'Void Order'}
+                            </button>
+                        )}
+                        <Link
+                            href={route('orders.index')}
+                            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Back to Orders
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -221,6 +252,34 @@ export default function Show({ order }: Props) {
                     </div>
                 </div>
             </div>
+            
+            {/* Void Confirmation Modal */}
+            {showVoidConfirm && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4">Void Order</h3>
+                        <p className="mb-6 text-gray-700">
+                            Are you sure you want to void this order? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowVoidConfirm(false)}
+                                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
+                                disabled={isVoiding}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleVoidOrder}
+                                className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded"
+                                disabled={isVoiding}
+                            >
+                                {isVoiding ? 'Processing...' : 'Void Order'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }

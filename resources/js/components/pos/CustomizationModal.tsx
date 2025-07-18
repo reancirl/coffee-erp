@@ -13,10 +13,6 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
         product.prices?.hot !== null ? 'hot' : product.prices?.iced !== null ? 'iced' : null
     );
     
-    // Debug product data
-    console.log('Product in modal:', product);
-    console.log('Product customizations:', product.customizations);
-    
     // Auto-proceed logic for add-ons with only one option
     React.useEffect(() => {
         // Check if it's an add-on type and has exactly one customization with only one option
