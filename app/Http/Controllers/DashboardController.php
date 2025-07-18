@@ -12,16 +12,19 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Get the current date with start and end timestamps
-        $today = Carbon::today();
-        $startOfDay = $today->copy()->startOfDay();
-        $endOfDay = $today->copy()->endOfDay();
+        // Get date parameters from request or use today as default
+        $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : Carbon::today();
+        $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : Carbon::today();
         
-        // Get total sales for today (completed orders only)
-        $todaySales = Order::where('status', 'completed')
-            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+        // Set start and end timestamps
+        $startTimestamp = $startDate->copy()->startOfDay();
+        $endTimestamp = $endDate->copy()->endOfDay();
+        
+        // Get total sales for selected date range (completed orders only)
+        $rangeSales = Order::where('status', 'completed')
+            ->whereBetween('created_at', [$startTimestamp, $endTimestamp])
             ->sum('total');
             
         // Categories to track (using IDs)
@@ -35,7 +38,7 @@ class DashboardController extends Controller
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->select('products.category', DB::raw('SUM(order_items.quantity) as total_cups'))
             ->where('orders.status', 'completed')
-            ->whereBetween('orders.created_at', [$startOfDay, $endOfDay])
+            ->whereBetween('orders.created_at', [$startTimestamp, $endTimestamp])
             ->whereIn('products.category', $trackedCategories)
             ->groupBy('products.category')
             ->pluck('total_cups', 'category')
@@ -58,11 +61,17 @@ class DashboardController extends Controller
             $namedCategoryCounts[$name] = $count;
         }
         
+        // Format dates for display
+        $formattedStartDate = $startDate->format('Y-m-d');
+        $formattedEndDate = $endDate->format('Y-m-d');
+        
         return Inertia::render('dashboard', [
             'salesData' => [
-                'todaySales' => $todaySales,
+                'rangeSales' => $rangeSales,
                 'totalCups' => $totalCups,
-                'categoryCounts' => $namedCategoryCounts
+                'categoryCounts' => $namedCategoryCounts,
+                'startDate' => $formattedStartDate,
+                'endDate' => $formattedEndDate
             ]
         ]);
     }

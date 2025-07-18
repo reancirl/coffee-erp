@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import React from 'react';
+import { Head, useForm } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -12,9 +12,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Define the props interface for the data passed from the controller
 interface SalesData {
-    todaySales: number;
+    rangeSales: number;
     totalCups: number;
     categoryCounts: Record<string, number>;
+    startDate: string;
+    endDate: string;
 }
 
 interface DashboardProps {
@@ -84,7 +86,24 @@ const CategoryCupCount = ({
 };
 
 export default function Dashboard({ salesData }: DashboardProps) {
-    const { todaySales, totalCups, categoryCounts } = salesData;
+    const { rangeSales, totalCups, categoryCounts, startDate, endDate } = salesData;
+    
+    // Form for date filtering
+    const { data, setData, get, processing } = useForm({
+        start_date: startDate,
+        end_date: endDate,
+    });
+    
+    // Handle form submission
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        get('/dashboard');
+    };
+    
+    // Format date range for display
+    const dateRangeText = startDate === endDate 
+        ? `${new Date(startDate).toLocaleDateString()}` 
+        : `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`;
     
     // Sort categories by cup count (descending)
     const sortedCategories = Object.entries(categoryCounts)
@@ -95,13 +114,48 @@ export default function Dashboard({ salesData }: DashboardProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6 bg-gray-50">
-                <h1 className="text-2xl font-bold">Today's Overview</h1>
+                <div className="flex justify-between items-center flex-wrap gap-4">
+                    <h1 className="text-2xl font-bold">Sales Overview: {dateRangeText}</h1>
+                    
+                    {/* Date Filter Form */}
+                    <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="start_date" className="text-sm font-medium text-gray-700">From:</label>
+                            <input 
+                                type="date" 
+                                id="start_date"
+                                value={data.start_date}
+                                onChange={e => setData('start_date', e.target.value)}
+                                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="end_date" className="text-sm font-medium text-gray-700">To:</label>
+                            <input 
+                                type="date" 
+                                id="end_date"
+                                value={data.end_date}
+                                onChange={e => setData('end_date', e.target.value)}
+                                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                        </div>
+                        
+                        <button 
+                            type="submit" 
+                            disabled={processing}
+                            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-75"
+                        >
+                            Filter
+                        </button>
+                    </form>
+                </div>
                 
                 {/* Today's sales stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <StatCard 
-                        title="Today's Sales" 
-                        value={formatCurrency(todaySales)}
+                        title="Total Sales" 
+                        value={formatCurrency(rangeSales)}
                         icon="💰"
                         color="bg-green-600"
                     />
@@ -113,7 +167,7 @@ export default function Dashboard({ salesData }: DashboardProps) {
                     />
                     <StatCard 
                         title="Average Per Cup" 
-                        value={totalCups > 0 ? formatCurrency(todaySales / totalCups) : formatCurrency(0)}
+                        value={totalCups > 0 ? formatCurrency(rangeSales / totalCups) : formatCurrency(0)}
                         icon="📊"
                         color="bg-indigo-600"
                     />
