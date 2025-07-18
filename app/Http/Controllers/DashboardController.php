@@ -27,13 +27,17 @@ class DashboardController extends Controller
             ->whereBetween('created_at', [$startTimestamp, $endTimestamp])
             ->sum('total');
             
-        // Get product-level cup counts
+        // Categories that represent cups (IDs 1-5)
+        $cupCategories = [1, 2, 3, 4, 5];
+        
+        // Get product-level cup counts (only for specified categories)
         $productCounts = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->select('products.name', DB::raw('SUM(order_items.quantity) as total_cups'))
             ->where('orders.status', 'completed')
             ->whereBetween('orders.created_at', [$startTimestamp, $endTimestamp])
+            ->whereIn('products.category', $cupCategories)
             ->groupBy('products.name')
             ->orderBy('total_cups', 'desc')
             ->get()
@@ -45,21 +49,25 @@ class DashboardController extends Controller
         // Get total cup count
         $totalCups = array_sum($productCounts);
         
-        // Get total cups for the current week
+        // Get total cups for the current week (only for specified categories)
         $startOfWeek = Carbon::now()->startOfWeek();
         $endOfWeek = Carbon::now()->endOfWeek();
         
         $totalCupsThisWeek = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'products.id', '=', 'order_items.product_id')
             ->where('orders.status', 'completed')
+            ->whereIn('products.category', $cupCategories)
             ->whereBetween('orders.created_at', [$startOfWeek, $endOfWeek])
             ->sum('order_items.quantity');
             
-        // Get daily cups data for the graph
+        // Get daily cups data for the graph (only for specified categories)
         $dailyCups = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'products.id', '=', 'order_items.product_id')
             ->select(DB::raw('DATE(orders.created_at) as date'), DB::raw('SUM(order_items.quantity) as cups'))
             ->where('orders.status', 'completed')
+            ->whereIn('products.category', $cupCategories)
             ->whereBetween('orders.created_at', [$startTimestamp, $endTimestamp])
             ->groupBy(DB::raw('DATE(orders.created_at)'))
             ->orderBy('date')
