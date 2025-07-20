@@ -73,7 +73,7 @@ const StatCard = ({ title, value, icon, color }: { title: string; value: string;
         <div className="flex justify-between items-center mb-2">
             <h3 className="text-gray-500 text-sm uppercase font-medium">{title}</h3>
             {icon && (
-                <div className={`${color || 'bg-blue-500'} p-2 rounded-full text-white`}>
+                <div className={`${color || 'bg-blue-500'} p-2 rounded-full text-white dark:text-black`}>
                     <span className="text-xl">{icon}</span>
                 </div>
             )}
@@ -195,12 +195,12 @@ export default function Dashboard({ salesData }: DashboardProps) {
                         icon="☕"
                         color="bg-amber-600"
                     />
-                    <StatCard 
+                    {/* <StatCard 
                         title="Total Cups This Week" 
                         value={`${totalCupsThisWeek}`}
                         icon="📈"
                         color="bg-indigo-600"
-                    />
+                    /> */}
                 </div>
                 
                 {/* Daily Cups Graph */}
