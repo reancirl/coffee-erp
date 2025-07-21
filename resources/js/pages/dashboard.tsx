@@ -156,7 +156,7 @@ export default function Dashboard({ salesData }: DashboardProps) {
                                 id="start_date"
                                 value={data.start_date}
                                 onChange={e => setData('start_date', e.target.value)}
-                                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black"
                             />
                         </div>
                         
@@ -167,7 +167,7 @@ export default function Dashboard({ salesData }: DashboardProps) {
                                 id="end_date"
                                 value={data.end_date}
                                 onChange={e => setData('end_date', e.target.value)}
-                                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black"
                             />
                         </div>
                         
