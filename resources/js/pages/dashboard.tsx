@@ -73,12 +73,12 @@ const StatCard = ({ title, value, icon, color }: { title: string; value: string;
         <div className="flex justify-between items-center mb-2">
             <h3 className="text-gray-500 text-sm uppercase font-medium">{title}</h3>
             {icon && (
-                <div className={`${color || 'bg-blue-500'} p-2 rounded-full text-white dark:text-black`}>
+                <div className={`${color || 'bg-blue-500'} p-2 rounded-full text-white`}>
                     <span className="text-xl">{icon}</span>
                 </div>
             )}
         </div>
-        <div className="text-3xl font-bold">{value}</div>
+        <div className="text-3xl font-bold text-black">{value}</div>
     </div>
 );
 
