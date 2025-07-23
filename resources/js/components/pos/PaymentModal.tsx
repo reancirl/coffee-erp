@@ -20,6 +20,11 @@ interface PaymentModalProps {
     setReceiptImage: (file: File | null) => void;
     qrCodeImage: File | null;
     setQrCodeImage: (file: File | null) => void;
+    // Split payment props
+    splitCashAmount: string;
+    setSplitCashAmount: (amount: string) => void;
+    splitGcashAmount: string;
+    setSplitGcashAmount: (amount: string) => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -36,6 +41,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setReceiptImage,
     qrCodeImage,
     setQrCodeImage,
+    splitCashAmount,
+    setSplitCashAmount,
+    splitGcashAmount,
+    setSplitGcashAmount,
 }) => {
     // Create a ref for the cash input field
     const cashInputRef = useRef<HTMLInputElement>(null);
@@ -132,6 +141,61 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </div>
                 )}
 
+                {selectedPaymentMethod?.id === 'split' && (
+                    <div className="mt-4">
+                        <h3 className="text-lg font-semibold mb-3">Split Payment (Cash + GCash)</h3>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block mb-2">Cash Amount</label>
+                                <input
+                                    type="number"
+                                    value={splitCashAmount}
+                                    onChange={(e) => {
+                                        const cashValue = e.target.value;
+                                        setSplitCashAmount(cashValue);
+                                        // Auto-calculate GCash amount
+                                        const remaining = amount - parseFloat(cashValue || '0');
+                                        setSplitGcashAmount(remaining > 0 ? remaining.toFixed(2) : '0');
+                                    }}
+                                    className="w-full p-2 border rounded"
+                                    placeholder="Enter cash amount"
+                                    min="0"
+                                    max={amount}
+                                    step="0.01"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block mb-2">GCash Amount</label>
+                                <input
+                                    type="number"
+                                    value={splitGcashAmount}
+                                    onChange={(e) => setSplitGcashAmount(e.target.value)}
+                                    className="w-full p-2 border rounded bg-gray-100 text-black"
+                                    placeholder="Auto-calculated"
+                                    readOnly
+                                />
+                            </div>
+                        </div>
+                        
+                        {splitCashAmount && splitGcashAmount && (
+                            <div className="mt-3 p-3 bg-gray-100 rounded text-black">
+                                <p className="text-sm">
+                                    <strong>Cash:</strong> ₱{parseFloat(splitCashAmount || '0').toFixed(2)} + 
+                                    <strong> GCash:</strong> ₱{parseFloat(splitGcashAmount || '0').toFixed(2)} = 
+                                    <strong> Total:</strong> ₱{(parseFloat(splitCashAmount || '0') + parseFloat(splitGcashAmount || '0')).toFixed(2)}
+                                </p>
+                                {(parseFloat(splitCashAmount || '0') + parseFloat(splitGcashAmount || '0')) !== amount && (
+                                    <p className="text-red-500 text-sm mt-1">
+                                        Split amounts must equal the total amount of ₱{amount.toFixed(2)}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <div className="mt-6 flex justify-end space-x-2">
                     <button
                         onClick={onClose}
@@ -144,7 +208,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                         disabled={!selectedPaymentMethod || 
                             (selectedPaymentMethod?.id === 'cash' && 
-                                (!cashAmountGiven || parseFloat(cashAmountGiven) < amount))}
+                                (!cashAmountGiven || parseFloat(cashAmountGiven) < amount)) ||
+                            (selectedPaymentMethod?.id === 'split' && 
+                                (!splitCashAmount || !splitGcashAmount || 
+                                 (parseFloat(splitCashAmount || '0') + parseFloat(splitGcashAmount || '0')) !== amount))}
                     >
                         Complete Payment
                     </button>

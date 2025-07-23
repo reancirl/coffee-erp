@@ -86,7 +86,35 @@ class OrderController extends Controller
             'items.*.add_ons.*.customizations' => 'nullable|array',
             'discount' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
+            // Split payment fields
+            'split_cash_amount' => 'nullable|numeric|min:0',
+            'split_gcash_amount' => 'nullable|numeric|min:0',
         ]);
+
+        // Additional validation for split payment
+        if ($validated['payment_method'] === 'Split (Cash + GCash)') {
+            if (empty($validated['split_cash_amount']) || empty($validated['split_gcash_amount'])) {
+                return back()->withErrors(['payment' => 'Both cash and GCash amounts are required for split payment.']);
+            }
+            
+            // Validate that split amounts sum to total (we'll calculate total first)
+            $subtotalForValidation = collect($validated['items'])->sum(function ($item) {
+                $itemTotal = $item['price'] * $item['quantity'];
+                if (!empty($item['add_ons'])) {
+                    foreach ($item['add_ons'] as $addOn) {
+                        $itemTotal += $addOn['price'] * ($addOn['quantity'] ?? 1);
+                    }
+                }
+                return $itemTotal - ($item['discount'] ?? 0);
+            });
+            
+            $totalForValidation = $subtotalForValidation - ($validated['discount'] ?? 0);
+            $splitTotal = $validated['split_cash_amount'] + $validated['split_gcash_amount'];
+            
+            if (abs($splitTotal - $totalForValidation) > 0.01) { // Allow for small floating point differences
+                return back()->withErrors(['payment' => 'Split payment amounts must equal the order total.']);
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -121,6 +149,8 @@ class OrderController extends Controller
                 'beeper_number' => $validated['beeper_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id(),
+                'split_cash_amount' => $validated['split_cash_amount'] ?? null,
+                'split_gcash_amount' => $validated['split_gcash_amount'] ?? null,
             ]);
 
             // Add order items

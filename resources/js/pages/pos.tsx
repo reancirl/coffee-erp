@@ -70,6 +70,10 @@ export default function Pos() {
     // Order processing state - to prevent double submissions
     const [isProcessingOrder, setIsProcessingOrder] = useState(false);
     
+    // Split payment state
+    const [splitCashAmount, setSplitCashAmount] = useState<string>('');
+    const [splitGcashAmount, setSplitGcashAmount] = useState<string>('');
+    
     // Helper function to check if product is an add-on
     const isAddOn = (product: any): boolean => {
         // Primary check: use the explicit type property
@@ -134,20 +138,37 @@ export default function Pos() {
             alert('Please select a payment method.');
             return;
         }
-        if (selectedPaymentMethod.id === 'Cash') {
+        if (selectedPaymentMethod.id === 'cash') {
             const given = Number(cashAmountGiven);
             if (isNaN(given) || given < total) {
                 alert('Please enter an amount that covers the final total.');
                 return;
             }
-        } else if (selectedPaymentMethod.id === 'GCash' || selectedPaymentMethod.id === 'Debit Card') {
+        } else if (selectedPaymentMethod.id === 'g-cash' || selectedPaymentMethod.id === 'debit') {
             if (!receiptImage) {
                 alert('Please take a picture of the transaction receipt.');
                 return;
             }
-        } else if (selectedPaymentMethod.id === 'PMNA Card') {
+        } else if (selectedPaymentMethod.id === 'pmna') {
             if (!qrCodeImage) {
                 alert('Please scan the QR Code using your camera.');
+                return;
+            }
+        } else if (selectedPaymentMethod.id === 'split') {
+            const cashAmount = Number(splitCashAmount);
+            const gcashAmount = Number(splitGcashAmount);
+            const splitTotal = cashAmount + gcashAmount;
+            
+            if (!splitCashAmount || !splitGcashAmount) {
+                alert('Please enter both cash and GCash amounts for split payment.');
+                return;
+            }
+            if (Math.abs(splitTotal - total) > 0.01) { // Allow for small floating point differences
+                alert(`Split payment amounts must equal the total amount of ₱${total.toFixed(2)}`);
+                return;
+            }
+            if (cashAmount <= 0 || gcashAmount <= 0) {
+                alert('Both cash and GCash amounts must be greater than zero.');
                 return;
             }
         }
@@ -221,6 +242,12 @@ export default function Pos() {
         // Attach any images
         if (receiptImage) form.append('receipt_image', receiptImage)
         if (qrCodeImage)   form.append('qr_code_image', qrCodeImage)
+        
+        // Add split payment data if applicable
+        if (selectedPaymentMethod?.id === 'split') {
+            form.append('split_cash_amount', splitCashAmount)
+            form.append('split_gcash_amount', splitGcashAmount)
+        }
       
         // Save current order for printing
         setSavedOrderForPrinting([...order]);
@@ -736,6 +763,10 @@ export default function Pos() {
                 setReceiptImage={setReceiptImage}
                 qrCodeImage={qrCodeImage}
                 setQrCodeImage={setQrCodeImage}
+                splitCashAmount={splitCashAmount}
+                setSplitCashAmount={setSplitCashAmount}
+                splitGcashAmount={splitGcashAmount}
+                setSplitGcashAmount={setSplitGcashAmount}
             />
 
             <CustomerModal

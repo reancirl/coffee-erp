@@ -17,13 +17,17 @@ class Order extends Model
         'status',
         'notes',
         'order_type',
-        'beeper_number'
+        'beeper_number',
+        'split_cash_amount',
+        'split_gcash_amount'
     ];
 
     protected $casts = [
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
+        'split_cash_amount' => 'decimal:2',
+        'split_gcash_amount' => 'decimal:2',
     ];
 
     public function items(): HasMany
