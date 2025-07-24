@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CashMonitoringController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -29,6 +30,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Reports routes
     Route::get('reports/z-report', [\App\Http\Controllers\ReportController::class, 'showZReportForm'])->name('reports.z-report');
     Route::get('reports/z-report/generate', [\App\Http\Controllers\ReportController::class, 'generateZReport'])->name('reports.z-report.generate');
+    
+    // Cash Monitoring routes
+    Route::get('cash-monitoring', [CashMonitoringController::class, 'index'])->name('cash-monitoring.index');
+    Route::post('cash-monitoring', [CashMonitoringController::class, 'store'])->name('cash-monitoring.store');
+    Route::patch('cash-monitoring/{cashMonitoring}/cash-flow', [CashMonitoringController::class, 'updateCashFlow'])->name('cash-monitoring.cash-flow');
+    Route::patch('cash-monitoring/{cashMonitoring}/close', [CashMonitoringController::class, 'close'])->name('cash-monitoring.close');
 });
 
 require __DIR__.'/settings.php';
