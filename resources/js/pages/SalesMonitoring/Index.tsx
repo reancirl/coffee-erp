@@ -71,7 +71,7 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
             return;
         }
 
-        router.patch(`/cash-monitoring/${currentMonitoring.id}/cash-flow`, {
+        router.patch(`/sales-monitoring/${currentMonitoring.id}/cash-flow`, {
             type,
             amount: parseFloat(amount),
             notes,
@@ -96,7 +96,7 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
             return;
         }
 
-        router.patch(`/cash-monitoring/${currentMonitoring.id}/close`, {
+        router.patch(`/sales-monitoring/${currentMonitoring.id}/close`, {
             actual_balance: parseFloat(actualBalance),
             variance_notes: varianceNotes,
         }, {

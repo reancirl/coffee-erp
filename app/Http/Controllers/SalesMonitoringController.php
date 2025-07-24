@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CashMonitoring;
+use App\Models\SalesMonitoring;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
-class CashMonitoringController extends Controller
+class SalesMonitoringController extends Controller
 {
     public function index()
     {
         $currentDate = Carbon::today();
-        $monitoring = CashMonitoring::where('monitoring_date', $currentDate)
+        $monitoring = SalesMonitoring::where('monitoring_date', $currentDate)
             ->with(['openedBy', 'closedBy'])
             ->first();
 
         // Get recent monitoring records for history
-        $recentMonitoring = CashMonitoring::with(['openedBy', 'closedBy'])
+        $recentMonitoring = SalesMonitoring::with(['openedBy', 'closedBy'])
             ->orderBy('monitoring_date', 'desc')
             ->take(10)
             ->get();
@@ -32,7 +32,7 @@ class CashMonitoringController extends Controller
             $this->updateSalesData($monitoring);
         }
 
-        return Inertia::render('CashMonitoring/Simple', [
+        return Inertia::render('SalesMonitoring/Simple', [
             'currentMonitoring' => $monitoring->append(['total_sales', 'total_cash', 'total_gcash']),
             'recentMonitoring' => $recentMonitoring->map(function ($item) {
                 return $item->append(['total_sales', 'total_cash', 'total_gcash']);
@@ -47,7 +47,7 @@ class CashMonitoringController extends Controller
             'opening_balance' => 'required|numeric|min:0',
         ]);
 
-        $monitoring = CashMonitoring::create([
+        $monitoring = SalesMonitoring::create([
             'monitoring_date' => $validated['monitoring_date'],
             'opening_balance' => $validated['opening_balance'],
             'opened_by' => auth()->id(),
@@ -58,7 +58,7 @@ class CashMonitoringController extends Controller
         return redirect()->back()->with('success', 'Cash monitoring started for ' . $validated['monitoring_date']);
     }
 
-    public function updateCashFlow(Request $request, CashMonitoring $cashMonitoring)
+    public function updateCashFlow(Request $request, SalesMonitoring $salesMonitoring)
     {
         $validated = $request->validate([
             'type' => 'required|in:cash_in,cash_out',
@@ -69,30 +69,30 @@ class CashMonitoringController extends Controller
         $field = $validated['type'];
         $notesField = $validated['type'] . '_notes';
 
-        $cashMonitoring->update([
-            $field => $cashMonitoring->$field + $validated['amount'],
-            $notesField => $cashMonitoring->$notesField . "\n" . now()->format('H:i') . ': +₱' . number_format($validated['amount'], 2) . ' - ' . $validated['notes'],
+        $salesMonitoring->update([
+            $field => $salesMonitoring->$field + $validated['amount'],
+            $notesField => $salesMonitoring->$notesField . "\n" . now()->format('H:i') . ': +₱' . number_format($validated['amount'], 2) . ' - ' . $validated['notes'],
         ]);
 
         // Recalculate expected balance
-        $cashMonitoring->update([
-            'expected_balance' => $cashMonitoring->calculateExpectedBalance(),
+        $salesMonitoring->update([
+            'expected_balance' => $salesMonitoring->calculateExpectedBalance(),
         ]);
 
         return redirect()->back()->with('success', ucfirst(str_replace('_', ' ', $validated['type'])) . ' updated successfully');
     }
 
-    public function close(Request $request, CashMonitoring $cashMonitoring)
+    public function close(Request $request, SalesMonitoring $salesMonitoring)
     {
         $validated = $request->validate([
             'actual_balance' => 'required|numeric|min:0',
             'variance_notes' => 'nullable|string|max:1000',
         ]);
 
-        $expectedBalance = $cashMonitoring->calculateExpectedBalance();
+        $expectedBalance = $salesMonitoring->calculateExpectedBalance();
         $variance = $validated['actual_balance'] - $expectedBalance;
 
-        $cashMonitoring->update([
+        $salesMonitoring->update([
             'actual_balance' => $validated['actual_balance'],
             'expected_balance' => $expectedBalance,
             'variance' => $variance,
@@ -108,13 +108,13 @@ class CashMonitoringController extends Controller
     private function createTodayMonitoring()
     {
         $yesterday = Carbon::yesterday();
-        $yesterdayMonitoring = CashMonitoring::where('monitoring_date', $yesterday)
+        $yesterdayMonitoring = SalesMonitoring::where('monitoring_date', $yesterday)
             ->where('status', 'closed')
             ->first();
 
         $openingBalance = $yesterdayMonitoring ? $yesterdayMonitoring->actual_balance : 0;
 
-        $monitoring = CashMonitoring::create([
+        $monitoring = SalesMonitoring::create([
             'monitoring_date' => Carbon::today(),
             'opening_balance' => $openingBalance,
             'opened_by' => auth()->id(),
@@ -126,7 +126,7 @@ class CashMonitoringController extends Controller
         return $monitoring;
     }
 
-    private function updateSalesData(CashMonitoring $monitoring)
+    private function updateSalesData(SalesMonitoring $monitoring)
     {
         $orders = Order::whereDate('created_at', $monitoring->monitoring_date)
             ->where('payment_status', 'completed')

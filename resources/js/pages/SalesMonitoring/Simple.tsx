@@ -22,7 +22,7 @@ import {
     Calendar
 } from 'lucide-react';
 
-interface CashMonitoring {
+interface SalesMonitoring {
     id: number;
     monitoring_date: string;
     opening_balance: number;
@@ -49,11 +49,11 @@ interface CashMonitoring {
 }
 
 interface Props {
-    currentMonitoring: CashMonitoring;
-    recentMonitoring: CashMonitoring[];
+    currentMonitoring: SalesMonitoring;
+    recentMonitoring: SalesMonitoring[];
 }
 
-export default function CashMonitoringSimple({ currentMonitoring, recentMonitoring }: Props) {
+export default function SalesMonitoringSimple({ currentMonitoring, recentMonitoring }: Props) {
     const [cashInAmount, setCashInAmount] = useState('');
     const [cashInNotes, setCashInNotes] = useState('');
     const [cashOutAmount, setCashOutAmount] = useState('');
@@ -73,7 +73,7 @@ export default function CashMonitoringSimple({ currentMonitoring, recentMonitori
             return;
         }
 
-        router.patch(`/cash-monitoring/${currentMonitoring.id}/cash-flow`, {
+        router.patch(`/sales-monitoring/${currentMonitoring.id}/cash-flow`, {
             type,
             amount: parseFloat(amount),
             notes,
@@ -98,7 +98,7 @@ export default function CashMonitoringSimple({ currentMonitoring, recentMonitori
             return;
         }
 
-        router.patch(`/cash-monitoring/${currentMonitoring.id}/close`, {
+        router.patch(`/sales-monitoring/${currentMonitoring.id}/close`, {
             actual_balance: parseFloat(actualBalance),
             variance_notes: varianceNotes,
         }, {
@@ -132,13 +132,13 @@ export default function CashMonitoringSimple({ currentMonitoring, recentMonitori
 
     return (
         <AppLayout>
-            <Head title="Cash Monitoring" />
+            <Head title="Sales Monitoring" />
             
             <div className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold">Cash Monitoring</h1>
+                        <h1 className="text-3xl font-bold">Sales Monitoring</h1>
                         <p className="text-gray-600">
                             Daily cash flow tracking and end-of-day reconciliation
                         </p>
@@ -343,7 +343,7 @@ export default function CashMonitoringSimple({ currentMonitoring, recentMonitori
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Close Cash Monitoring</DialogTitle>
+                                    <DialogTitle>Close Sales Monitoring</DialogTitle>
                                     <DialogDescription>
                                         Count the actual cash in the register and close the day
                                     </DialogDescription>
@@ -389,7 +389,7 @@ export default function CashMonitoringSimple({ currentMonitoring, recentMonitori
                                         />
                                     </div>
                                     <Button onClick={handleClose} className="w-full">
-                                        Close Cash Monitoring
+                                        Close Sales Monitoring
                                     </Button>
                                 </div>
                             </DialogContent>
@@ -400,7 +400,7 @@ export default function CashMonitoringSimple({ currentMonitoring, recentMonitori
                 {/* Recent History */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Recent Cash Monitoring History</CardTitle>
+                        <CardTitle>Recent Sales Monitoring History</CardTitle>
                         <CardDescription>Last 10 cash monitoring sessions</CardDescription>
                     </CardHeader>
                     <CardContent>

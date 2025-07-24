@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 
-class CashMonitoring extends Model
+class SalesMonitoring extends Model
 {
+    protected $table = 'sales_monitorings';
+
     protected $fillable = [
         'monitoring_date',
         'opening_balance',

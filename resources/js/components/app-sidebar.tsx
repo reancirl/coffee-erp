@@ -34,8 +34,8 @@ const mainNavItems: NavItem[] = [
         icon: FileText,
     },
     {
-        title: 'Cash Monitoring',
-        href: '/cash-monitoring',
+        title: 'Sales Monitoring',
+        href: '/sales-monitoring',
         icon: Wallet,
     },
 ];
