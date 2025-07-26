@@ -16,7 +16,7 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $roles = Role::with('permissions')->paginate(10);
+        $roles = Role::with('permissions')->paginate(30);
         
         return Inertia::render('roles/Index', [
             'roles' => $roles,
