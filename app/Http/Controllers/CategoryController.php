@@ -10,9 +10,25 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Category::withCount('products');
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('description', 'like', '%' . $searchTerm . '%');
+            });
+        }
+        
+        $categories = $query->orderBy('name')->paginate(20)->withQueryString();
+            
+        return inertia('categories/Index', [
+            'categories' => $categories,
+            'filters' => $request->only(['search'])
+        ]);
     }
 
     /**
@@ -20,7 +36,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        //
+        return inertia('categories/Form');
     }
 
     /**
@@ -28,7 +44,15 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        Category::create($validated);
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Category created successfully.');
     }
 
     /**
@@ -36,7 +60,14 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        //
+        $category->loadCount('products');
+        $category->load(['products' => function ($query) {
+            $query->orderBy('name')->take(10);
+        }]);
+        
+        return inertia('categories/Show', [
+            'category' => $category
+        ]);
     }
 
     /**
@@ -44,7 +75,9 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        return inertia('categories/Form', [
+            'category' => $category
+        ]);
     }
 
     /**
@@ -52,7 +85,15 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $category->update($validated);
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Category updated successfully.');
     }
 
     /**
@@ -60,6 +101,15 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        // Check if category has products
+        if ($category->products()->count() > 0) {
+            return redirect()->route('categories.index')
+                ->with('error', 'Cannot delete category that has products assigned to it.');
+        }
+
+        $category->delete();
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Category deleted successfully.');
     }
 }

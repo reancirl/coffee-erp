@@ -23,6 +23,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Customer routes
     Route::resource('customers', CustomerController::class);
     
+    // Category routes
+    Route::resource('categories', \App\Http\Controllers\CategoryController::class);
+    
     // Product routes
     Route::resource('products', \App\Http\Controllers\ProductController::class);
     

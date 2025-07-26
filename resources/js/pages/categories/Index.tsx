@@ -4,38 +4,20 @@ import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit, Trash2, Plus, Search, X } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, X, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface Category {
     id: number;
     name: string;
     description?: string;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    price: number;
-    category?: number;
-    prices?: {
-        hot?: number;
-        iced?: number;
-    };
-    is_add_on: boolean;
-    customizations?: Array<{
-        name: string;
-        options: string[];
-        required: boolean;
-    }>;
-    category_relation?: Category;
+    products_count: number;
     created_at: string;
     updated_at: string;
 }
 
-interface PaginatedProducts {
-    data: Product[];
+interface PaginatedCategories {
+    data: Category[];
     current_page: number;
     last_page: number;
     per_page: number;
@@ -48,64 +30,46 @@ interface PaginatedProducts {
 }
 
 interface Props {
-    products: PaginatedProducts;
-    categories: Category[];
+    categories: PaginatedCategories;
     filters: {
         search?: string;
-        category?: string;
-        type?: string;
     };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Products',
-        href: '/products',
+        title: 'Categories',
+        href: '/categories',
     },
 ];
 
-// Helper function to format currency
-const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-PH', {
-        style: 'currency',
-        currency: 'PHP',
-        minimumFractionDigits: 2
-    }).format(amount);
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('en-PH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
 };
 
-// Helper function to get price display
-const getPriceDisplay = (product: Product): string => {
-    if (product.prices?.hot && product.prices?.iced) {
-        if (product.prices.hot === product.prices.iced) {
-            return formatCurrency(product.prices.hot);
-        }
-        return `Hot: ${formatCurrency(product.prices.hot)} | Iced: ${formatCurrency(product.prices.iced)}`;
-    } else if (product.prices?.hot) {
-        return `Hot: ${formatCurrency(product.prices.hot)}`;
-    } else if (product.prices?.iced) {
-        return `Iced: ${formatCurrency(product.prices.iced)}`;
-    }
-    return formatCurrency(product.price);
-};
-
-export default function Index({ products, categories, filters }: Props) {
+export default function Index({ categories, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     
-    const deleteProduct = (id: number, name: string) => {
+    const deleteCategory = (id: number, name: string) => {
         if (confirm(`Are you sure you want to delete "${name}"?`)) {
-            router.delete(route('products.destroy', id));
+            router.delete(route('categories.destroy', id));
         }
     };
     
     const applyFilters = () => {
-        router.get('/products', {
+        router.get('/categories', {
             search: search || undefined,
         });
     };
     
     const clearFilters = () => {
         setSearch('');
-        router.get('/products');
+        router.get('/categories');
     };
     
     const handleSearchSubmit = (e: React.FormEvent) => {
@@ -113,43 +77,43 @@ export default function Index({ products, categories, filters }: Props) {
         applyFilters();
     };
     
-    // Apply filters when filter values change
+    // Apply filters when search value changes (debounced)
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             if (search !== (filters.search || '')) {
                 applyFilters();
             }
-        }, 500); // Debounce search
+        }, 500);
         
         return () => clearTimeout(timeoutId);
     }, [search]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Products" />
+            <Head title="Categories" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold">Products</h2>
-                    <Link href={route('products.create')}>
+                    <h2 className="text-2xl font-bold">Categories</h2>
+                    <Link href={route('categories.create')}>
                         <Button className="flex items-center gap-2">
                             <Plus className="h-4 w-4" />
-                            Add New Product
+                            Add New Category
                         </Button>
                     </Link>
                 </div>
 
-                {/* Search and Filters */}
-                <div className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
+                {/* Search */}
+                <div className="bg-white rounded-lg shadow-sm border p-4">
                     <form onSubmit={handleSearchSubmit} className="flex gap-4 items-end">
                         <div className="flex-1">
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Search Products
+                                Search Categories
                             </label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                 <Input
                                     type="text"
-                                    placeholder="Search by product name or category..."
+                                    placeholder="Search by category name or description..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     className="pl-10"
@@ -173,11 +137,14 @@ export default function Index({ products, categories, filters }: Props) {
 
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div className="p-6 text-gray-900">
-                        {products.data.length === 0 ? (
+                        {categories.data.length === 0 ? (
                             <div className="text-center py-8">
-                                <p className="text-gray-500 mb-4">No products found.</p>
-                                <Link href={route('products.create')}>
-                                    <Button>Create Your First Product</Button>
+                                <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                                <p className="text-gray-500 mb-4">
+                                    {search ? 'No categories found matching your search.' : 'No categories found.'}
+                                </p>
+                                <Link href={route('categories.create')}>
+                                    <Button>Create Your First Category</Button>
                                 </Link>
                             </div>
                         ) : (
@@ -190,16 +157,13 @@ export default function Index({ products, categories, filters }: Props) {
                                                     Name
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Category
+                                                    Description
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Price
+                                                    Products
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Type
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Customizations
+                                                    Created
                                                 </th>
                                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Actions
@@ -207,44 +171,39 @@ export default function Index({ products, categories, filters }: Props) {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
-                                            {products.data.map((product) => (
-                                                <tr key={product.id} className="hover:bg-gray-50">
+                                            {categories.data.map((category) => (
+                                                <tr key={category.id} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="text-sm font-medium text-gray-900">
-                                                            {product.name}
+                                                            {category.name}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                                                            {category.description || (
+                                                                <span className="text-gray-400 italic">No description</span>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        {product.category_relation ? (
-                                                            <Badge variant="secondary">
-                                                                {product.category_relation.name}
-                                                            </Badge>
-                                                        ) : (
-                                                            <span className="text-gray-400">No category</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-900">
-                                                            {getPriceDisplay(product)}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <Badge variant={product.is_add_on ? "outline" : "default"}>
-                                                            {product.is_add_on ? 'Add-on' : 'Product'}
+                                                        <Badge variant="secondary" className="flex items-center gap-1 w-fit">
+                                                            <Package className="h-3 w-3" />
+                                                            {category.products_count} product{category.products_count !== 1 ? 's' : ''}
                                                         </Badge>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        {product.customizations && product.customizations.length > 0 ? (
-                                                            <Badge variant="secondary">
-                                                                {product.customizations.length} option{product.customizations.length > 1 ? 's' : ''}
-                                                            </Badge>
-                                                        ) : (
-                                                            <span className="text-gray-400">None</span>
-                                                        )}
+                                                        <div className="text-sm text-gray-500">
+                                                            {formatDate(category.created_at)}
+                                                        </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <div className="flex justify-end gap-2">
-                                                            <Link href={route('products.edit', product.id)}>
+                                                            <Link href={route('categories.show', category.id)}>
+                                                                <Button variant="outline" size="sm">
+                                                                    View
+                                                                </Button>
+                                                            </Link>
+                                                            <Link href={route('categories.edit', category.id)}>
                                                                 <Button variant="outline" size="sm">
                                                                     <Edit className="h-4 w-4" />
                                                                 </Button>
@@ -252,8 +211,10 @@ export default function Index({ products, categories, filters }: Props) {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                onClick={() => deleteProduct(product.id, product.name)}
+                                                                onClick={() => deleteCategory(category.id, category.name)}
                                                                 className="text-red-600 hover:text-red-700"
+                                                                disabled={category.products_count > 0}
+                                                                title={category.products_count > 0 ? 'Cannot delete category with products' : 'Delete category'}
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
@@ -266,20 +227,20 @@ export default function Index({ products, categories, filters }: Props) {
                                 </div>
 
                                 {/* Pagination */}
-                                {products.last_page > 1 && (
+                                {categories.last_page > 1 && (
                                     <div className="flex items-center justify-between px-4 py-3 sm:px-6">
                                         <div className="flex flex-1 justify-between sm:hidden">
-                                            {products.links[0]?.url && (
+                                            {categories.links[0]?.url && (
                                                 <Link
-                                                    href={products.links[0].url || '#'}
+                                                    href={categories.links[0].url || '#'}
                                                     className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                                                 >
                                                     Previous
                                                 </Link>
                                             )}
-                                            {products.links[products.links.length - 1]?.url && (
+                                            {categories.links[categories.links.length - 1]?.url && (
                                                 <Link
-                                                    href={products.links[products.links.length - 1].url || '#'}
+                                                    href={categories.links[categories.links.length - 1].url || '#'}
                                                     className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                                                 >
                                                     Next
@@ -291,18 +252,18 @@ export default function Index({ products, categories, filters }: Props) {
                                                 <p className="text-sm text-gray-700">
                                                     Showing{' '}
                                                     <span className="font-medium">
-                                                        {(products.current_page - 1) * products.per_page + 1}
+                                                        {(categories.current_page - 1) * categories.per_page + 1}
                                                     </span>{' '}
                                                     to{' '}
                                                     <span className="font-medium">
-                                                        {Math.min(products.current_page * products.per_page, products.total)}
+                                                        {Math.min(categories.current_page * categories.per_page, categories.total)}
                                                     </span>{' '}
-                                                    of <span className="font-medium">{products.total}</span> results
+                                                    of <span className="font-medium">{categories.total}</span> results
                                                 </p>
                                             </div>
                                             <div>
                                                 <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm">
-                                                    {products.links.map((link, index) => {
+                                                    {categories.links.map((link, index) => {
                                                         const isDisabled = !link.url;
                                                         return (
                                                             <Link
@@ -315,7 +276,7 @@ export default function Index({ products, categories, filters }: Props) {
                                                                 } ${
                                                                     index === 0 ? 'rounded-l-md' : ''
                                                                 } ${
-                                                                    index === products.links.length - 1 ? 'rounded-r-md' : ''
+                                                                    index === categories.links.length - 1 ? 'rounded-r-md' : ''
                                                                 } ${
                                                                     isDisabled ? 'pointer-events-none opacity-50' : ''
                                                                 }`}
