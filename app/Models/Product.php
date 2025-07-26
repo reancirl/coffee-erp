@@ -23,4 +23,12 @@ class Product extends Model
         'customizations' => 'json',
         'is_add_on' => 'boolean'
     ];
+    
+    /**
+     * Get the category that owns the product.
+     */
+    public function categoryRelation()
+    {
+        return $this->belongsTo(Category::class, 'category');
+    }
 }

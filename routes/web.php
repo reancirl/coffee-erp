@@ -23,6 +23,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Customer routes
     Route::resource('customers', CustomerController::class);
     
+    // Product routes
+    Route::resource('products', \App\Http\Controllers\ProductController::class);
+    
     // Orders routes - only for viewing (no create/edit)
     Route::resource('orders', OrderController::class)->except(['create', 'edit']);
     Route::patch('orders/{order}/void', [OrderController::class, 'voidOrder'])->name('orders.void');
