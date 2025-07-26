@@ -61,13 +61,13 @@ const allNavItems: (NavItem & { module: string })[] = [
         title: 'Roles',
         href: '/roles',
         icon: Shield,
-        module: 'dashboard', // Using dashboard module for admin access
+        module: 'sales-monitoring', // Using sales-monitoring module for admin access
     },
     {
         title: 'User Roles',
         href: '/user-roles',
         icon: UserCheck,
-        module: 'dashboard', // Using dashboard module for admin access
+        module: 'sales-monitoring', // Using sales-monitoring module for admin access
     },
 ];
 
