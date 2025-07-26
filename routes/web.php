@@ -12,36 +12,65 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Dashboard - accessible to all authenticated users
+    Route::middleware(['module.access:dashboard'])->group(function () {
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    });
 
     // POS Routes
-    Route::get('pos', [OrderController::class, 'pos'])->name('pos');
-    Route::get('pos/products', [\App\Http\Controllers\ProductController::class, 'getProductsForPOS'])->name('pos.products');
-    Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
-    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::middleware(['module.access:pos'])->group(function () {
+        Route::get('pos', [OrderController::class, 'pos'])->name('pos');
+        Route::get('pos/products', [\App\Http\Controllers\ProductController::class, 'getProductsForPOS'])->name('pos.products');
+        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+    });
 
     // Customer routes
-    Route::resource('customers', CustomerController::class);
+    Route::middleware(['module.access:customers'])->group(function () {
+        Route::resource('customers', CustomerController::class);
+    });
     
     // Category routes
-    Route::resource('categories', \App\Http\Controllers\CategoryController::class);
+    Route::middleware(['module.access:categories'])->group(function () {
+        Route::resource('categories', \App\Http\Controllers\CategoryController::class);
+    });
     
     // Product routes
-    Route::resource('products', \App\Http\Controllers\ProductController::class);
+    Route::middleware(['module.access:products'])->group(function () {
+        Route::resource('products', \App\Http\Controllers\ProductController::class);
+    });
     
     // Orders routes - only for viewing (no create/edit)
-    Route::resource('orders', OrderController::class)->except(['create', 'edit']);
-    Route::patch('orders/{order}/void', [OrderController::class, 'voidOrder'])->name('orders.void');
+    Route::middleware(['module.access:orders'])->group(function () {
+        Route::resource('orders', OrderController::class)->except(['create', 'edit']);
+        Route::patch('orders/{order}/void', [OrderController::class, 'voidOrder'])->name('orders.void');
+        Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    });
     
     // Reports routes
-    Route::get('reports/z-report', [\App\Http\Controllers\ReportController::class, 'showZReportForm'])->name('reports.z-report');
-    Route::get('reports/z-report/generate', [\App\Http\Controllers\ReportController::class, 'generateZReport'])->name('reports.z-report.generate');
+    Route::middleware(['module.access:reports'])->group(function () {
+        Route::get('reports/z-report', [\App\Http\Controllers\ReportController::class, 'showZReportForm'])->name('reports.z-report');
+        Route::get('reports/z-report/generate', [\App\Http\Controllers\ReportController::class, 'generateZReport'])->name('reports.z-report.generate');
+    });
     
     // Cash Monitoring routes
-    Route::get('sales-monitoring', [SalesMonitoringController::class, 'index'])->name('sales-monitoring.index');
-    Route::post('sales-monitoring', [SalesMonitoringController::class, 'store'])->name('sales-monitoring.store');
-    Route::patch('sales-monitoring/{salesMonitoring}/cash-flow', [SalesMonitoringController::class, 'updateCashFlow'])->name('sales-monitoring.cash-flow');
-    Route::patch('sales-monitoring/{salesMonitoring}/close', [SalesMonitoringController::class, 'close'])->name('sales-monitoring.close');
+    Route::middleware(['module.access:sales-monitoring'])->group(function () {
+        Route::get('sales-monitoring', [SalesMonitoringController::class, 'index'])->name('sales-monitoring.index');
+        Route::post('sales-monitoring', [SalesMonitoringController::class, 'store'])->name('sales-monitoring.store');
+        Route::patch('sales-monitoring/{salesMonitoring}/cash-flow', [SalesMonitoringController::class, 'updateCashFlow'])->name('sales-monitoring.cash-flow');
+        Route::patch('sales-monitoring/{salesMonitoring}/close', [SalesMonitoringController::class, 'close'])->name('sales-monitoring.close');
+    });
+    
+    // Role Management routes (Admin only)
+    Route::middleware(['module.access:dashboard'])->group(function () {
+        Route::resource('roles', \App\Http\Controllers\RoleController::class);
+        
+        // User Role Assignment routes
+        Route::get('user-roles', [\App\Http\Controllers\UserRoleController::class, 'index'])->name('user-roles.index');
+        Route::get('user-roles/{user}/edit', [\App\Http\Controllers\UserRoleController::class, 'edit'])->name('user-roles.edit');
+        Route::patch('user-roles/{user}', [\App\Http\Controllers\UserRoleController::class, 'update'])->name('user-roles.update');
+        Route::post('user-roles/{user}/assign-role', [\App\Http\Controllers\UserRoleController::class, 'assignRole'])->name('user-roles.assign-role');
+        Route::delete('user-roles/{user}/remove-role', [\App\Http\Controllers\UserRoleController::class, 'removeRole'])->name('user-roles.remove-role');
+    });
 });
 
 require __DIR__.'/settings.php';

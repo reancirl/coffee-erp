@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        $middleware->alias([
+            'module.access' => \App\Http\Middleware\CheckModuleAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

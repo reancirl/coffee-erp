@@ -6,7 +6,9 @@ use App\Models\User;
 use App\Models\Tenant;
 use App\Models\Subscription;
 use App\Models\Product;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,12 +17,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Barista Drink - Coffee category (ID: 1)
-        Product::create([
-            'name' => 'Barista Drink',
-            'price' => 155,
-            'category' => 1,
-            'is_add_on' => false,
+        // User::create([
+        //     'name' => 'Super Admin',
+        //     'email' => 'admin@admin.com',
+        //     'password' => Hash::make('password'),
+        // ]);
+
+        Tenant::create([
+            'name' => 'Eastlone',
         ]);
+
+        // User::create([
+        //     'name' => 'test staff',
+        //     'email' => 'test@admin.com',
+        //     'password' => Hash::make('password'),
+        //     'tenant_id' => 1,
+        // ]);
+
+        $this->call(RolePermissionSeeder::class);
     }
 }
