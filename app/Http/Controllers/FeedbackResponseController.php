@@ -30,9 +30,9 @@ class FeedbackResponseController extends Controller
 
         // Check if feedback already submitted for this session
         $existingFeedback = FeedbackResponse::where('session_token', $request->session_token)->first();
-        if ($existingFeedback) {
-            return redirect()->back()->with('error', 'Feedback has already been submitted for this session.');
-        }
+        // if ($existingFeedback) {
+        //     return redirect()->back()->with('error', 'Feedback has already been submitted for this session.');
+        // }
 
         FeedbackResponse::create([
             'overall_experience' => $request->overall_experience,
