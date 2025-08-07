@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalesMonitoringController;
+use App\Http\Controllers\FeedbackResponseController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -72,6 +73,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('user-roles/{user}/remove-role', [\App\Http\Controllers\UserRoleController::class, 'removeRole'])->name('user-roles.remove-role');
     });
 });
+
+// Public Feedback Survey Routes (no authentication required)
+Route::get('/feedback/cafe-survey-x9k2m8p4q7w1n5z3/{token}', [FeedbackResponseController::class, 'show'])->name('feedback.survey');
+Route::post('/feedback/submit', [FeedbackResponseController::class, 'store'])->name('feedback.submit');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
