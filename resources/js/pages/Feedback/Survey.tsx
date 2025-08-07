@@ -52,10 +52,10 @@ export default function Survey({ token }: SurveyProps) {
                         <div className="flex justify-center mb-4">
                             <Coffee className="h-12 w-12 text-amber-600" />
                         </div>
-                        <CardTitle className="text-2xl font-bold text-gray-800">
+                        <CardTitle className="text-2xl font-bold text-gray-800 dark:text-white">
                             📝 3-Question Café Feedback Survey
                         </CardTitle>
-                        <CardDescription className="text-gray-600">
+                        <CardDescription className="text-gray-600 dark:text-white">
                             Help us improve your café experience! This will only take 2 minutes.
                         </CardDescription>
                     </CardHeader>
@@ -154,9 +154,6 @@ export default function Survey({ token }: SurveyProps) {
                                 <Label className="text-lg font-semibold text-amber-600">
                                     🫶 Let’s stay in touch — sign up for updates and occasional giveaways like free drinks!
                                 </Label>
-                                <p className="text-sm text-gray-600">
-                                    Leave your name and email below for a chance to win a free drink!
-                                </p>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
