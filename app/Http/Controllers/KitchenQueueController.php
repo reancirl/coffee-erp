@@ -28,6 +28,10 @@ class KitchenQueueController extends Controller
                     'beeper_number' => $order->beeper_number,
                     'created_at' => $order->created_at,
                     'time_elapsed' => $this->getTimeElapsed($order->created_at),
+                    'total' => $order->total,
+                    'subtotal' => $order->subtotal,
+                    'discount' => $order->discount,
+                    'payment_method' => $order->payment_method,
                     'items' => $order->items->map(function ($item) {
                         return [
                             'id' => $item->id,
@@ -101,6 +105,10 @@ class KitchenQueueController extends Controller
                     'beeper_number' => $order->beeper_number,
                     'created_at' => $order->created_at,
                     'time_elapsed' => $this->getTimeElapsed($order->created_at),
+                    'total' => $order->total,
+                    'subtotal' => $order->subtotal,
+                    'discount' => $order->discount,
+                    'payment_method' => $order->payment_method,
                     'items' => $order->items->map(function ($item) {
                         return [
                             'id' => $item->id,

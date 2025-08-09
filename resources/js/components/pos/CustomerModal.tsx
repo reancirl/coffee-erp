@@ -128,7 +128,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
                         }}
                         onClick={handleComplete}
                     >
-                        Complete Order
+                        Process Order
                     </button>
                 </div>
             </div>
