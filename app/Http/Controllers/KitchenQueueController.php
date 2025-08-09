@@ -16,7 +16,7 @@ class KitchenQueueController extends Controller
     {
         // Get pending orders (not completed) ordered by creation time (FIFO)
         $pendingOrders = Order::with(['items.addOns'])
-            ->where('status', '!=', 'completed')
+            ->where('status', '=', 'pending')
             ->whereDate('created_at', Carbon::today())
             ->orderBy('created_at', 'asc')
             ->get()
@@ -93,7 +93,7 @@ class KitchenQueueController extends Controller
     public function getQueueData()
     {
         $pendingOrders = Order::with(['items.addOns'])
-            ->where('status', '!=', 'completed')
+            ->where('status', '=', 'pending')
             ->whereDate('created_at', Carbon::today())
             ->orderBy('created_at', 'asc')
             ->get()
