@@ -144,7 +144,7 @@ class OrderController extends Controller
                 'total' => $total,
                 'payment_method' => $validated['payment_method'],
                 'payment_status' => 'completed',
-                'status' => 'completed',
+                'status' => 'pending', // Start as pending, will be completed via kitchen queue
                 'order_type' => $validated['order_type'] ?? 'dine-in',
                 'beeper_number' => $validated['beeper_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Coffee, Users, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Clock, Coffee, Users, CheckCircle, RefreshCw } from 'lucide-react';
 
 interface OrderItem {
     id: number;
@@ -36,20 +37,21 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
     const [orders, setOrders] = useState<Order[]>(initialOrders);
     const [clickCounts, setClickCounts] = useState<{ [key: number]: number }>({});
     const [completingOrders, setCompletingOrders] = useState<Set<number>>(new Set());
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Auto-refresh queue data every 30 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetch('/kitchen-queue/data')
-                .then(response => response.json())
-                .then(data => {
-                    setOrders(data.orders);
-                })
-                .catch(error => console.error('Error fetching queue data:', error));
-        }, 30000);
-
-        return () => clearInterval(interval);
-    }, []);
+    // Manual refresh function
+    const refreshQueue = async () => {
+        setIsRefreshing(true);
+        try {
+            const response = await fetch('/kitchen-queue/data');
+            const data = await response.json();
+            setOrders(data.orders);
+        } catch (error) {
+            console.error('Error fetching queue data:', error);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
 
     // Handle triple-click to complete order
     const handleOrderClick = (orderId: number) => {
@@ -82,28 +84,30 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
         setCompletingOrders(prev => new Set(prev).add(orderId));
 
         try {
-            const response = await fetch(`/kitchen-queue/${orderId}/complete`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            // Use Inertia router for proper CSRF handling
+            router.patch(`/kitchen-queue/${orderId}/complete`, {}, {
+                onSuccess: () => {
+                    // Remove the completed order from the queue
+                    setOrders(prev => prev.filter(order => order.id !== orderId));
+                    setClickCounts(prev => {
+                        const updated = { ...prev };
+                        delete updated[orderId];
+                        return updated;
+                    });
                 },
+                onError: (errors) => {
+                    console.error('Failed to complete order:', errors);
+                },
+                onFinish: () => {
+                    setCompletingOrders(prev => {
+                        const updated = new Set(prev);
+                        updated.delete(orderId);
+                        return updated;
+                    });
+                }
             });
-
-            if (response.ok) {
-                // Remove the completed order from the queue
-                setOrders(prev => prev.filter(order => order.id !== orderId));
-                setClickCounts(prev => {
-                    const updated = { ...prev };
-                    delete updated[orderId];
-                    return updated;
-                });
-            } else {
-                console.error('Failed to complete order');
-            }
         } catch (error) {
             console.error('Error completing order:', error);
-        } finally {
             setCompletingOrders(prev => {
                 const updated = new Set(prev);
                 updated.delete(orderId);
@@ -146,14 +150,23 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
                     <p className="text-gray-600 mt-2">
                         Orders are displayed in first-in-first-out order. Triple-click an order to mark as completed.
                     </p>
-                    <div className="mt-4 flex items-center gap-4">
-                        <Badge variant="outline" className="text-sm">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {orders.length} pending orders
-                        </Badge>
-                        <Badge variant="outline" className="text-sm text-blue-600">
-                            Auto-refresh every 30s
-                        </Badge>
+                    <div className="mt-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <Badge variant="outline" className="text-sm">
+                                <Clock className="h-3 w-3 mr-1" />
+                                {orders.length} pending orders
+                            </Badge>
+                        </div>
+                        <Button 
+                            onClick={refreshQueue}
+                            disabled={isRefreshing}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh Queue'}
+                        </Button>
                     </div>
                 </div>
 

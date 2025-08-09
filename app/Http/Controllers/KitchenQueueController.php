@@ -62,10 +62,7 @@ class KitchenQueueController extends Controller
             'status' => 'completed'
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => "Order {$order->order_number} marked as completed"
-        ]);
+        return redirect()->back();
     }
 
     /**
@@ -93,6 +90,7 @@ class KitchenQueueController extends Controller
     {
         $pendingOrders = Order::with(['items.addOns'])
             ->where('status', '!=', 'completed')
+            ->whereDate('created_at', Carbon::today())
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($order) {
