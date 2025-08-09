@@ -205,6 +205,11 @@ export default function Pos() {
           form.append(`items[${i}][product_name]`, item.name)
           form.append(`items[${i}][quantity]`, '1')
           form.append(`items[${i}][price]`, item.price.toString())
+          
+          // Add item-level discount if this item has discount applied
+          const itemDiscount = discountSelections[item.id] ? (item.price * 0.2) : 0;
+          form.append(`items[${i}][discount]`, itemDiscount.toString())
+          
           if (item.selectedVariant) {
             form.append(`items[${i}][variant]`, item.selectedVariant)
           }
@@ -236,7 +241,12 @@ export default function Pos() {
           })
         })
       
-        form.append('discount', '0')
+        // Calculate total order-level discount from all discounted items
+        const totalOrderDiscount = order.reduce(
+          (acc, item) => (discountSelections[item.id] ? acc + (item.price * 0.2) : acc),
+          0
+        );
+        form.append('discount', totalOrderDiscount.toString())
         form.append('notes', `Customer: ${selectedCustomer?.name || 'Guest'}`)
       
         // Attach any images

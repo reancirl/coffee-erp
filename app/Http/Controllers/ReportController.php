@@ -46,14 +46,41 @@ class ReportController extends Controller
         $discounts = $orders->sum('discount');
         $netSales = $orders->sum('total');
 
-        // Calculate sales by payment method
-        $paymentMethodTotals = $orders->groupBy('payment_method')
-            ->map(function ($orderGroup) {
-                return [
-                    'count' => $orderGroup->count(),
-                    'total' => $orderGroup->sum('total'),
-                ];
-            });
+        // Calculate sales by payment method with proper split payment allocation
+        $paymentMethodTotals = collect();
+        
+        foreach ($orders as $order) {
+            if ($order->payment_method === 'Split (Cash + GCash)') {
+                // Allocate split payment to Cash and GCash separately
+                $cashAmount = $order->split_cash_amount ?? 0;
+                $gcashAmount = $order->split_gcash_amount ?? 0;
+                
+                // Add to Cash total
+                if ($cashAmount > 0) {
+                    $cashData = $paymentMethodTotals->get('Cash', ['count' => 0, 'total' => 0]);
+                    $paymentMethodTotals->put('Cash', [
+                        'count' => $cashData['count'] + 1,
+                        'total' => $cashData['total'] + $cashAmount,
+                    ]);
+                }
+                
+                // Add to GCash total
+                if ($gcashAmount > 0) {
+                    $gcashData = $paymentMethodTotals->get('GCash', ['count' => 0, 'total' => 0]);
+                    $paymentMethodTotals->put('GCash', [
+                        'count' => $gcashData['count'] + 1,
+                        'total' => $gcashData['total'] + $gcashAmount,
+                    ]);
+                }
+            } else {
+                // Regular payment method
+                $methodData = $paymentMethodTotals->get($order->payment_method, ['count' => 0, 'total' => 0]);
+                $paymentMethodTotals->put($order->payment_method, [
+                    'count' => $methodData['count'] + 1,
+                    'total' => $methodData['total'] + $order->total,
+                ]);
+            }
+        }
 
         // Get all products sold ordered by top-selling first
         $allProductsSold = OrderItem::whereIn('order_id', $orders->pluck('id'))

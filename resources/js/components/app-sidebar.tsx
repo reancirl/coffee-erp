@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck } from 'lucide-react';
+import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // Define all possible navigation items with their module mappings
@@ -19,6 +19,12 @@ const allNavItems: (NavItem & { module: string })[] = [
         title: 'POS',
         href: '/pos',
         icon: Calculator,
+        module: 'pos',
+    },
+    {
+        title: 'Kitchen Queue',
+        href: '/kitchen-queue',
+        icon: ChefHat,
         module: 'pos',
     },
     {

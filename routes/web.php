@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalesMonitoringController;
 use App\Http\Controllers\FeedbackResponseController;
+use App\Http\Controllers\KitchenQueueController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -59,6 +60,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('sales-monitoring', [SalesMonitoringController::class, 'store'])->name('sales-monitoring.store');
         Route::patch('sales-monitoring/{salesMonitoring}/cash-flow', [SalesMonitoringController::class, 'updateCashFlow'])->name('sales-monitoring.cash-flow');
         Route::patch('sales-monitoring/{salesMonitoring}/close', [SalesMonitoringController::class, 'close'])->name('sales-monitoring.close');
+    });
+    
+    // Kitchen Queue routes
+    Route::middleware(['module.access:pos'])->group(function () {
+        Route::get('kitchen-queue', [KitchenQueueController::class, 'index'])->name('kitchen-queue.index');
+        Route::get('kitchen-queue/data', [KitchenQueueController::class, 'getQueueData'])->name('kitchen-queue.data');
+        Route::patch('kitchen-queue/{order}/complete', [KitchenQueueController::class, 'completeOrder'])->name('kitchen-queue.complete');
     });
     
     // Role Management routes (Admin only)
