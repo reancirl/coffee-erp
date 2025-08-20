@@ -92,7 +92,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
                             Cookie Variant *
                         </label>
                         <div className="grid grid-cols-2 gap-2">
-                            {['Matcha', 'Chocolate', 'Peanut Butter', 'Red Velvet'].map((option) => {
+                            {['Biscoff', 'Red Velvet'].map((option) => {
                                 const isSelected = customizationSelections['Variant'] === option;
                                 return (
                                     <div
