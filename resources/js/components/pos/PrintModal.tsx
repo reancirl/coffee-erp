@@ -83,7 +83,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
             <!DOCTYPE html>
             <html>
             <head>
-              <title>EASTLONE cafe Order Slip</title>
+              <title>ERP cafe Order Slip</title>
               <style>
                 @page {
                   margin: 0;
@@ -161,7 +161,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
             <body>
               <div class="header">
                 ${beeperNumber ? `<div class="section-beeper-number">#${beeperNumber}</div>` : ''}
-                <div class="title">EASTLONE cafe</div>
+                <div class="title">ERP cafe</div>
                 <div>ORDER SLIP</div>
               </div>
       

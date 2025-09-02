@@ -17,22 +17,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::create([
-        //     'name' => 'Super Admin',
-        //     'email' => 'admin@admin.com',
-        //     'password' => Hash::make('password'),
-        // ]);
-
-        Tenant::create([
-            'name' => 'Eastlone',
+        User::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@admin.com',
+            'password' => Hash::make('password'),
         ]);
 
-        // User::create([
-        //     'name' => 'test staff',
-        //     'email' => 'test@admin.com',
-        //     'password' => Hash::make('password'),
-        //     'tenant_id' => 1,
-        // ]);
+        Tenant::create([
+            'name' => '8Drive',
+        ]);
 
         $this->call(RolePermissionSeeder::class);
     }
