@@ -4,77 +4,170 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat } from 'lucide-react';
+import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp } from 'lucide-react';
 import AppLogo from './app-logo';
 
-// Define all possible navigation items with their module mappings
-const allNavItems: (NavItem & { module: string })[] = [
+// Define navigation groups with their items
+interface NavGroup {
+    title: string;
+    items: (NavItem & { module: string })[];
+}
+
+const navigationGroups: NavGroup[] = [
     {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-        module: 'dashboard',
+        title: 'Overview',
+        items: [
+            {
+                title: 'Dashboard',
+                href: '/dashboard',
+                icon: LayoutGrid,
+                module: 'dashboard',
+            },
+        ]
     },
     {
-        title: 'POS',
-        href: '/pos',
-        icon: Calculator,
-        module: 'pos',
+        title: 'Operations',
+        items: [
+            {
+                title: 'POS',
+                href: '/pos',
+                icon: Calculator,
+                module: 'pos',
+            },
+            {
+                title: 'Kitchen Queue',
+                href: '/kitchen-queue',
+                icon: ChefHat,
+                module: 'pos',
+            },
+            {
+                title: 'Orders',
+                href: '/orders',
+                icon: Receipt,
+                module: 'orders',
+            },
+            {
+                title: 'Time Clock',
+                href: '/time-clock',
+                icon: Clock,
+                module: 'dashboard', // All employees can access time clock
+            },
+        ]
     },
     {
-        title: 'Kitchen Queue',
-        href: '/kitchen-queue',
-        icon: ChefHat,
-        module: 'pos',
+        title: 'Inventory & Products',
+        items: [
+            {
+                title: 'Categories',
+                href: '/categories',
+                icon: FolderOpen,
+                module: 'categories',
+            },
+            {
+                title: 'Products',
+                href: '/products',
+                icon: Package,
+                module: 'products',
+            },
+            {
+                title: 'Inventory',
+                href: '/inventory',
+                icon: Archive,
+                module: 'products',
+            },
+        ]
     },
     {
-        title: 'Customers',
-        href: '/customers',
-        icon: Users,
-        module: 'customers',
+        title: 'Supplier Management',
+        items: [
+            {
+                title: 'Suppliers',
+                href: '/suppliers',
+                icon: Truck,
+                module: 'products',
+            },
+            {
+                title: 'Purchase Orders',
+                href: '/purchase-orders',
+                icon: ShoppingCart,
+                module: 'products',
+            },
+            {
+                title: 'Receiving',
+                href: '/receiving',
+                icon: ClipboardList,
+                module: 'products',
+            },
+        ]
     },
     {
-        title: 'Categories',
-        href: '/categories',
-        icon: FolderOpen,
-        module: 'categories',
+        title: 'Customer Management',
+        items: [
+            {
+                title: 'Customers',
+                href: '/customers',
+                icon: Users,
+                module: 'customers',
+            },
+        ]
     },
     {
-        title: 'Products',
-        href: '/products',
-        icon: Package,
-        module: 'products',
+        title: 'Staff Management',
+        items: [
+            {
+                title: 'Employees',
+                href: '/employees',
+                icon: UserCog,
+                module: 'sales-monitoring',
+            },
+            {
+                title: 'Shift Management',
+                href: '/shifts',
+                icon: Calendar,
+                module: 'sales-monitoring',
+            },
+        ]
     },
     {
-        title: 'Orders',
-        href: '/orders',
-        icon: Receipt,
-        module: 'orders',
+        title: 'Analytics & Reports',
+        items: [
+            {
+                title: 'Reports',
+                href: '/reports/z-report',
+                icon: FileText,
+                module: 'reports',
+            },
+            {
+                title: 'Sales Monitoring',
+                href: '/sales-monitoring',
+                icon: Wallet,
+                module: 'sales-monitoring',
+            },
+            {
+                title: 'Supplier Performance',
+                href: '/supplier-performance',
+                icon: TrendingUp,
+                module: 'sales-monitoring',
+            },
+        ]
     },
     {
-        title: 'Reports',
-        href: '/reports/z-report',
-        icon: FileText,
-        module: 'reports',
-    },
-    {
-        title: 'Sales Monitoring',
-        href: '/sales-monitoring',
-        icon: Wallet,
-        module: 'sales-monitoring',
-    },
-    {
-        title: 'Roles',
-        href: '/roles',
-        icon: Shield,
-        module: 'sales-monitoring', // Using sales-monitoring module for admin access
-    },
-    {
-        title: 'User Roles',
-        href: '/user-roles',
-        icon: UserCheck,
-        module: 'sales-monitoring', // Using sales-monitoring module for admin access
-    },
+        title: 'System Administration',
+        items: [
+            {
+                title: 'Roles',
+                href: '/roles',
+                icon: Shield,
+                module: 'sales-monitoring',
+            },
+            {
+                title: 'User Roles',
+                href: '/user-roles',
+                icon: UserCheck,
+                module: 'sales-monitoring',
+            },
+        ]
+    }
 ];
 
 const footerNavItems: NavItem[] = [];
@@ -83,21 +176,18 @@ export function AppSidebar() {
     const { auth } = usePage().props as any;
     const accessibleModules = auth?.accessibleModules || [];
     
-    // Temporary debug - will remove after testing
-    console.log('🔍 DEBUG: Auth object:', auth);
-    console.log('🔍 DEBUG: Accessible modules:', accessibleModules);
-    console.log('🔍 DEBUG: User:', auth?.user);
+    // Filter navigation groups and items based on user's accessible modules
+    const filteredGroups = navigationGroups
+        .map(group => ({
+            ...group,
+            items: group.items
+                .filter(item => accessibleModules.includes(item.module))
+                .map(({ module, ...item }) => item) // Remove module property from final items
+        }))
+        .filter(group => group.items.length > 0); // Only show groups that have accessible items
     
-    // Filter navigation items based on user's accessible modules
-    const mainNavItems: NavItem[] = allNavItems
-        .filter(item => {
-            const hasAccess = accessibleModules.includes(item.module);
-            console.log(`🔍 ${item.title} (${item.module}): ${hasAccess ? '✅ VISIBLE' : '❌ HIDDEN'}`);
-            return hasAccess;
-        })
-        .map(({ module, ...item }) => item); // Remove module property from final items
-    
-    console.log('🔍 DEBUG: Final nav items:', mainNavItems.map(item => item.title));
+    // Flatten all items for the NavMain component (it expects a flat array)
+    const mainNavItems: NavItem[] = filteredGroups.flatMap(group => group.items);
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -114,7 +204,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain groups={filteredGroups} />
             </SidebarContent>
 
             <SidebarFooter>

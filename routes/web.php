@@ -41,6 +41,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('products', \App\Http\Controllers\ProductController::class);
     });
     
+    // Inventory routes
+    Route::middleware(['module.access:products'])->group(function () {
+        Route::get('inventory', function () {
+            return \Inertia\Inertia::render('inventory/index');
+        })->name('inventory.index');
+    });
+    
     // Orders routes - only for viewing (no create/edit)
     Route::middleware(['module.access:orders'])->group(function () {
         Route::resource('orders', OrderController::class)->except(['create', 'edit']);
@@ -79,6 +86,48 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('user-roles/{user}', [\App\Http\Controllers\UserRoleController::class, 'update'])->name('user-roles.update');
         Route::post('user-roles/{user}/assign-role', [\App\Http\Controllers\UserRoleController::class, 'assignRole'])->name('user-roles.assign-role');
         Route::delete('user-roles/{user}/remove-role', [\App\Http\Controllers\UserRoleController::class, 'removeRole'])->name('user-roles.remove-role');
+    });
+    
+    // Employee Management routes (Admin only)
+    Route::middleware(['module.access:sales-monitoring'])->group(function () {
+        Route::get('employees', function () {
+            return \Inertia\Inertia::render('employees/index');
+        })->name('employees.index');
+        
+        // Shift Management
+        Route::get('/shifts', function () {
+            return Inertia::render('shifts/index');
+        })->name('shifts.index');
+
+        // Supplier Performance
+        Route::get('/supplier-performance', function () {
+            return Inertia::render('supplier-performance/index');
+        })->name('supplier-performance.index');
+    });
+
+    // Product Management routes (includes supplier/PO management)
+    Route::middleware(['module.access:products'])->group(function () {
+        // Supplier Management
+        Route::get('/suppliers', function () {
+            return Inertia::render('suppliers/index');
+        })->name('suppliers.index');
+
+        // Purchase Orders
+        Route::get('/purchase-orders', function () {
+            return Inertia::render('purchase-orders/index');
+        })->name('purchase-orders.index');
+
+        // Receiving Orders
+        Route::get('/receiving', function () {
+            return Inertia::render('receiving/index');
+        })->name('receiving.index');
+    });
+    
+    // Time Clock routes (All employees)
+    Route::middleware(['module.access:dashboard'])->group(function () {
+        Route::get('time-clock', function () {
+            return \Inertia\Inertia::render('time-clock/index');
+        })->name('time-clock.index');
     });
 });
 
