@@ -70,6 +70,20 @@ class EventBookingController extends Controller
     }
 
     /**
+     * Admin: edit booking.
+     */
+    public function edit(EventBooking $eventBooking)
+    {
+        [$packages] = $this->getFormData(false);
+
+        return Inertia::render('event-bookings/Edit', [
+            'booking' => $eventBooking,
+            'packages' => $packages,
+            'statuses' => $this->statuses(),
+        ]);
+    }
+
+    /**
      * Admin: show create form.
      */
     public function create()

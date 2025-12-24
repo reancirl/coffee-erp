@@ -98,7 +98,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['module.access:event-booking'])->group(function () {
         Route::resource('event-packages', EventPackageController::class)->except(['show', 'create', 'edit']);
         Route::resource('event-unavailable-dates', EventUnavailableDateController::class)->only(['index', 'store', 'destroy']);
-        Route::resource('event-bookings', EventBookingController::class)->only(['index', 'create', 'store', 'update']);
+        Route::resource('event-bookings', EventBookingController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     });
     
     // Employee Management routes (Admin only)

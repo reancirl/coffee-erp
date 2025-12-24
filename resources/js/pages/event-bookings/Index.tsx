@@ -54,6 +54,14 @@ interface PageProps {
 const currency = (value: number | string) =>
     new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(Number(value || 0));
 
+const statusTone: Record<string, { bg: string; text: string; border: string }> = {
+    pending: { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
+    reserved: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
+    confirmed: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
+    completed: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
+    cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200' },
+};
+
 export default function EventBookingsIndex() {
     const { bookings, packages, statuses, filters, flash } = usePage<PageProps>().props;
 
@@ -62,17 +70,18 @@ export default function EventBookingsIndex() {
     return (
         <AppLayout breadcrumbs={[{ title: 'Event Bookings', href: '/event-bookings' }]}>
             <Head title="Event Bookings" />
-            <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-6 p-4 md:p-6">
                 {flash?.success && (
                     <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-green-800">{flash.success}</div>
                 )}
 
                 <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <div>
-                                <p className="text-sm uppercase tracking-wide text-gray-500">Pipeline</p>
+                                <p className="text-xs uppercase tracking-wide text-gray-500">Pipeline</p>
                                 <h2 className="text-xl font-semibold text-gray-900">Bookings</h2>
+                                <p className="text-sm text-gray-600">Quick view of requests and their status.</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <label className="text-sm font-medium text-gray-700">Status</label>
@@ -104,13 +113,13 @@ export default function EventBookingsIndex() {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead>
                                 <tr className="bg-gray-50 text-left text-xs font-semibold uppercase text-gray-500">
-                                    <th className="px-4 py-3">Date</th>
-                                    <th className="px-4 py-3">Event</th>
-                                    <th className="px-4 py-3">Package</th>
-                                    <th className="px-4 py-3">Contact</th>
-                                    <th className="px-4 py-3">Status</th>
-                                    <th className="px-4 py-3">Notes</th>
-                                    <th className="px-4 py-3 text-right">Actions</th>
+                                    <th className="px-3 py-3 md:px-4">Date</th>
+                                    <th className="px-3 py-3 md:px-4">Event</th>
+                                    <th className="px-3 py-3 md:px-4">Package</th>
+                                    <th className="px-3 py-3 md:px-4">Contact</th>
+                                    <th className="px-3 py-3 md:px-4">Status</th>
+                                    <th className="px-3 py-3 md:px-4">Notes</th>
+                                    <th className="px-3 py-3 text-right md:px-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -155,65 +164,40 @@ function BookingRow({ booking, packages, statuses }: { booking: EventBooking; pa
 
     return (
         <tr className="align-top">
-            <td className="px-4 py-3 text-sm text-gray-800">
+            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
                 <div className="font-semibold text-gray-900">{formattedDate}</div>
                 {formattedTime && <div className="text-xs text-gray-600">Start: {formattedTime}</div>}
             </td>
-            <td className="px-4 py-3 text-sm text-gray-800">
+            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
                 <div className="font-semibold text-gray-900">{form.data.event_name}</div>
                 {form.data.event_type && <div className="text-xs text-gray-600">{form.data.event_type}</div>}
                 <div className="text-xs text-gray-600">{form.data.venue_address}</div>
             </td>
-            <td className="px-4 py-3 text-sm text-gray-800">
-                <select
-                    className="w-full rounded-lg border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    value={form.data.event_package_id}
-                    onChange={(e) => form.setData('event_package_id', e.target.value)}
-                >
-                    <option value="">Custom</option>
-                    {packages.map((pkg) => (
-                        <option key={pkg.id} value={pkg.id}>
-                            {pkg.name} · {pkg.cup_count} cups · {currency(pkg.price)}
-                        </option>
-                    ))}
-                </select>
-                {form.data.expected_guests ? <div className="text-xs text-gray-600 mt-1">{form.data.expected_guests} guests</div> : null}
+            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
+                <div className="font-semibold text-gray-900">{booking.package?.name ?? 'Custom'}</div>
+                {booking.package?.cup_count ? (
+                    <div className="text-xs text-gray-600">{booking.package.cup_count} cups</div>
+                ) : null}
+                {booking.expected_guests ? <div className="text-xs text-gray-600">{booking.expected_guests} guests</div> : null}
             </td>
-            <td className="px-4 py-3 text-sm text-gray-800">
+            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
                 <div className="font-semibold text-gray-900">{form.data.contact_name}</div>
                 {form.data.contact_email && <div className="text-xs text-gray-600">{form.data.contact_email}</div>}
                 {form.data.contact_phone && <div className="text-xs text-gray-600">{form.data.contact_phone}</div>}
             </td>
-            <td className="px-4 py-3 text-sm text-gray-800">
-                <select
-                    className="w-full rounded-lg border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    value={form.data.status}
-                    onChange={(e) => form.setData('status', e.target.value)}
-                >
-                    {statuses.map((status) => (
-                        <option key={status} value={status}>
-                            {status}
-                        </option>
-                    ))}
-                </select>
+            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
+                <StatusPill status={form.data.status} />
             </td>
-            <td className="px-4 py-3 text-sm text-gray-800">
-                <textarea
-                    className="w-full rounded-lg border border-gray-200 px-2 py-1 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    value={form.data.notes}
-                    onChange={(e) => form.setData('notes', e.target.value)}
-                    rows={3}
-                />
+            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
+                <div className="text-gray-800">{form.data.notes || '—'}</div>
             </td>
-            <td className="px-4 py-3 text-right text-sm text-gray-800">
-                <button
-                    type="button"
-                    onClick={save}
-                    disabled={form.processing}
-                    className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
+            <td className="px-3 py-3 text-right text-sm text-gray-800 space-y-2 md:px-4">
+                <Link
+                    href={`/event-bookings/${booking.id}/edit`}
+                    className="block rounded-lg border border-gray-300 px-3 py-2 text-center text-sm font-semibold text-gray-800 hover:bg-gray-100"
                 >
-                    {form.processing ? 'Saving…' : 'Save'}
-                </button>
+                    Edit
+                </Link>
             </td>
         </tr>
     );
@@ -240,11 +224,21 @@ function PaginationLinks({ bookings }: { bookings: Paginated<EventBooking> }) {
     );
 }
 
+function StatusPill({ status }: { status: string }) {
+    const tone = statusTone[status] || statusTone.pending;
+    return (
+        <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${tone.bg} ${tone.text} ${tone.border}`}>
+            {status}
+        </span>
+    );
+}
+
 function formatDateHuman(dateStr?: string | null): string {
     if (!dateStr) return '—';
 
     const tryParse = (value: string) => {
-        const d = new Date(value);
+        // If only date is provided, keep as-is; if full ISO, let Date handle it.
+        const d = value.includes('T') ? new Date(value) : new Date(value + 'T00:00:00');
         return Number.isNaN(d.getTime()) ? null : d;
     };
 
