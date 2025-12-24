@@ -8,10 +8,16 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalesMonitoringController;
 use App\Http\Controllers\FeedbackResponseController;
 use App\Http\Controllers\KitchenQueueController;
+use App\Http\Controllers\EventBookingController;
+use App\Http\Controllers\EventPackageController;
+use App\Http\Controllers\EventUnavailableDateController;
+use App\Http\Controllers\PublicMenuController;
 
-Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+Route::get('/', [EventBookingController::class, 'landing'])->name('home');
+Route::get('/menu', [PublicMenuController::class, 'index'])->name('menu');
+Route::get('/rewards', fn () => \Inertia\Inertia::render('rewards'))->name('rewards');
+Route::post('/event-bookings/public', [EventBookingController::class, 'storePublic'])->name('event-bookings.public-store');
+Route::get('/event-bookings/availability', [EventBookingController::class, 'availability'])->name('event-bookings.availability');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard - accessible to all authenticated users
@@ -86,6 +92,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('user-roles/{user}', [\App\Http\Controllers\UserRoleController::class, 'update'])->name('user-roles.update');
         Route::post('user-roles/{user}/assign-role', [\App\Http\Controllers\UserRoleController::class, 'assignRole'])->name('user-roles.assign-role');
         Route::delete('user-roles/{user}/remove-role', [\App\Http\Controllers\UserRoleController::class, 'removeRole'])->name('user-roles.remove-role');
+    });
+
+    // Event booking module
+    Route::middleware(['module.access:event-booking'])->group(function () {
+        Route::resource('event-packages', EventPackageController::class)->except(['show', 'create', 'edit']);
+        Route::resource('event-unavailable-dates', EventUnavailableDateController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('event-bookings', EventBookingController::class)->only(['index', 'create', 'store', 'update']);
     });
     
     // Employee Management routes (Admin only)

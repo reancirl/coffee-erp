@@ -27,7 +27,8 @@ class RolePermissionSeeder extends Seeder
             'categories' => 'Category management',
             'orders' => 'Order management and history',
             'reports' => 'Reports and analytics',
-            'sales-monitoring' => 'Cash monitoring and sales tracking'
+            'sales-monitoring' => 'Cash monitoring and sales tracking',
+            'event-booking' => 'Coffee cart event booking'
         ];
 
         // Create permissions for each module (or get existing ones)

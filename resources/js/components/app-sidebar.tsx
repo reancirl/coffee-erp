@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp } from 'lucide-react';
+import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp, CalendarRange, CalendarX2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // Define navigation groups with their items
@@ -51,6 +51,29 @@ const navigationGroups: NavGroup[] = [
                 href: '/time-clock',
                 icon: Clock,
                 module: 'dashboard', // All employees can access time clock
+            },
+        ]
+    },
+    {
+        title: 'Events & Catering',
+        items: [
+            {
+                title: 'Event Bookings',
+                href: '/event-bookings',
+                icon: CalendarRange,
+                module: 'event-booking',
+            },
+            {
+                title: 'Event Packages',
+                href: '/event-packages',
+                icon: Package,
+                module: 'event-booking',
+            },
+            {
+                title: 'Blocked Dates',
+                href: '/event-unavailable-dates',
+                icon: CalendarX2,
+                module: 'event-booking',
             },
         ]
     },

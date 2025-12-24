@@ -136,7 +136,7 @@ class User extends Authenticatable
     {
         // Super admin has access to everything
         if ($this->isSuperAdmin()) {
-            return ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring'];
+            return ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking'];
         }
 
         // If user has no roles, return empty array
@@ -145,7 +145,7 @@ class User extends Authenticatable
         }
 
         $modules = [];
-        $allModules = ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring'];
+        $allModules = ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking'];
         
         foreach ($allModules as $module) {
             if ($this->hasModuleAccess($module)) {

@@ -105,7 +105,7 @@ class HandleInertiaRequests extends Middleware
         try {
             // Check if user is super admin (tenant_id is null)
             if (is_null($user->tenant_id)) {
-                return ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring'];
+                return ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking'];
             }
 
             // Check if user has any roles using direct database query
