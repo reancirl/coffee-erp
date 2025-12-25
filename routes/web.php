@@ -96,7 +96,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Event booking module
     Route::middleware(['module.access:event-booking'])->group(function () {
-        Route::resource('event-packages', EventPackageController::class)->except(['show', 'create', 'edit']);
+        Route::resource('event-packages', EventPackageController::class)->except(['show']);
         Route::resource('event-unavailable-dates', EventUnavailableDateController::class)->only(['index', 'store', 'destroy']);
         Route::resource('event-bookings', EventBookingController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     });

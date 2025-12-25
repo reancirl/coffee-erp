@@ -29,7 +29,7 @@ export default function EventUnavailableDates() {
     return (
         <AppLayout breadcrumbs={[{ title: 'Blocked Dates', href: '/event-unavailable-dates' }]}>
             <Head title="Blocked Dates" />
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 p-6">
                 {flash?.success && (
                     <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-green-800">{flash.success}</div>
                 )}
