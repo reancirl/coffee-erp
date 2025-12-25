@@ -148,7 +148,9 @@ class EventBookingController extends Controller
      */
     private function getFormData(bool $onlyActivePackages = true): array
     {
-        $packagesQuery = EventPackage::orderBy('cup_count');
+        $packagesQuery = EventPackage::with('products:id,name')
+            ->select(['id', 'name', 'cup_count', 'price', 'description', 'is_active'])
+            ->orderBy('cup_count');
 
         if ($onlyActivePackages) {
             $packagesQuery->where('is_active', true);

@@ -4,12 +4,18 @@ import { PublicFooter } from '@/components/public-footer';
 import { PublicHeader } from '@/components/public-header';
 import { useEffect, useMemo, useState } from 'react';
 
+type PackageProduct = {
+    id: number;
+    name: string;
+};
+
 type EventPackage = {
     id: number;
     name: string;
     cup_count: number;
     price: string;
     description?: string | null;
+    products?: PackageProduct[];
 };
 
 interface PageProps {
@@ -40,6 +46,7 @@ export default function Welcome() {
     const [dateWarning, setDateWarning] = useState<string | null>(null);
     const [successSummary, setSuccessSummary] = useState<{ date?: string; packageName?: string } | null>(null);
     const [showReview, setShowReview] = useState(false);
+    const [menuPackage, setMenuPackage] = useState<EventPackage | null>(null);
 
     const sortedPackages = useMemo(() => [...packages].sort((a, b) => a.cup_count - b.cup_count), [packages]);
 
@@ -288,11 +295,25 @@ export default function Welcome() {
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <p className="text-xs uppercase tracking-wide text-gray-500">{pkg.cup_count} cups</p>
-                                                        <p className="text-lg font-semibold text-gray-900">{pkg.name}</p>
+                                                    <p className="text-lg font-semibold text-gray-900">{pkg.name}</p>
                                                     </div>
                                                     <p className="text-lg font-bold text-gray-900">₱{Number(pkg.price).toLocaleString()}</p>
                                                 </div>
                                                 {pkg.description && <p className="mt-2 text-sm text-gray-600">{pkg.description}</p>}
+                                                {pkg.products?.length ? (
+                                                    <div className="mt-3">
+                                                        <button
+                                                            type="button"
+                                                            className="inline-flex items-center gap-2 rounded-lg border border-primary px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setMenuPackage(pkg);
+                                                            }}
+                                                        >
+                                                            View menu ({pkg.products.length})
+                                                        </button>
+                                                    </div>
+                                                ) : null}
                                             </button>
                                         ))}
                                         {form.errors.event_package_id && (
@@ -520,6 +541,49 @@ export default function Welcome() {
                         </div>
                     </div>
                 </main>
+                <Dialog open={Boolean(menuPackage)} onOpenChange={(open) => setMenuPackage(open ? menuPackage : null)}>
+                    <DialogContent className="max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle>{menuPackage?.name || 'Package menu'}</DialogTitle>
+                            {menuPackage?.description && (
+                                <DialogDescription>{menuPackage.description}</DialogDescription>
+                            )}
+                        </DialogHeader>
+                        <div className="space-y-2 text-sm text-gray-800">
+                            {menuPackage && (
+                                <div className="flex items-center justify-between text-gray-700">
+                                    <span className="font-medium">{menuPackage.cup_count} cups</span>
+                                    <span className="font-semibold text-gray-900">
+                                        ₱{Number(menuPackage.price).toLocaleString()}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                {menuPackage?.products?.length ? (
+                                    <ul className="space-y-1">
+                                        {menuPackage.products.map((product) => (
+                                            <li key={product.id} className="flex items-center gap-2 text-gray-900">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                                {product.name}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-gray-600">No menu items listed for this package yet.</p>
+                                )}
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <button
+                                type="button"
+                                onClick={() => setMenuPackage(null)}
+                                className="cursor-pointer rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100"
+                            >
+                                Close
+                            </button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
                 <ReviewModal
                     open={showReview}
                     onOpenChange={setShowReview}
