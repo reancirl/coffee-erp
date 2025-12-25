@@ -33,6 +33,16 @@ const ProductCategory: React.FC<ProductCategoryProps> = ({ title, products, onPr
                         'border-2 border-teal-500' : 
                         isAddOn ? 'border-2 border-amber-500' : '';
                     
+                    const hotPrice = product.prices?.hot;
+                    const icedPrice = product.prices?.iced;
+                    const hasVariantPricing = hotPrice !== null && hotPrice !== undefined ||
+                        icedPrice !== null && icedPrice !== undefined;
+                    const showBothVariants = hasVariantPricing &&
+                        hotPrice !== null && hotPrice !== undefined &&
+                        icedPrice !== null && icedPrice !== undefined &&
+                        hotPrice !== icedPrice;
+                    const singleDisplayPrice = hotPrice ?? icedPrice ?? product.price;
+
                     return (
                         <div
                             key={product.id}
@@ -50,7 +60,18 @@ const ProductCategory: React.FC<ProductCategoryProps> = ({ title, products, onPr
                                     </span>
                                 )}
                             </div>
-                            <p>₱{formatPrice(product.price)}</p>
+                            {showBothVariants ? (
+                                <div className="text-sm space-y-0.5">
+                                    {hotPrice !== null && hotPrice !== undefined && (
+                                        <p>Hot: ₱{formatPrice(hotPrice)}</p>
+                                    )}
+                                    {icedPrice !== null && icedPrice !== undefined && (
+                                        <p>Iced: ₱{formatPrice(icedPrice)}</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <p>₱{formatPrice(singleDisplayPrice)}</p>
+                            )}
                         </div>
                     );
                 })}

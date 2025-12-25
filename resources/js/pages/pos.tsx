@@ -578,7 +578,7 @@ export default function Pos() {
                                     title="Coffee"
                                     products={menuData["Coffee"].map((item) => ({
                                         ...item,
-                                        price: item.prices?.hot || item.prices?.iced || 0,
+                                        price: item.prices?.hot ?? item.prices?.iced ?? item.price ?? 0,
                                         id: item.id, // Assign sequential IDs starting from 1
                                         customizations: item.prices ? [
                                             { name: 'Variant', options: [
@@ -633,18 +633,18 @@ export default function Pos() {
                     )}
 
                     {/* Greens & Grains */}
-                    {menuData["Greens & Grains"] && (
-                        <ProductCategory
-                            title="Greens & Grains"
-                            products={menuData["Greens & Grains"].map((item) => ({
-                                ...item,
-                                id: item.id, // Using 400s range to avoid conflicts
-                                price: item.prices?.hot || item.prices?.iced || item.price || 0,
-                                customizations: item.prices ? [
-                                    { name: 'Variant', options: [
-                                        ...(item.prices.hot !== null ? ['Hot'] : []),
-                                        ...(item.prices.iced !== null ? ['Iced'] : [])
-                                    ], required: true }
+                            {menuData["Greens & Grains"] && (
+                                <ProductCategory
+                                    title="Greens & Grains"
+                                    products={menuData["Greens & Grains"].map((item) => ({
+                                        ...item,
+                                        id: item.id, // Using 400s range to avoid conflicts
+                                        price: item.prices?.hot ?? item.prices?.iced ?? item.price ?? 0,
+                                        customizations: item.prices ? [
+                                            { name: 'Variant', options: [
+                                                ...(item.prices.hot !== null ? ['Hot'] : []),
+                                                ...(item.prices.iced !== null ? ['Iced'] : [])
+                                            ], required: true }
                                 ] : []
                             }))}
                             onProductClick={handleProductClick}
@@ -745,7 +745,9 @@ export default function Pos() {
                 <CustomizationModal
                     product={selectedProduct}
                     onClose={() => setSelectedProduct(null)}
-                    onAddToOrder={(customizations: any) => addToOrder(selectedProduct, customizations)}
+                    onAddToOrder={(customizations: any, variant?: 'hot' | 'iced') => 
+                        addToOrder(selectedProduct, customizations, variant)
+                    }
                 />
             )}
 

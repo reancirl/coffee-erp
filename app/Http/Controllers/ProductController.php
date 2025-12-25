@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Artisan;
 
 class ProductController extends Controller
 {
@@ -78,9 +79,16 @@ class ProductController extends Controller
             'customizations' => 'nullable|array',
         ]);
 
+        $validated = $this->normalizePricing($validated);
+
+        $isAddOn = (bool) ($validated['is_add_on'] ?? false);
+        $variantPrices = $validated['prices'] ?? [];
+        $hasBasePrice = array_key_exists('price', $validated) && $validated['price'] !== null;
+        $hasVariantPrice = (isset($variantPrices['hot']) && $variantPrices['hot'] !== null) ||
+            (isset($variantPrices['iced']) && $variantPrices['iced'] !== null);
+
         // Ensure at least one price is provided for non-add-ons
-        if (!$validated['is_add_on'] && empty($validated['price']) && 
-            (empty($validated['prices']['hot']) && empty($validated['prices']['iced']))) {
+        if (!$isAddOn && !$hasBasePrice && !$hasVariantPrice) {
             return back()->withErrors(['price' => 'At least one price must be provided.']);
         }
 
@@ -131,13 +139,22 @@ class ProductController extends Controller
             'customizations' => 'nullable|array',
         ]);
 
-        // Ensure at least one price is provided for non-add-ons
-        if (!$validated['is_add_on'] && empty($validated['price']) && 
-            (empty($validated['prices']['hot']) && empty($validated['prices']['iced']))) {
+        $validated = $this->normalizePricing($validated);
+
+        $isAddOn = (bool) ($validated['is_add_on'] ?? false);
+        $variantPrices = $validated['prices'] ?? [];
+        $hasBasePrice = array_key_exists('price', $validated) && $validated['price'] !== null;
+        $hasVariantPrice = (isset($variantPrices['hot']) && $variantPrices['hot'] !== null) ||
+            (isset($variantPrices['iced']) && $variantPrices['iced'] !== null);
+
+        if (!$isAddOn && !$hasBasePrice && !$hasVariantPrice) {
             return back()->withErrors(['price' => 'At least one price must be provided.']);
         }
 
         $product->update($validated);
+
+        Cache::forget('pos_products');
+        Artisan::call('optimize:clear');
 
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully.');
@@ -203,5 +220,29 @@ class ProductController extends Controller
                 'menuData' => $menuData
             ];
         });
+    }
+
+    /**
+     * Normalize pricing to collapse single-variant prices into the base price.
+     */
+    private function normalizePricing(array $validated): array
+    {
+        $prices = $validated['prices'] ?? null;
+        $hasHot = is_array($prices) && array_key_exists('hot', $prices) && $prices['hot'] !== null;
+        $hasIced = is_array($prices) && array_key_exists('iced', $prices) && $prices['iced'] !== null;
+
+        // If only one variant is provided, treat it as the base price and clear variant pricing
+        if ($hasHot && $hasIced) {
+            // Keep variant pricing but ensure base price is set from a variant
+            $validated['price'] = $prices['hot'] ?? $prices['iced'];
+        } elseif ($hasHot xor $hasIced) {
+            $validated['price'] = $hasHot ? $prices['hot'] : $prices['iced'];
+            $validated['prices'] = null;
+        } elseif (!$hasHot && !$hasIced) {
+            // No variant pricing provided; ensure prices is null
+            $validated['prices'] = null;
+        }
+
+        return $validated;
     }
 }

@@ -100,10 +100,12 @@ export default function Form({ product, categories }: Props) {
 
         if (isEditing) {
             put(route('products.update', product.id), {
+                data: submitData,
                 onSuccess: () => reset(),
             });
         } else {
             post(route('products.store'), {
+                data: submitData,
                 onSuccess: () => reset(),
             });
         }
@@ -226,9 +228,15 @@ export default function Form({ product, categories }: Props) {
                                     <Checkbox
                                         id="variant_pricing"
                                         checked={hasVariantPricing}
-                                        onCheckedChange={(checked) => setHasVariantPricing(!!checked)}
+                                        onCheckedChange={(checked) => {
+                                            const isChecked = !!checked;
+                                            setHasVariantPricing(isChecked);
+                                            if (!isChecked) {
+                                                setData('prices', { hot: null, iced: null });
+                                            }
+                                        }}
                                     />
-                                    <Label htmlFor="variant_pricing">Different prices for hot/iced variants</Label>
+                                    <Label htmlFor="variant_pricing">Has hot/iced variant</Label>
                                 </div>
 
                                 {hasVariantPricing ? (
