@@ -75,16 +75,16 @@ const categoryColors: Record<string, string> = {
 
 // Card component for stats
 const StatCard = ({ title, value, icon, color }: { title: string; value: string; icon?: string; color?: string }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 flex flex-col">
+    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 flex flex-col text-sm">
         <div className="flex justify-between items-center mb-2">
-            <h3 className="text-gray-500 dark:text-gray-400 text-sm uppercase font-medium">{title}</h3>
+            <h3 className="text-gray-500 dark:text-gray-400 text-xs uppercase font-semibold">{title}</h3>
             {icon && (
                 <div className={`${color || 'bg-blue-500'} p-2 rounded-full text-white`}>
                     <span className="text-xl">{icon}</span>
                 </div>
             )}
         </div>
-    <div className="text-3xl font-bold text-gray-900 dark:text-gray-50">{value}</div>
+    <div className="text-2xl font-bold text-gray-900 dark:text-gray-50">{value}</div>
 </div>
 );
 
@@ -169,38 +169,38 @@ export default function Dashboard({ salesData }: DashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+            <div className="flex h-full flex-1 flex-col gap-5 rounded-xl bg-white/60 p-6 text-sm shadow-sm lg:p-8">
                 <div className="flex justify-between items-center flex-wrap gap-4">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Sales Overview: {dateRangeText}</h1>
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-50">Sales Overview: {dateRangeText}</h1>
                     
                     {/* Date Filter Form */}
                     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
-                            <label htmlFor="start_date" className="text-sm font-medium text-gray-700 dark:text-gray-300">From:</label>
+                            <label htmlFor="start_date" className="text-xs font-semibold text-gray-700 dark:text-gray-300">From:</label>
                             <input 
                                 type="date" 
                                 id="start_date"
                                 value={data.start_date}
                                 onChange={e => setData('start_date', e.target.value)}
-                                className="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black"
+                                className="rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-2 py-1 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm text-black"
                             />
                         </div>
                         
                         <div className="flex items-center gap-2">
-                            <label htmlFor="end_date" className="text-sm font-medium text-gray-700 dark:text-gray-300">To:</label>
+                            <label htmlFor="end_date" className="text-xs font-semibold text-gray-700 dark:text-gray-300">To:</label>
                             <input 
                                 type="date" 
                                 id="end_date"
                                 value={data.end_date}
                                 onChange={e => setData('end_date', e.target.value)}
-                                className="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-black"
+                                className="rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 px-2 py-1 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary sm:text-sm text-black"
                             />
                         </div>
                         
                         <button 
                             type="submit" 
                             disabled={processing}
-                            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-75"
+                            className="inline-flex justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-75 cursor-pointer"
                         >
                             Filter
                         </button>
@@ -208,7 +208,7 @@ export default function Dashboard({ salesData }: DashboardProps) {
                 </div>
                 
                 {/* Today's sales stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6">
                     <StatCard 
                         title="Total Sales" 
                         value={formatCurrency(rangeSales)}
@@ -236,9 +236,9 @@ export default function Dashboard({ salesData }: DashboardProps) {
                 </div>
                 
                 {/* Daily Trends */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Daily Cups Served</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+                        <h2 className="text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">Daily Cups Served</h2>
                         {dailyCups.length > 0 ? (
                             <div style={{ height: '300px' }}>
                                 <Line
@@ -300,8 +300,8 @@ export default function Dashboard({ salesData }: DashboardProps) {
                         )}
                     </div>
                     
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Daily Sales</h2>
+                    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+                        <h2 className="text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">Daily Sales</h2>
                         {dailySales.length > 0 ? (
                             <div style={{ height: '300px' }}>
                                 <Line
@@ -368,9 +368,9 @@ export default function Dashboard({ salesData }: DashboardProps) {
                 </div>
                 
                 {/* Category Breakdown */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Sales by Category</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+                        <h2 className="text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">Sales by Category</h2>
                         {categoryBreakdown.length > 0 ? (
                             <div style={{ height: '300px' }}>
                                 <Bar 
@@ -417,8 +417,8 @@ export default function Dashboard({ salesData }: DashboardProps) {
                         )}
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Items Sold by Category</h2>
+                    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+                        <h2 className="text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">Items Sold by Category</h2>
                         {categoryBreakdown.length > 0 ? (
                             <div style={{ height: '300px' }}>
                                 <Bar 
@@ -457,9 +457,9 @@ export default function Dashboard({ salesData }: DashboardProps) {
                 </div>
 
                 {/* Cup counts by product */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Cups Per Product</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+                        <h2 className="text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">Cups Per Product</h2>
                         {sortedProducts.map((item, index) => (
                             <ProductCupCount 
                                 key={item.product}
@@ -472,8 +472,8 @@ export default function Dashboard({ salesData }: DashboardProps) {
                         ))}
                     </div>
                     
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Food & Pastry Items</h2>
+                    <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+                        <h2 className="text-base font-semibold mb-3 text-gray-900 dark:text-gray-100">Food & Pastry Items</h2>
                         {sortedFoodProducts.length > 0 ? (
                             sortedFoodProducts.map((item, index) => (
                                 <ProductCupCount 

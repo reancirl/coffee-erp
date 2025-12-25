@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemAddOn;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -27,8 +28,8 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with('items');
-        
+        $query = Order::with('items.addOns');
+
         // Apply date filters if provided
         if ($request->filled('start_date')) {
             $query->whereDate('created_at', '>=', $request->start_date);
@@ -41,7 +42,24 @@ class OrderController extends Controller
         } else {
             $query->whereDate('created_at', '<=', Carbon::now()->endOfDay());
         }
-        
+
+        // Filter by product name or ID if provided
+        if ($request->filled('product')) {
+            $productSearch = $request->product;
+
+            $query->whereHas('items', function ($itemQuery) use ($productSearch) {
+                $itemQuery->where(function ($subQuery) use ($productSearch) {
+                    $subQuery->where('product_id', $productSearch)
+                        ->orWhere('product_name', 'like', '%' . $productSearch . '%');
+                });
+            });
+        }
+
+        // Filter by order number (partial match)
+        if ($request->filled('order_number')) {
+            $query->where('order_number', 'like', '%' . $request->order_number . '%');
+        }
+
         // Get results with pagination
         $orders = $query->latest()->paginate(10)->withQueryString();
             
@@ -57,7 +75,10 @@ class OrderController extends Controller
             'filters' => [
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
-            ]
+                'product' => $request->product,
+                'order_number' => $request->order_number,
+            ],
+            'products' => Product::orderBy('name')->get(['id', 'name'])
         ]);
     }
 

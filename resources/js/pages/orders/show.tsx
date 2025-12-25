@@ -38,6 +38,8 @@ interface Order {
     order_type: string;
     beeper_number: string | null;
     notes: string | null;
+    split_cash_amount?: number | null;
+    split_gcash_amount?: number | null;
     created_at: string;
     updated_at: string;
     items: OrderItem[];
@@ -141,6 +143,19 @@ export default function Show({ order }: Props) {
                                     <p className="text-sm text-gray-500">Payment</p>
                                     <p className="font-medium">{order.payment_method}</p>
                                 </div>
+                                {(order.split_cash_amount || order.split_gcash_amount) && (
+                                    <div className="col-span-2">
+                                        <p className="text-sm text-gray-500">Split Breakdown</p>
+                                        <div className="flex flex-col gap-1 text-sm font-medium">
+                                            {order.split_cash_amount !== null && order.split_cash_amount !== undefined && (
+                                                <span>Cash: {formatCurrency(Number(order.split_cash_amount))}</span>
+                                            )}
+                                            {order.split_gcash_amount !== null && order.split_gcash_amount !== undefined && (
+                                                <span>GCash: {formatCurrency(Number(order.split_gcash_amount))}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                                 <div>
                                     <p className="text-sm text-gray-500">Order Type</p>
                                     <p className="font-medium">{order.order_type}</p>

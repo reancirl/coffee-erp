@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Link, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { Fragment, useState } from 'react';
 
 interface OrderItem {
     id: number;
@@ -12,6 +12,13 @@ interface OrderItem {
     variant: string | null;
     customizations: Record<string, string> | null;
     total: number;
+    addOns?: {
+        id: number;
+        product_name: string;
+        quantity: number;
+        price: number;
+        variant: string | null;
+    }[];
 }
 
 interface Order {
@@ -31,6 +38,13 @@ interface Order {
     items: OrderItem[];
 }
 
+interface ProductOption {
+    id: number;
+    name: string;
+}
+
+type AggregatedItem = OrderItem & { quantity: number };
+
 interface Props {
     orders: {
         data: Order[];
@@ -43,7 +57,10 @@ interface Props {
     filters?: {
         start_date?: string;
         end_date?: string;
+        product?: string;
+        order_number?: string;
     };
+    products: ProductOption[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -62,7 +79,7 @@ const formatCurrency = (amount: number): string => {
     }).format(amount);
 };
 
-export default function Index({ orders, filters }: Props) {
+export default function Index({ orders, filters, products }: Props) {
     // Format date to YYYY-MM-DD for input type="date"
     const formatDateForInput = (date: Date) => {
         return date.toISOString().split('T')[0];
@@ -82,14 +99,28 @@ export default function Index({ orders, filters }: Props) {
     };
     
     const initialDates = initializeDates();
+    const initialProductFilter = filters?.product || '';
+    const initialOrderNumber = filters?.order_number || '';
     const [startDate, setStartDate] = useState<string>(initialDates.start);
     const [endDate, setEndDate] = useState<string>(initialDates.end);
+    const [productQuery, setProductQuery] = useState<string>(initialProductFilter);
+    const [orderNumberQuery, setOrderNumberQuery] = useState<string>(initialOrderNumber);
+    const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
+    const [showProductSuggestions, setShowProductSuggestions] = useState(false);
+    
+    const trimmedProductQuery = productQuery.toLowerCase().trim();
+    const filteredProducts = products.filter((product) => {
+        if (!trimmedProductQuery) return true;
+        return product.name.toLowerCase().includes(trimmedProductQuery) || product.id.toString().includes(trimmedProductQuery);
+    });
     
     // Handle filter application
     const applyFilter = () => {
         router.get('/orders', {
             start_date: startDate,
             end_date: endDate,
+            product: productQuery || undefined,
+            order_number: orderNumberQuery || undefined,
         }, {
             preserveState: true,
         });
@@ -101,66 +132,178 @@ export default function Index({ orders, filters }: Props) {
         
         setStartDate(formatDateForInput(today));
         setEndDate(formatDateForInput(today));
+        setProductQuery('');
+        setOrderNumberQuery('');
         
         router.get('/orders', {}, {
             preserveState: true,
         });
     };
+
+    const toggleExpanded = (orderId: number) => {
+        setExpandedOrders((prev) => {
+            const next = new Set(prev);
+            if (next.has(orderId)) {
+                next.delete(orderId);
+            } else {
+                next.add(orderId);
+            }
+            return next;
+        });
+    };
+
+    const normalizeCustomizations = (customizations: Record<string, string> | null) => {
+        if (!customizations) return '';
+        const entries = Object.entries(customizations).sort(([a], [b]) => a.localeCompare(b));
+        return JSON.stringify(entries);
+    };
+
+    const normalizeAddOns = (addOns: OrderItem['addOns'] | undefined) => {
+        if (!addOns || addOns.length === 0) return '';
+        const summarized = addOns
+            .map((addon) => ({
+                name: addon.product_name,
+                quantity: addon.quantity ?? 1,
+                variant: addon.variant || '',
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+        return JSON.stringify(summarized);
+    };
+
+    const aggregateOrderItems = (items: OrderItem[]): AggregatedItem[] => {
+        const map = new Map<string, AggregatedItem>();
+
+        items.forEach((item) => {
+            const key = [
+                item.product_name,
+                item.variant || '',
+                normalizeCustomizations(item.customizations),
+                normalizeAddOns(item.addOns),
+            ].join('||');
+
+            if (map.has(key)) {
+                const existing = map.get(key)!;
+                existing.quantity += item.quantity;
+            } else {
+                map.set(key, { ...item });
+            }
+        });
+
+        return Array.from(map.values());
+    };
     
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Orders" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex justify-between items-center">
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl bg-white/60 p-6 text-sm shadow-sm lg:p-8">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold">Orders</h2>
-                        <p className="text-sm text-gray-600">
+                        <h2 className="text-xl font-bold">Orders</h2>
+                        <p className="text-xs text-gray-600">
                             {orders.meta.total} {orders.meta.total === 1 ? 'order' : 'orders'} found
-                            {(filters?.start_date || filters?.end_date) && ' with current filters'}
+                            {(filters?.start_date || filters?.end_date || filters?.product) && ' with current filters'}
                         </p>
                     </div>
                     
-                    {/* Date Filter */}
-                    <div className="flex items-center space-x-2">
-                        <div className="flex items-center">
-                            <label htmlFor="start-date" className="mr-1 text-sm font-medium">From:</label>
-                            <input 
-                                type="date" 
-                                id="start-date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="border rounded p-1 text-sm"
-                            />
+                    {/* Filters */}
+                    <div className="w-full rounded-2xl border border-gray-100 bg-white/80 p-4 shadow-lg ring-1 ring-black/5">
+                        <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                            <div className="flex flex-col">
+                                <label htmlFor="start-date" className="mb-1 text-xs font-semibold text-gray-800">From</label>
+                                <input 
+                                    type="date" 
+                                    id="start-date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                <label htmlFor="end-date" className="mb-1 text-xs font-semibold text-gray-800">To</label>
+                                <input 
+                                    type="date" 
+                                    id="end-date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                <label htmlFor="order-number" className="mb-1 text-xs font-semibold text-gray-800">Order #</label>
+                                <input
+                                    type="search"
+                                    id="order-number"
+                                    value={orderNumberQuery}
+                                    onChange={(e) => setOrderNumberQuery(e.target.value)}
+                                    autoComplete="off"
+                                    placeholder="Search order number"
+                                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                <label htmlFor="product" className="mb-1 text-xs font-semibold text-gray-800">Product</label>
+                                <div className="relative">
+                                    <input
+                                        type="search"
+                                        id="product"
+                                        value={productQuery}
+                                        onChange={(e) => {
+                                            setProductQuery(e.target.value);
+                                            setShowProductSuggestions(true);
+                                        }}
+                                        onFocus={() => setShowProductSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowProductSuggestions(false), 150)}
+                                        autoComplete="off"
+                                        placeholder="Enter product name or ID"
+                                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    />
+                                    {showProductSuggestions && (productQuery.trim().length > 0 || products.length > 0) && (
+                                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
+                                            <div className="max-h-64 overflow-y-auto py-1 text-sm">
+                                                {filteredProducts.slice(0, 8).map((product) => (
+                                                    <button
+                                                        key={product.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setProductQuery(product.name);
+                                                            setShowProductSuggestions(false);
+                                                        }}
+                                                        className="flex w-full items-center justify-between px-3 py-2 text-left text-gray-800 hover:bg-primary/10"
+                                                    >
+                                                        <span className="font-medium">{product.name}</span>
+                                                        <span className="text-xs text-gray-500">#{product.id}</span>
+                                                    </button>
+                                                ))}
+                                                {filteredProducts.length === 0 && (
+                                                    <div className="px-3 py-2 text-xs text-gray-500">No matches found</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-end gap-2 pt-2 lg:justify-end">
+                                <button 
+                                    onClick={applyFilter}
+                                    className="cursor-pointer rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                                >
+                                    Filter
+                                </button>
+                                <button 
+                                    onClick={resetFilter}
+                                    className="cursor-pointer rounded-xl border border-gray-300 bg-white px-5 py-2 text-sm font-semibold text-gray-800 shadow-sm transition hover:border-primary hover:text-primary"
+                                >
+                                    Reset
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex items-center">
-                            <label htmlFor="end-date" className="mr-1 text-sm font-medium">To:</label>
-                            <input 
-                                type="date" 
-                                id="end-date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="border rounded p-1 text-sm"
-                            />
-                        </div>
-                        <button 
-                            onClick={applyFilter}
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm"
-                        >
-                            Filter
-                        </button>
-                        <button 
-                            onClick={resetFilter}
-                            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-3 rounded text-sm"
-                        >
-                            Reset
-                        </button>
                     </div>
                 </div>
 
                 <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div className="p-6 text-gray-900">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
+                            <table className="min-w-full divide-y divide-gray-200 text-sm">
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
@@ -174,45 +317,95 @@ export default function Index({ orders, filters }: Props) {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {orders.data.map((order) => (
-                                        <tr key={order.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap">{order.order_number}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {new Date(order.created_at).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                })}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {order.order_type}
-                                                {order.beeper_number && ` (#${order.beeper_number})`}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{order.items.length}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap font-medium">
-                                                {formatCurrency(order.total)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{order.payment_method}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                    ${order.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                                      'bg-gray-100 text-gray-800'}`}>
-                                                    {order.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <Link
-                                                    href={route('orders.show', order.id)}
-                                                    className="text-indigo-600 hover:text-indigo-900"
-                                                >
-                                                    View
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {orders.data.map((order) => {
+                                        const isExpanded = expandedOrders.has(order.id);
+                                        return (
+                                            <Fragment key={order.id}>
+                                                <tr>
+                                                    <td className="px-6 py-4 whitespace-nowrap">{order.order_number}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        {new Date(order.created_at).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        })}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        {order.order_type}
+                                                        {order.beeper_number && ` (#${order.beeper_number})`}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <button
+                                                            onClick={() => toggleExpanded(order.id)}
+                                                            className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-800 transition hover:border-primary hover:text-primary"
+                                                        >
+                                                            {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                                                            <span className={`text-xs transition-transform ${isExpanded ? 'rotate-90' : 'rotate-0'}`}>&gt;</span>
+                                                        </button>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap font-medium">
+                                                        {formatCurrency(order.total)}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">{order.payment_method}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                            ${order.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                                              'bg-gray-100 text-gray-800'}`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                        <Link
+                                                            href={route('orders.show', order.id)}
+                                                            className="cursor-pointer text-indigo-600 hover:text-indigo-900"
+                                                        >
+                                                            View
+                                                        </Link>
+                                                    </td>
+                                                </tr>
+                                                {isExpanded && (
+                                                    <tr className="bg-gray-50">
+                                                        <td colSpan={8} className="px-6 py-4">
+                                                            <div className="flex flex-col gap-3">
+                                                                {aggregateOrderItems(order.items).map((item, idx) => (
+                                                                    <div key={item.id} className="rounded-lg border border-gray-200 bg-white/80 p-3 shadow-sm">
+                                                                        <div className="flex items-start justify-between">
+                                                                            <div className="font-semibold text-gray-900">{item.product_name}</div>
+                                                                            <div className="text-xs text-gray-600">x{item.quantity}</div>
+                                                                        </div>
+                                                                        <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-600">
+                                                                            {item.variant && <span className="rounded-full bg-gray-100 px-2 py-0.5">Variant: {item.variant}</span>}
+                                                                            {item.customizations && Object.keys(item.customizations).length > 0 && (
+                                                                                <span className="rounded-full bg-gray-100 px-2 py-0.5">
+                                                                                    {Object.entries(item.customizations).map(([key, value]) => `${key}: ${value}`).join(' • ')}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        {item.addOns && item.addOns.length > 0 && (
+                                                                            <div className="mt-2 rounded-lg border border-gray-100 bg-gray-50 p-2 text-xs text-gray-700">
+                                                                                <div className="mb-1 font-semibold text-gray-800">Add-ons</div>
+                                                                                <ul className="list-disc space-y-1 pl-4">
+                                                                                    {item.addOns.map((addon) => (
+                                                                                        <li key={addon.id} className="flex items-center justify-between">
+                                                                                            <span>{addon.product_name}</span>
+                                                                                            <span className="text-gray-500">x{addon.quantity ?? 1}</span>
+                                                                                        </li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </Fragment>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -229,9 +422,11 @@ export default function Index({ orders, filters }: Props) {
                                             href={route('orders.index', { 
                                                 page: orders.meta.current_page - 1,
                                                 start_date: startDate,
-                                                end_date: endDate
+                                                end_date: endDate,
+                                                product: productQuery || undefined,
+                                                order_number: orderNumberQuery || undefined
                                             })}
-                                            className="px-4 py-2 bg-gray-200 rounded"
+                                            className="cursor-pointer rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                                             preserveState
                                         >
                                             Previous
@@ -242,9 +437,11 @@ export default function Index({ orders, filters }: Props) {
                                             href={route('orders.index', { 
                                                 page: orders.meta.current_page + 1,
                                                 start_date: startDate,
-                                                end_date: endDate
+                                                end_date: endDate,
+                                                product: productQuery || undefined,
+                                                order_number: orderNumberQuery || undefined
                                             })}
-                                            className="px-4 py-2 bg-gray-200 rounded"
+                                            className="cursor-pointer rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                                             preserveState
                                         >
                                             Next
