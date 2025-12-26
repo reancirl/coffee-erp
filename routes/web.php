@@ -12,6 +12,7 @@ use App\Http\Controllers\EventBookingController;
 use App\Http\Controllers\EventPackageController;
 use App\Http\Controllers\EventUnavailableDateController;
 use App\Http\Controllers\PublicMenuController;
+use App\Http\Controllers\CashRemittanceController;
 
 Route::get('/', [EventBookingController::class, 'landing'])->name('home');
 Route::get('/menu', [PublicMenuController::class, 'index'])->name('menu');
@@ -73,6 +74,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('sales-monitoring', [SalesMonitoringController::class, 'store'])->name('sales-monitoring.store');
         Route::patch('sales-monitoring/{salesMonitoring}/cash-flow', [SalesMonitoringController::class, 'updateCashFlow'])->name('sales-monitoring.cash-flow');
         Route::patch('sales-monitoring/{salesMonitoring}/close', [SalesMonitoringController::class, 'close'])->name('sales-monitoring.close');
+        Route::post('sales-monitoring/{salesMonitoring}/remittances', [CashRemittanceController::class, 'store'])->name('sales-monitoring.remittances.store');
+        Route::patch('cash-remittances/{cashRemittance}/confirm', [CashRemittanceController::class, 'confirm'])->name('cash-remittances.confirm');
     });
     
     // Kitchen Queue routes

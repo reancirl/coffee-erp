@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import React, { useMemo, useState } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,24 @@ import {
     TrendingDown, 
     DollarSign, 
     Calculator,
-    Calendar
+    Calendar,
+    Banknote,
+    ShieldCheck
 } from 'lucide-react';
+
+interface Remittance {
+    id: number;
+    destination: string;
+    method: string;
+    amount: number;
+    reference?: string | null;
+    notes?: string | null;
+    status: 'pending' | 'confirmed';
+    attachment_url?: string | null;
+    confirmed_at?: string | null;
+    confirmed_by?: { name: string } | null;
+    created_at: string;
+}
 
 interface SalesMonitoring {
     id: number;
@@ -46,6 +62,7 @@ interface SalesMonitoring {
     total_sales: number;
     total_cash: number;
     total_gcash: number;
+    remittances?: Remittance[];
 }
 
 interface Props {
@@ -63,6 +80,15 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
     const [showCashInModal, setShowCashInModal] = useState(false);
     const [showCashOutModal, setShowCashOutModal] = useState(false);
     const [showCloseModal, setShowCloseModal] = useState(false);
+    const [showRemitModal, setShowRemitModal] = useState(false);
+    const remittanceForm = useForm({
+        destination: '',
+        method: '',
+        amount: '',
+        reference: '',
+        notes: '',
+        attachment: null as File | null,
+    });
 
     const handleCashFlow = (type: 'cash_in' | 'cash_out') => {
         const amount = type === 'cash_in' ? cashInAmount : cashOutAmount;
@@ -114,6 +140,10 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
         const safeAmount = amount || 0;
         return `₱${safeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
+    const availableCash = useMemo(
+        () => Number(currentMonitoring.expected_balance ?? 0),
+        [currentMonitoring.expected_balance],
+    );
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -121,6 +151,26 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
             month: 'long',
             day: 'numeric'
         });
+    };
+
+    const submitRemittance = () => {
+        if (!remittanceForm.data.destination || !remittanceForm.data.method || !remittanceForm.data.amount) {
+            alert('Please fill destination, method, and amount.');
+            return;
+        }
+
+        remittanceForm.post(`/sales-monitoring/${currentMonitoring.id}/remittances`, {
+            forceFormData: true,
+            onSuccess: () => {
+                remittanceForm.reset();
+                remittanceForm.setData('attachment', null);
+                setShowRemitModal(false);
+            },
+        });
+    };
+
+    const confirmRemittance = (id: number) => {
+        router.patch(`/cash-remittances/${id}/confirm`);
     };
 
     const formatTime = (dateString: string) => {
@@ -192,6 +242,22 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                     <div>Cash: {formatCurrency(currentMonitoring.total_cash)}</div>
                                     <div>GCash: {formatCurrency(currentMonitoring.total_gcash)}</div>
                                 </div>
+                            </div>
+
+                            {/* Remittances */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Banknote className="h-4 w-4 text-indigo-500" />
+                                    <span className="text-sm font-medium">Remittances</span>
+                                </div>
+                                <p className="text-2xl font-bold text-indigo-600">
+                                    {formatCurrency(
+                                        (currentMonitoring.remittances || []).reduce((sum, r) => sum + (r.amount || 0), 0),
+                                    )}
+                                </p>
+                                <Button size="sm" variant="outline" onClick={() => setShowRemitModal(true)}>
+                                    Log remittance
+                                </Button>
                             </div>
 
                             {/* Cash Flow */}
@@ -396,6 +462,166 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                         </Dialog>
                     </div>
                 )}
+
+                <Dialog open={showRemitModal} onOpenChange={setShowRemitModal}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Log remittance</DialogTitle>
+                            <DialogDescription>Record funds sent to bank or vault for this shift/day.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div>
+                                    <Label>Destination</Label>
+                                    <Input
+                                        value={remittanceForm.data.destination}
+                                        onChange={(e) => remittanceForm.setData('destination', e.target.value)}
+                                        placeholder="BPI - Main, Vault"
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Method</Label>
+                                    <Input
+                                        value={remittanceForm.data.method}
+                                        onChange={(e) => remittanceForm.setData('method', e.target.value)}
+                                        placeholder="Cash deposit, GCash"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div>
+                                    <Label>Amount</Label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={remittanceForm.data.amount}
+                                        onChange={(e) => remittanceForm.setData('amount', e.target.value)}
+                                        placeholder="0.00"
+                                    />
+                                    <p className="mt-1 text-xs text-gray-500">Available: {formatCurrency(availableCash)}</p>
+                                </div>
+                                <div>
+                                    <Label>Reference (optional)</Label>
+                                    <Input
+                                        value={remittanceForm.data.reference}
+                                        onChange={(e) => remittanceForm.setData('reference', e.target.value)}
+                                        placeholder="GCash ref, deposit slip"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <Label>Notes (optional)</Label>
+                                <textarea
+                                    value={remittanceForm.data.notes}
+                                    onChange={(e) => remittanceForm.setData('notes', e.target.value)}
+                                    className="w-full rounded-md border p-2"
+                                    rows={3}
+                                    placeholder="Any details"
+                                />
+                            </div>
+                            <div>
+                                <Label>Proof (optional)</Label>
+                                <Input
+                                    type="file"
+                                    accept="image/*,application/pdf"
+                                    onChange={(e) => remittanceForm.setData('attachment', e.target.files?.[0] ?? null)}
+                                />
+                            </div>
+                        </div>
+                        <div className="mt-6 flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setShowRemitModal(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={submitRemittance} disabled={remittanceForm.processing}>
+                                {remittanceForm.processing ? 'Saving…' : 'Save remittance'}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Remittances */}
+                <Card>
+                    <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <CardTitle>Remittances</CardTitle>
+                            <CardDescription>Cash moved to bank/vault for this day</CardDescription>
+                        </div>
+                        <Button variant="outline" onClick={() => setShowRemitModal(true)}>
+                            Log remittance
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        {(currentMonitoring.remittances?.length || 0) === 0 ? (
+                            <p className="text-sm text-gray-600">No remittances recorded yet.</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b text-left">
+                                            <th className="px-3 py-2">Destination</th>
+                                            <th className="px-3 py-2">Method</th>
+                                            <th className="px-3 py-2">Reference</th>
+                                            <th className="px-3 py-2">Amount</th>
+                                            <th className="px-3 py-2">Status</th>
+                                            <th className="px-3 py-2">Proof</th>
+                                            <th className="px-3 py-2 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {currentMonitoring.remittances?.map((remit) => (
+                                            <tr key={remit.id} className="border-b hover:bg-gray-50">
+                                                <td className="px-3 py-2">
+                                                    <div className="font-medium text-gray-900">{remit.destination}</div>
+                                                    {remit.notes && <div className="text-xs text-gray-600">{remit.notes}</div>}
+                                                </td>
+                                                <td className="px-3 py-2">{remit.method}</td>
+                                                <td className="px-3 py-2 text-gray-700">{remit.reference || '—'}</td>
+                                                <td className="px-3 py-2 font-semibold text-gray-900">{formatCurrency(remit.amount)}</td>
+                                                <td className="px-3 py-2">
+                                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
+                                                        remit.status === 'confirmed'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-amber-100 text-amber-800'
+                                                    }`}>
+                                                        {remit.status === 'confirmed' ? (
+                                                            <>
+                                                                <ShieldCheck className="h-3.5 w-3.5" /> Confirmed
+                                                            </>
+                                                        ) : (
+                                                            'Pending'
+                                                        )}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    {remit.attachment_url ? (
+                                                        <a
+                                                            href={remit.attachment_url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="text-primary hover:underline"
+                                                        >
+                                                            View
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-gray-500">—</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-3 py-2 text-right">
+                                                    {remit.status === 'pending' && (
+                                                        <Button size="sm" onClick={() => confirmRemittance(remit.id)}>
+                                                            Confirm
+                                                        </Button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Recent History */}
                 <Card>

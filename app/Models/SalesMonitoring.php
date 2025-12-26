@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 
 class SalesMonitoring extends Model
@@ -56,6 +57,11 @@ class SalesMonitoring extends Model
     public function closedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'closed_by');
+    }
+
+    public function remittances(): HasMany
+    {
+        return $this->hasMany(CashRemittance::class);
     }
 
     public function calculateExpectedBalance(): float

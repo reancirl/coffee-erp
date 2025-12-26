@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SalesMonitoring;
 use App\Models\Order;
+use App\Models\CashRemittance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ class SalesMonitoringController extends Controller
     {
         $currentDate = Carbon::today();
         $monitoring = SalesMonitoring::where('monitoring_date', $currentDate)
-            ->with(['openedBy', 'closedBy'])
+            ->with(['openedBy', 'closedBy', 'remittances.confirmedBy'])
             ->first();
 
         // Get recent monitoring records for history
@@ -31,6 +32,8 @@ class SalesMonitoringController extends Controller
             // Update sales data from orders
             $this->updateSalesData($monitoring);
         }
+
+        $monitoring->load(['openedBy', 'closedBy', 'remittances.confirmedBy']);
 
         return Inertia::render('SalesMonitoring/Simple', [
             'currentMonitoring' => $monitoring->append(['total_sales', 'total_cash', 'total_gcash']),

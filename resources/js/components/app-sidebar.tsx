@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp, CalendarRange, CalendarX2 } from 'lucide-react';
+import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp, CalendarRange, CalendarX2, Banknote } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // Define navigation groups with their items
@@ -173,6 +173,35 @@ const navigationGroups: NavGroup[] = [
                 module: 'sales-monitoring',
             },
         ]
+    },
+    {
+        title: 'Finance',
+        items: [
+            {
+                title: 'Remittances',
+                href: '/sales-monitoring#remittances',
+                icon: Banknote,
+                module: 'sales-monitoring',
+            },
+            {
+                title: 'Expenses',
+                href: '/expenses',
+                icon: Receipt,
+                module: 'sales-monitoring',
+            },
+            {
+                title: 'Payroll',
+                href: '/payroll',
+                icon: Wallet,
+                module: 'sales-monitoring',
+            },
+            {
+                title: 'Cash Reconciliation',
+                href: '/cash-reconciliation',
+                icon: Calculator,
+                module: 'sales-monitoring',
+            },
+        ],
     },
     {
         title: 'System Administration',
