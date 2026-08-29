@@ -106,9 +106,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Employee Management routes (Admin only)
     Route::middleware(['module.access:sales-monitoring'])->group(function () {
-        Route::get('employees', function () {
-            return \Inertia\Inertia::render('employees/index');
-        })->name('employees.index');
+        Route::get('employees', [\App\Http\Controllers\EmployeeController::class, 'index'])->name('employees.index');
+        Route::patch('employees/{user}', [\App\Http\Controllers\EmployeeController::class, 'update'])->name('employees.update');
         
         // Shift Management
         Route::get('/shifts', function () {

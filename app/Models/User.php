@@ -3,7 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\EmploymentStatus;
+use App\Support\EmployeeCode;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +28,26 @@ class User extends Authenticatable
         'email',
         'password',
         'tenant_id', // Added tenant_id
+        'position',
+        'employment_status',
+        'allowance_eligible',
+    ];
+
+    /**
+     * `employee_code` is deliberately NOT mass assignable. It is issued once by
+     * EmployeeCode and must never be reassigned from request input, because
+     * historical transactions are read back through it.
+     */
+
+    /**
+     * Mirror the database defaults in memory, so a freshly built User reports
+     * the same eligibility as one loaded back from the database.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'employment_status' => 'active',
+        'allowance_eligible' => false,
     ];
 
     /**
@@ -46,12 +70,79 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'employment_status' => EmploymentStatus::class,
+            'allowance_eligible' => 'boolean',
         ];
     }
 
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Orders this user rang up as cashier.
+     */
+    public function processedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->employment_status?->isActive() ?? false;
+    }
+
+    /**
+     * The single authority on whether this person may redeem a coffee
+     * allowance. Every redemption path must ask this and nothing else.
+     *
+     * Deliberately independent of roles and module permissions: those govern
+     * what a user may *operate* in the app, while this is an HR entitlement.
+     * A manager with full admin rights still gets no free coffee unless HR
+     * marked them eligible.
+     */
+    public function canRedeemAllowance(): bool
+    {
+        return $this->isActive()
+            && $this->allowance_eligible === true
+            && filled($this->employee_code);
+    }
+
+    /**
+     * Why redemption is refused, for cashier-facing messages. Null when allowed.
+     */
+    public function allowanceIneligibilityReason(): ?string
+    {
+        if (! $this->isActive()) {
+            return 'This employee is not active.';
+        }
+
+        if ($this->allowance_eligible !== true) {
+            return 'This employee is not eligible for the coffee allowance.';
+        }
+
+        if (blank($this->employee_code)) {
+            return 'This employee has no employee code.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Issue this user's permanent employee code, or return the existing one.
+     */
+    public function assignEmployeeCode(): string
+    {
+        return EmployeeCode::assignTo($this);
+    }
+
+    /** Users who may currently redeem an allowance. */
+    public function scopeAllowanceEligible(Builder $query): Builder
+    {
+        return $query->where('allowance_eligible', true)
+            ->where('employment_status', EmploymentStatus::Active->value)
+            ->whereNotNull('employee_code');
     }
 
     public function isSuperAdmin(): bool
