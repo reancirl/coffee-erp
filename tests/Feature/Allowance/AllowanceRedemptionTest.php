@@ -29,6 +29,7 @@ class AllowanceRedemptionTest extends TestCase
 
         $this->cashier = User::factory()->create(['name' => 'Maria']);
         $this->juan = User::factory()->create(['name' => 'Juan Dela Cruz', 'allowance_eligible' => true]);
+        $this->grantAllowanceRole($this->juan);
         $this->juan->assignEmployeeCode();
         $this->juan->refresh();
         $this->token = EmployeeQr::issueFor($this->juan)->token;

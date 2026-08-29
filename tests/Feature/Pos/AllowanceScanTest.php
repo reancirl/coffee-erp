@@ -30,6 +30,7 @@ class AllowanceScanTest extends TestCase
             'allowance_eligible' => true,
         ], $overrides));
 
+        $this->grantAllowanceRole($user);
         $user->assignEmployeeCode();
 
         return $user->refresh();

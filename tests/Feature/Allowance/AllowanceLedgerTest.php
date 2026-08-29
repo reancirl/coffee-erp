@@ -20,6 +20,7 @@ class AllowanceLedgerTest extends TestCase
     private function employee(): User
     {
         $user = User::factory()->create(['name' => 'Juan Dela Cruz', 'allowance_eligible' => true]);
+        $this->grantAllowanceRole($user);
         $user->assignEmployeeCode();
 
         $this->travelTo(CarbonImmutable::parse('2026-08-29 10:00', config('allowance.timezone'))->utc());
@@ -149,6 +150,40 @@ class AllowanceLedgerTest extends TestCase
         Allowance::reverse(Allowance::redeem($juan, 650));
 
         $this->assertSame('0', (string) Allowance::balanceFor($juan)['used']);
+    }
+
+    public function test_a_user_with_ledger_history_cannot_be_deleted(): void
+    {
+        $juan = $this->employee();
+        Allowance::redeem($juan, 150);
+
+        $this->expectException(\App\Exceptions\AllowanceHistoryExistsException::class);
+        $juan->delete();
+    }
+
+    public function test_self_service_account_deletion_cannot_wipe_the_ledger(): void
+    {
+        $juan = $this->employee();
+        Allowance::redeem($juan, 150);
+
+        $this->actingAs($juan)
+            ->from('/settings/profile')
+            ->delete('/settings/profile', ['password' => 'password'])
+            ->assertSessionHasErrors('password');
+
+        // Account and every ledger row survive.
+        $this->assertNotNull($juan->fresh());
+        $this->assertSame(1, $juan->allowanceTransactions()->count());
+        $this->assertSame(1, $juan->allowancePeriods()->count());
+    }
+
+    public function test_a_user_with_no_allowance_history_can_still_be_deleted(): void
+    {
+        $plain = User::factory()->create();
+
+        $plain->delete();
+
+        $this->assertNull($plain->fresh());
     }
 
     public function test_many_small_redemptions_stay_exact(): void

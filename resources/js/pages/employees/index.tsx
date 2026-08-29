@@ -28,6 +28,7 @@ interface Employee {
     position: string | null;
     employment_status: string;
     allowance_eligible: boolean;
+    has_allowance_role: boolean;
     can_redeem_allowance: boolean;
     ineligibility_reason: string | null;
     has_qr: boolean;
@@ -41,6 +42,7 @@ interface Props {
     };
     filters: { search?: string; eligible_only?: boolean };
     statuses: string[];
+    allowance_role: string;
 }
 
 interface LedgerEntry {
@@ -81,7 +83,7 @@ const initials = (name: string) =>
         .join('')
         .toUpperCase();
 
-export default function Index({ employees, filters, statuses }: Props) {
+export default function Index({ employees, filters, statuses, allowance_role }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [editing, setEditing] = useState<Employee | null>(null);
     const [qrFor, setQrFor] = useState<Employee | null>(null);
@@ -606,6 +608,12 @@ export default function Index({ employees, filters, statuses }: Props) {
                                         ? `Employee code ${editing.employee_code} is permanent and will not change.`
                                         : 'An employee code will be issued on save.'}
                                 </p>
+                                {editing && !editing.has_allowance_role && (
+                                    <p className="text-xs text-amber-600">
+                                        Also needs the <strong>{allowance_role}</strong> role, assigned in User Roles.
+                                        Ticking this alone will not grant the allowance.
+                                    </p>
+                                )}
                             </div>
                         </div>
 

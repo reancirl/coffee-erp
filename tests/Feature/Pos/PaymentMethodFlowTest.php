@@ -94,6 +94,7 @@ class PaymentMethodFlowTest extends TestCase
     public function test_employee_allowance_is_accepted_with_a_valid_employee_qr(): void
     {
         $employee = \App\Models\User::factory()->create(['allowance_eligible' => true]);
+        $this->grantAllowanceRole($employee);
         $employee->assignEmployeeCode();
         $token = \App\Support\EmployeeQr::issueFor($employee)->token;
 
@@ -153,6 +154,7 @@ class PaymentMethodFlowTest extends TestCase
         $cashier = $this->cashier();
 
         $employee = \App\Models\User::factory()->create(['name' => 'Juan Dela Cruz', 'allowance_eligible' => true]);
+        $this->grantAllowanceRole($employee);
         $employee->assignEmployeeCode();
         $token = \App\Support\EmployeeQr::issueFor($employee)->token;
 

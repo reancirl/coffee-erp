@@ -77,6 +77,21 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // The allowance ledger is an audit record. The database cascades on
+        // user_id, so deleting a user would wipe their periods, transactions
+        // and QR history without any of the model-level guards firing —
+        // reachable by the employee themselves via profile deletion.
+        static::deleting(function (User $user) {
+            if ($user->allowanceTransactions()->exists()) {
+                throw new \App\Exceptions\AllowanceHistoryExistsException($user);
+            }
+        });
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -136,8 +151,20 @@ class User extends Authenticatable
     public function canRedeemAllowance(): bool
     {
         return $this->isActive()
+            && $this->hasAllowanceRole()
             && $this->allowance_eligible === true
             && filled($this->employee_code);
+    }
+
+    /**
+     * Is this person in the role the allowance exists for?
+     *
+     * Membership is the structural entitlement; `allowance_eligible` is the
+     * individual on/off switch layered over it.
+     */
+    public function hasAllowanceRole(): bool
+    {
+        return $this->hasRole(config('allowance.role'));
     }
 
     /**
@@ -147,6 +174,10 @@ class User extends Authenticatable
     {
         if (! $this->isActive()) {
             return 'This employee is not active.';
+        }
+
+        if (! $this->hasAllowanceRole()) {
+            return 'This employee is not in the '.config('allowance.role').' role.';
         }
 
         if ($this->allowance_eligible !== true) {
@@ -232,7 +263,8 @@ class User extends Authenticatable
     {
         return $query->where('allowance_eligible', true)
             ->where('employment_status', EmploymentStatus::Active->value)
-            ->whereNotNull('employee_code');
+            ->whereNotNull('employee_code')
+            ->role(config('allowance.role'));
     }
 
     public function isSuperAdmin(): bool

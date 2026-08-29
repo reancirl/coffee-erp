@@ -29,6 +29,7 @@ class EmployeeIdentityTest extends TestCase
             'allowance_eligible' => true,
         ], $overrides));
 
+        $this->grantAllowanceRole($user);
         $user->assignEmployeeCode();
 
         return $user->refresh();
@@ -46,12 +47,15 @@ class EmployeeIdentityTest extends TestCase
 
     public function test_a_non_eligible_user_cannot_redeem(): void
     {
+        // In the role, but individually switched off: isolates the per-person
+        // switch from the role requirement.
         $pedro = User::factory()->create([
             'name' => 'Pedro Santos',
             'position' => 'Manager',
             'employment_status' => EmploymentStatus::Active,
             'allowance_eligible' => false,
         ]);
+        $this->grantAllowanceRole($pedro);
 
         $this->assertFalse($pedro->canRedeemAllowance());
         $this->assertSame('This employee is not eligible for the coffee allowance.', $pedro->allowanceIneligibilityReason());
@@ -72,10 +76,52 @@ class EmployeeIdentityTest extends TestCase
             'employment_status' => EmploymentStatus::Active,
             'allowance_eligible' => true,
         ]);
+        $this->grantAllowanceRole($user);
 
         $this->assertNull($user->employee_code);
         $this->assertFalse($user->canRedeemAllowance());
         $this->assertSame('This employee has no employee code.', $user->allowanceIneligibilityReason());
+    }
+
+    public function test_the_allowance_role_is_required_even_when_switched_on(): void
+    {
+        // Active, switched on, has a code - but not in the role.
+        $user = User::factory()->create([
+            'employment_status' => EmploymentStatus::Active,
+            'allowance_eligible' => true,
+        ]);
+        $user->assignEmployeeCode();
+        $user->refresh();
+
+        $this->assertFalse($user->hasAllowanceRole());
+        $this->assertFalse($user->canRedeemAllowance());
+        $this->assertSame('This employee is not in the Swiftly Developer role.', $user->allowanceIneligibilityReason());
+
+        // Granting the role is the only thing missing.
+        $this->grantAllowanceRole($user);
+        $this->assertTrue($user->canRedeemAllowance());
+    }
+
+    public function test_losing_the_role_withdraws_the_allowance(): void
+    {
+        $juan = $this->eligible();
+        $this->assertTrue($juan->canRedeemAllowance());
+
+        $juan->removeRole(config('allowance.role'));
+
+        $this->assertFalse($juan->fresh()->canRedeemAllowance());
+        // The employee code survives, so history stays intact.
+        $this->assertSame('SW-001', $juan->fresh()->employee_code);
+    }
+
+    public function test_the_eligible_scope_excludes_users_without_the_role(): void
+    {
+        $inRole = $this->eligible();
+
+        $notInRole = User::factory()->create(['allowance_eligible' => true]);
+        $notInRole->assignEmployeeCode();
+
+        $this->assertSame([$inRole->id], User::allowanceEligible()->pluck('id')->all());
     }
 
     public function test_users_default_to_ineligible(): void

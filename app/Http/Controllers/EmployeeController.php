@@ -21,7 +21,7 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query()->orderBy('name');
+        $query = User::query()->with('roles')->orderBy('name');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -48,6 +48,7 @@ class EmployeeController extends Controller
                     'position' => $user->position,
                     'employment_status' => $user->employment_status->value,
                     'allowance_eligible' => $user->allowance_eligible,
+                    'has_allowance_role' => $user->hasAllowanceRole(),
                     'can_redeem_allowance' => $user->canRedeemAllowance(),
                     'ineligibility_reason' => $user->allowanceIneligibilityReason(),
                     'has_qr' => $user->activeQrCredential() !== null,
@@ -64,6 +65,7 @@ class EmployeeController extends Controller
                 'eligible_only' => $request->boolean('eligible_only'),
             ],
             'statuses' => EmploymentStatus::values(),
+            'allowance_role' => config('allowance.role'),
         ]);
     }
 

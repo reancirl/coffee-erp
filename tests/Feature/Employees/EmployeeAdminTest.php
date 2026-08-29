@@ -22,6 +22,7 @@ class EmployeeAdminTest extends TestCase
             'position' => 'Developer',
             'allowance_eligible' => true,
         ]);
+        $this->grantAllowanceRole($juan);
         $juan->assignEmployeeCode();
 
         User::factory()->create(['name' => 'Pedro Santos', 'position' => 'Manager']);
@@ -38,7 +39,10 @@ class EmployeeAdminTest extends TestCase
                 ->where('employees.data.1.can_redeem_allowance', true)
                 ->where('employees.data.2.name', 'Pedro Santos')
                 ->where('employees.data.2.can_redeem_allowance', false)
-                ->where('employees.data.2.ineligibility_reason', 'This employee is not eligible for the coffee allowance.')
+                // Pedro is not in the allowance role, which is the first gate.
+                ->where('employees.data.2.ineligibility_reason', 'This employee is not in the Swiftly Developer role.')
+                ->where('employees.data.2.has_allowance_role', false)
+                ->where('employees.data.1.has_allowance_role', true)
             );
     }
 
@@ -46,6 +50,7 @@ class EmployeeAdminTest extends TestCase
     {
         $admin = User::factory()->create();
         $juan = User::factory()->create(['name' => 'Juan Dela Cruz']);
+        $this->grantAllowanceRole($juan);
 
         $this->actingAs($admin)
             ->patch("/employees/{$juan->id}", [
@@ -65,6 +70,7 @@ class EmployeeAdminTest extends TestCase
     {
         $admin = User::factory()->create();
         $juan = User::factory()->create(['allowance_eligible' => true]);
+        $this->grantAllowanceRole($juan);
         $juan->assignEmployeeCode();
 
         $this->actingAs($admin)
@@ -83,6 +89,7 @@ class EmployeeAdminTest extends TestCase
     {
         $admin = User::factory()->create();
         $juan = User::factory()->create(['allowance_eligible' => true]);
+        $this->grantAllowanceRole($juan);
         $juan->assignEmployeeCode();
 
         $this->actingAs($admin)
@@ -100,6 +107,7 @@ class EmployeeAdminTest extends TestCase
     {
         $admin = User::factory()->create();
         $juan = User::factory()->create(['allowance_eligible' => true]);
+        $this->grantAllowanceRole($juan);
         $juan->assignEmployeeCode();
 
         $this->actingAs($admin)
@@ -133,6 +141,7 @@ class EmployeeAdminTest extends TestCase
     {
         $admin = User::factory()->create();
         $juan = User::factory()->create(['name' => 'Juan', 'allowance_eligible' => true]);
+        $this->grantAllowanceRole($juan);
         $juan->assignEmployeeCode();
         User::factory()->create(['name' => 'Pedro']);
 
@@ -149,6 +158,7 @@ class EmployeeAdminTest extends TestCase
     {
         $admin = User::factory()->create(['name' => 'Admin']);
         $juan = User::factory()->create(['name' => 'Juan', 'allowance_eligible' => true]);
+        $this->grantAllowanceRole($juan);
         $juan->assignEmployeeCode();
         \App\Support\EmployeeQr::issueFor($juan);
 

@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Eligible role
+    |--------------------------------------------------------------------------
+    |
+    | Membership of this role is a prerequisite for the coffee allowance: the
+    | perk exists because developers hold their meetings at the coffee shop.
+    | The per-person `allowance_eligible` switch is applied on top, so one
+    | person can be suspended without losing the role itself.
+    |
+    */
+
+    'role' => env('ALLOWANCE_ROLE', 'Swiftly Developer'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Business timezone
     |--------------------------------------------------------------------------
     |

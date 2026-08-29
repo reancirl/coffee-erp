@@ -51,6 +51,15 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        // Refuse before logging out, so the user stays signed in and can see
+        // why. Deleting would cascade away their allowance ledger.
+        if ($user->allowanceTransactions()->exists()) {
+            return back()->withErrors([
+                'password' => 'This account has coffee allowance history and cannot be deleted. '
+                    .'Ask an administrator to set you inactive instead.',
+            ]);
+        }
+
         Auth::logout();
 
         $user->delete();
