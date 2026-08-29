@@ -12,6 +12,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'allowance_user_id',
         'subtotal',
         'discount',
         'total',
@@ -45,6 +46,14 @@ class Order extends Model
     public function cashier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * The employee whose allowance paid for this order, if any.
+     */
+    public function allowanceEmployee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'allowance_user_id');
     }
 
     /**

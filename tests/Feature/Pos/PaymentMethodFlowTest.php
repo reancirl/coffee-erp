@@ -87,15 +87,27 @@ class PaymentMethodFlowTest extends TestCase
         $this->assertSame(0, Order::count());
     }
 
-    public function test_employee_allowance_is_accepted_by_the_existing_order_pipeline(): void
+    /**
+     * Phase 3 tightened this: the method alone is no longer enough, a valid
+     * employee QR must accompany it.
+     */
+    public function test_employee_allowance_is_accepted_with_a_valid_employee_qr(): void
     {
+        $employee = \App\Models\User::factory()->create(['allowance_eligible' => true]);
+        $employee->assignEmployeeCode();
+        $token = \App\Support\EmployeeQr::issueFor($employee)->token;
+
         $this->actingAs($this->cashier())
-            ->post('/orders', $this->payload(['payment_method' => PaymentMethod::EmployeeAllowance->value]))
+            ->post('/orders', $this->payload([
+                'payment_method' => PaymentMethod::EmployeeAllowance->value,
+                'employee_qr_token' => $token,
+            ]))
             ->assertSessionHasNoErrors();
 
         $order = Order::sole();
         $this->assertSame(PaymentMethod::EmployeeAllowance->value, $order->payment_method);
         $this->assertEquals(150, $order->total);
+        $this->assertSame($employee->id, $order->allowance_user_id);
     }
 
     public function test_unknown_payment_method_is_rejected_at_the_boundary(): void
@@ -136,17 +148,27 @@ class PaymentMethodFlowTest extends TestCase
         $this->assertSame('Maria', $order->cashier->name);
     }
 
-    public function test_employee_allowance_transaction_identifies_its_cashier(): void
+    public function test_employee_allowance_transaction_identifies_its_cashier_and_employee(): void
     {
         $cashier = $this->cashier();
 
+        $employee = \App\Models\User::factory()->create(['name' => 'Juan Dela Cruz', 'allowance_eligible' => true]);
+        $employee->assignEmployeeCode();
+        $token = \App\Support\EmployeeQr::issueFor($employee)->token;
+
         $this->actingAs($cashier)
-            ->post('/orders', $this->payload(['payment_method' => PaymentMethod::EmployeeAllowance->value]))
+            ->post('/orders', $this->payload([
+                'payment_method' => PaymentMethod::EmployeeAllowance->value,
+                'employee_qr_token' => $token,
+            ]))
             ->assertSessionHasNoErrors();
 
-        $order = Order::sole();
+        $order = Order::sole()->load(['cashier', 'allowanceEmployee']);
         $this->assertSame(PaymentMethod::EmployeeAllowance->value, $order->payment_method);
+        // Both sides of the dispute case are recorded.
         $this->assertSame('Maria', $order->cashier->name);
+        $this->assertSame('Juan Dela Cruz', $order->allowanceEmployee->name);
+        $this->assertSame('SW-001', $order->allowanceEmployee->employee_code);
     }
 
     public function test_guests_cannot_create_orders(): void

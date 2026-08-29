@@ -299,6 +299,7 @@ class EmployeeQrTest extends TestCase
 
         $this->assertSame(QrResolution::Unknown, $result['resolution']);
         $this->assertNull($result['user']);
+        $this->assertSame('Employee not found.', $result['message']);
     }
 
     public function test_valid_qr_for_a_deactivated_employee_is_refused(): void

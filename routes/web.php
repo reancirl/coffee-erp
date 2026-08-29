@@ -31,6 +31,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pos', [OrderController::class, 'pos'])->name('pos');
         Route::get('pos/products', [\App\Http\Controllers\ProductController::class, 'getProductsForPOS'])->name('pos.products');
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+        // Throttled: the token is unguessable, but there is no reason for a
+        // till to be resolving hundreds of codes a minute.
+        Route::post('pos/scan-employee-qr', [\App\Http\Controllers\Pos\EmployeeQrScanController::class, 'resolve'])
+            ->middleware('throttle:30,1')
+            ->name('pos.scan-employee-qr');
     });
 
     // Customer routes

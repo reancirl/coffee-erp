@@ -85,7 +85,7 @@ class EmployeeQr
         $credential = EmployeeQrCredential::with('user')->where('token', $scanned)->first();
 
         if ($credential === null) {
-            return self::outcome(QrResolution::Unknown, null, null, 'This QR is not recognised.');
+            return self::outcome(QrResolution::Unknown, null, null, 'Employee not found.');
         }
 
         if ($credential->isRevoked()) {

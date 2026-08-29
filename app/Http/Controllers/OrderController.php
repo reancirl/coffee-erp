@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentMethod;
+use App\Support\EmployeeQr;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemAddOn;
@@ -112,9 +113,32 @@ class OrderController extends Controller
             // Split payment fields
             'split_cash_amount' => 'nullable|numeric|min:0',
             'split_gcash_amount' => 'nullable|numeric|min:0',
+            // Employee allowance
+            'employee_qr_token' => 'nullable|string|max:255',
         ]);
 
         $paymentMethod = PaymentMethod::tryFromLabel($validated['payment_method']);
+
+        // An allowance order is only valid against a live, eligible employee.
+        // The token is re-resolved here rather than trusting whatever the
+        // scanner screen decided a moment ago.
+        $allowanceEmployee = null;
+
+        if ($paymentMethod === PaymentMethod::EmployeeAllowance) {
+            if (blank($validated['employee_qr_token'] ?? null)) {
+                return back()->withErrors(['payment' => 'Scan the employee QR to use the employee allowance.']);
+            }
+
+            $result = EmployeeQr::resolve($validated['employee_qr_token']);
+
+            if (! $result['resolution']->isOk()) {
+                return back()->withErrors([
+                    'payment' => ($result['message'] ?? 'This QR cannot be used.').' Payment rejected.',
+                ]);
+            }
+
+            $allowanceEmployee = $result['user'];
+        }
 
         // Additional validation for split payment
         if ($paymentMethod->isSplit()) {
@@ -174,6 +198,7 @@ class OrderController extends Controller
                 'beeper_number' => $validated['beeper_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id(),
+                'allowance_user_id' => $allowanceEmployee?->id,
                 'split_cash_amount' => $paymentMethod->isSplit() ? ($validated['split_cash_amount'] ?? null) : null,
                 'split_gcash_amount' => $paymentMethod->isSplit() ? ($validated['split_gcash_amount'] ?? null) : null,
             ]);

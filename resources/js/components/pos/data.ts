@@ -99,7 +99,8 @@ export const isAddOn = (product: any): boolean => {
 export const paymentMethods = [
     { id: 'cash', name: 'Cash' },
     { id: 'g-cash', name: 'GCash' },
-    { id: 'split', name: 'Split (Cash + GCash)' }
+    { id: 'split', name: 'Split (Cash + GCash)' },
+    { id: 'employee-allowance', name: 'Employee Allowance' }
     // { id: 'debit', name: 'Debit Card' },
     // { id: 'pmna', name: 'PMNA Card' },
 ];

@@ -20,6 +20,10 @@ interface PaymentModalProps {
     setReceiptImage: (file: File | null) => void;
     qrCodeImage: File | null;
     setQrCodeImage: (file: File | null) => void;
+    // Employee allowance
+    onScanEmployee: () => void;
+    scannedEmployee: { name: string; employee_code: string | null } | null;
+    clearScannedEmployee: () => void;
     // Split payment props
     splitCashAmount: string;
     setSplitCashAmount: (amount: string) => void;
@@ -41,6 +45,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setReceiptImage,
     qrCodeImage,
     setQrCodeImage,
+    onScanEmployee,
+    scannedEmployee,
+    clearScannedEmployee,
     splitCashAmount,
     setSplitCashAmount,
     splitGcashAmount,
@@ -128,16 +135,36 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </div>
                 )}
 
-                {selectedPaymentMethod?.id === 'pmna' && (
+                {selectedPaymentMethod?.id === 'employee-allowance' && (
                     <div className="mt-4">
-                        <label className="block mb-2">Scan QR Code</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={(e) => setQrCodeImage(e.target.files?.[0] || null)}
-                            className="w-full p-2 border rounded"
-                        />
+                        <label className="block mb-2">Employee</label>
+                        {scannedEmployee ? (
+                            <div className="flex items-center justify-between rounded border p-3">
+                                <div>
+                                    <div className="font-semibold">{scannedEmployee.name}</div>
+                                    {scannedEmployee.employee_code && (
+                                        <div className="font-mono text-sm text-gray-600">
+                                            {scannedEmployee.employee_code}
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={clearScannedEmployee}
+                                    className="rounded border px-3 py-1 text-sm"
+                                >
+                                    Rescan
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={onScanEmployee}
+                                className="w-full rounded border-2 border-dashed p-4 text-sm text-gray-600 hover:bg-gray-50"
+                            >
+                                Scan Employee QR
+                            </button>
+                        )}
                     </div>
                 )}
 
