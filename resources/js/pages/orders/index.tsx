@@ -29,6 +29,7 @@ interface Order {
     total: number;
     payment_method: string;
     payment_status: string;
+    cashier: { id: number; name: string } | null;
     status: string;
     order_type: string;
     beeper_number: string | null;
@@ -312,6 +313,7 @@ export default function Index({ orders, filters, products }: Props) {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cashier</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
@@ -350,6 +352,9 @@ export default function Index({ orders, filters, products }: Props) {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">{order.payment_method}</td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
+                                                        {order.cashier?.name ?? <span className="text-gray-400">&mdash;</span>}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                                             ${order.status === 'completed' ? 'bg-green-100 text-green-800' : 
                                                               order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
@@ -368,7 +373,7 @@ export default function Index({ orders, filters, products }: Props) {
                                                 </tr>
                                                 {isExpanded && (
                                                     <tr className="bg-gray-50">
-                                                        <td colSpan={8} className="px-6 py-4">
+                                                        <td colSpan={9} className="px-6 py-4">
                                                             <div className="flex flex-col gap-3">
                                                                 {aggregateOrderItems(order.items).map((item, idx) => (
                                                                     <div key={item.id} className="rounded-lg border border-gray-200 bg-white/80 p-3 shadow-sm">

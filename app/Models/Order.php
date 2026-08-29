@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
     protected $fillable = [
         'order_number',
+        'user_id',
         'subtotal',
         'discount',
         'total',
@@ -35,15 +38,34 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    /**
+     * The cashier who processed this order. Null for orders created before
+     * cashier attribution existed.
+     */
+    public function cashier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * The order's payment method, or null if it is not one the app knows.
+     */
+    public function paymentMethod(): ?PaymentMethod
+    {
+        return PaymentMethod::tryFromLabel($this->payment_method);
+    }
+
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($order) {
-            // Generate a simple incremental order number if not set
+            // Generate a simple incremental order number if not set.
+            // Keyed off the highest id, not the newest created_at: orders
+            // written within the same second tie on created_at and used to
+            // hand out a duplicate number, violating the unique index.
             if (empty($order->order_number)) {
-                $latestOrder = static::latest()->first();
-                $orderNumber = $latestOrder ? ($latestOrder->id + 1) : 1;
+                $orderNumber = ((int) static::max('id')) + 1;
                 $order->order_number = 'ORD-' . str_pad($orderNumber, 5, '0', STR_PAD_LEFT);
             }
         });

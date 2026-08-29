@@ -18,6 +18,8 @@ class SalesMonitoring extends Model
         'gcash_sales',
         'split_cash_sales',
         'split_gcash_sales',
+        'allowance_sales',
+        'other_sales',
         'cash_in',
         'cash_out',
         'expected_balance',
@@ -40,6 +42,8 @@ class SalesMonitoring extends Model
         'gcash_sales' => 'decimal:2',
         'split_cash_sales' => 'decimal:2',
         'split_gcash_sales' => 'decimal:2',
+        'allowance_sales' => 'decimal:2',
+        'other_sales' => 'decimal:2',
         'cash_in' => 'decimal:2',
         'cash_out' => 'decimal:2',
         'expected_balance' => 'decimal:2',
@@ -64,6 +68,13 @@ class SalesMonitoring extends Model
         return $this->hasMany(CashRemittance::class);
     }
 
+    /**
+     * Cash expected in the drawer.
+     *
+     * Only methods that physically add cash count: GCash, Employee Allowance
+     * and unrecognised methods are deliberately excluded, so redeeming an
+     * allowance never inflates the drawer or its variance.
+     */
     public function calculateExpectedBalance(): float
     {
         return $this->opening_balance + $this->cash_sales + $this->split_cash_sales + $this->cash_in - $this->cash_out;
@@ -77,9 +88,17 @@ class SalesMonitoring extends Model
         return $this->actual_balance - $this->calculateExpectedBalance();
     }
 
+    /**
+     * All revenue taken for the day, regardless of how it was settled.
+     */
     public function getTotalSalesAttribute(): float
     {
-        return $this->cash_sales + $this->gcash_sales + $this->split_cash_sales + $this->split_gcash_sales;
+        return $this->cash_sales
+            + $this->gcash_sales
+            + $this->split_cash_sales
+            + $this->split_gcash_sales
+            + $this->allowance_sales
+            + $this->other_sales;
     }
 
     public function getTotalCashAttribute(): float
@@ -90,5 +109,13 @@ class SalesMonitoring extends Model
     public function getTotalGcashAttribute(): float
     {
         return $this->gcash_sales + $this->split_gcash_sales;
+    }
+
+    /**
+     * Revenue settled without money reaching the till.
+     */
+    public function getTotalNonCashAttribute(): float
+    {
+        return $this->gcash_sales + $this->split_gcash_sales + $this->allowance_sales + $this->other_sales;
     }
 }

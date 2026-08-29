@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemAddOn;
@@ -9,6 +10,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -28,7 +30,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with('items.addOns');
+        $query = Order::with(['items.addOns', 'cashier:id,name']);
 
         // Apply date filters if provided
         if ($request->filled('start_date')) {
@@ -88,7 +90,7 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'payment_method' => 'required|string',
+            'payment_method' => ['required', 'string', Rule::in(PaymentMethod::acceptedValues())],
             'order_type' => 'nullable|string',
             'beeper_number' => 'nullable|string',
             'items' => 'required|array|min:1',
@@ -112,8 +114,10 @@ class OrderController extends Controller
             'split_gcash_amount' => 'nullable|numeric|min:0',
         ]);
 
+        $paymentMethod = PaymentMethod::tryFromLabel($validated['payment_method']);
+
         // Additional validation for split payment
-        if ($validated['payment_method'] === 'Split (Cash + GCash)') {
+        if ($paymentMethod->isSplit()) {
             if (empty($validated['split_cash_amount']) || empty($validated['split_gcash_amount'])) {
                 return back()->withErrors(['payment' => 'Both cash and GCash amounts are required for split payment.']);
             }
@@ -163,15 +167,15 @@ class OrderController extends Controller
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'total' => $total,
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => $paymentMethod->value,
                 'payment_status' => 'completed',
                 'status' => 'pending', // Start as pending, will be completed via kitchen queue
                 'order_type' => $validated['order_type'] ?? 'dine-in',
                 'beeper_number' => $validated['beeper_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id(),
-                'split_cash_amount' => $validated['split_cash_amount'] ?? null,
-                'split_gcash_amount' => $validated['split_gcash_amount'] ?? null,
+                'split_cash_amount' => $paymentMethod->isSplit() ? ($validated['split_cash_amount'] ?? null) : null,
+                'split_gcash_amount' => $paymentMethod->isSplit() ? ($validated['split_gcash_amount'] ?? null) : null,
             ]);
 
             // Add order items
@@ -229,7 +233,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         return Inertia::render('orders/show', [
-            'order' => $order->load('items.addOns')
+            'order' => $order->load(['items.addOns', 'cashier:id,name'])
         ]);
     }
     

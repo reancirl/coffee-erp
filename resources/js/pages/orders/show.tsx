@@ -34,6 +34,7 @@ interface Order {
     total: number;
     payment_method: string;
     payment_status: string;
+    cashier: { id: number; name: string } | null;
     status: string;
     order_type: string;
     beeper_number: string | null;
@@ -142,6 +143,12 @@ export default function Show({ order }: Props) {
                                 <div>
                                     <p className="text-sm text-gray-500">Payment</p>
                                     <p className="font-medium">{order.payment_method}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Cashier</p>
+                                    <p className="font-medium">
+                                        {order.cashier?.name ?? <span className="text-gray-400">Not recorded</span>}
+                                    </p>
                                 </div>
                                 {(order.split_cash_amount || order.split_gcash_amount) && (
                                     <div className="col-span-2">
