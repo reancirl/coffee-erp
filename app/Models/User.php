@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\EmploymentStatus;
 use App\Support\EmployeeCode;
+use App\Support\EmployeeQr;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -86,6 +87,22 @@ class User extends Authenticatable
     public function processedOrders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Every QR credential ever issued to this user, revoked ones included.
+     */
+    public function qrCredentials(): HasMany
+    {
+        return $this->hasMany(EmployeeQrCredential::class);
+    }
+
+    /**
+     * The credential a scanner would currently accept, if any.
+     */
+    public function activeQrCredential(): ?EmployeeQrCredential
+    {
+        return EmployeeQr::activeFor($this);
     }
 
     public function isActive(): bool

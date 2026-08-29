@@ -108,6 +108,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['module.access:sales-monitoring'])->group(function () {
         Route::get('employees', [\App\Http\Controllers\EmployeeController::class, 'index'])->name('employees.index');
         Route::patch('employees/{user}', [\App\Http\Controllers\EmployeeController::class, 'update'])->name('employees.update');
+        Route::get('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'qr'])->name('employees.qr');
+        Route::post('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'issueQr'])->name('employees.qr.issue');
+        Route::delete('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'revokeQr'])->name('employees.qr.revoke');
         
         // Shift Management
         Route::get('/shifts', function () {

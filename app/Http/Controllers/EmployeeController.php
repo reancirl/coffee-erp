@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\EmploymentStatus;
 use App\Models\User;
 use App\Support\EmployeeCode;
+use App\Support\EmployeeQr;
+use App\Support\QrImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -46,6 +48,8 @@ class EmployeeController extends Controller
                     'allowance_eligible' => $user->allowance_eligible,
                     'can_redeem_allowance' => $user->canRedeemAllowance(),
                     'ineligibility_reason' => $user->allowanceIneligibilityReason(),
+                    'has_qr' => $user->activeQrCredential() !== null,
+                    'qr_issued_at' => $user->activeQrCredential()?->issued_at?->toDayDateTimeString(),
                 ]),
                 'meta' => [
                     'current_page' => $employees->currentPage(),
@@ -91,5 +95,51 @@ class EmployeeController extends Controller
         });
 
         return redirect()->back()->with('success', "{$user->name} updated.");
+    }
+
+    /**
+     * The employee's QR as an SVG image.
+     *
+     * Served as an image so the raw token never has to travel in page props.
+     */
+    public function qr(User $user)
+    {
+        $credential = $user->activeQrCredential();
+
+        abort_if($credential === null, 404, 'This employee has no active QR.');
+
+        return response($credential->token ? QrImage::svg($credential->token) : '', 200, [
+            'Content-Type' => 'image/svg+xml',
+            // A QR is a credential: never let a shared cache hold on to it.
+            'Cache-Control' => 'no-store, private',
+        ]);
+    }
+
+    /**
+     * Issue (or reissue) the employee's QR. Any previous QR stops working.
+     */
+    public function issueQr(Request $request, User $user)
+    {
+        if (! $user->canRedeemAllowance()) {
+            return back()->withErrors([
+                'qr' => $user->allowanceIneligibilityReason() ?? 'This employee cannot hold an allowance QR.',
+            ]);
+        }
+
+        EmployeeQr::issueFor($user, $request->user());
+
+        return back()->with('success', "New QR issued for {$user->name}. Any previous QR no longer works.");
+    }
+
+    /**
+     * Revoke the employee's QR without issuing a replacement.
+     */
+    public function revokeQr(Request $request, User $user)
+    {
+        $revoked = EmployeeQr::revokeFor($user, $request->user());
+
+        return back()->with('success', $revoked > 0
+            ? "QR revoked for {$user->name}."
+            : "{$user->name} had no active QR.");
     }
 }

@@ -15,6 +15,9 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('settings/password', [PasswordController::class, 'update'])->name('password.update');
 
+    Route::get('settings/coffee-qr', [\App\Http\Controllers\Settings\EmployeeQrController::class, 'show'])->name('coffee-qr.show');
+    Route::get('settings/coffee-qr/image', [\App\Http\Controllers\Settings\EmployeeQrController::class, 'image'])->name('coffee-qr.image');
+
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');
     })->name('appearance');

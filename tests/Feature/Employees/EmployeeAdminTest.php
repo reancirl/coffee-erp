@@ -145,6 +145,24 @@ class EmployeeAdminTest extends TestCase
             );
     }
 
+    public function test_directory_reports_qr_state(): void
+    {
+        $admin = User::factory()->create(['name' => 'Admin']);
+        $juan = User::factory()->create(['name' => 'Juan', 'allowance_eligible' => true]);
+        $juan->assignEmployeeCode();
+        \App\Support\EmployeeQr::issueFor($juan);
+
+        $this->actingAs($admin)
+            ->get('/employees')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('employees.data.0.name', 'Admin')
+                ->where('employees.data.0.has_qr', false)
+                ->where('employees.data.1.name', 'Juan')
+                ->where('employees.data.1.has_qr', true)
+            );
+    }
+
     public function test_guests_cannot_view_the_directory(): void
     {
         $this->get('/employees')->assertRedirect('/login');
