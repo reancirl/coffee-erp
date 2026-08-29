@@ -116,6 +116,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'qr'])->name('employees.qr');
         Route::post('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'issueQr'])->name('employees.qr.issue');
         Route::delete('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'revokeQr'])->name('employees.qr.revoke');
+        Route::get('employees/{user}/allowance', [\App\Http\Controllers\EmployeeController::class, 'allowance'])->name('employees.allowance');
+        Route::post('employees/{user}/allowance/adjust', [\App\Http\Controllers\EmployeeController::class, 'adjustAllowance'])->name('employees.allowance.adjust');
         
         // Shift Management
         Route::get('/shifts', function () {

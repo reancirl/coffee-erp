@@ -14,9 +14,28 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class AllowanceTransaction extends Model
 {
-    public const TYPE_REDEMPTION = 'redemption';
-    public const TYPE_REFUND = 'refund';
+    public const TYPE_REDEEM = 'redeem';
+    public const TYPE_REVERSAL = 'reversal';
     public const TYPE_ADJUSTMENT = 'adjustment';
+
+    /** @return array<int, string> */
+    public static function types(): array
+    {
+        return [self::TYPE_REDEEM, self::TYPE_REVERSAL, self::TYPE_ADJUSTMENT];
+    }
+
+    public function isReversal(): bool
+    {
+        return $this->type === self::TYPE_REVERSAL;
+    }
+
+    /** Signed amount as a display string, e.g. "-150.00" / "+150.00". */
+    public function getSignedAmountAttribute(): string
+    {
+        $amount = (float) $this->amount;
+
+        return ($amount < 0 ? '-' : '+').number_format(abs($amount), 2);
+    }
 
     protected $fillable = [
         'allowance_period_id',

@@ -161,7 +161,7 @@ class Allowance
                 'user_id' => $user->id,
                 'order_id' => $order?->id,
                 'amount' => -$amount,
-                'type' => AllowanceTransaction::TYPE_REDEMPTION,
+                'type' => AllowanceTransaction::TYPE_REDEEM,
                 'description' => $order?->order_number,
                 'recorded_by' => $actor?->id,
             ]);
@@ -169,19 +169,72 @@ class Allowance
     }
 
     /**
-     * Put money back, e.g. when an order is voided. Booked against the period
-     * the original spend belongs to, not today's.
+     * Put money back, e.g. when an order is voided.
+     *
+     * Booked against the period the original spend belongs to, not today's, so
+     * voiding an August order in September restores August's balance. The
+     * original row is left exactly as it was.
      */
-    public static function refund(AllowanceTransaction $original, ?User $actor = null, ?string $reason = null): AllowanceTransaction
+    public static function reverse(AllowanceTransaction $original, ?User $actor = null, ?string $reason = null): AllowanceTransaction
     {
         return AllowanceTransaction::create([
             'allowance_period_id' => $original->allowance_period_id,
             'user_id' => $original->user_id,
             'order_id' => $original->order_id,
             'amount' => abs((float) $original->amount),
-            'type' => AllowanceTransaction::TYPE_REFUND,
+            'type' => AllowanceTransaction::TYPE_REVERSAL,
             'description' => $reason ?? 'Reversal of transaction #'.$original->id,
             'recorded_by' => $actor?->id,
+        ]);
+    }
+
+    /**
+     * Reverse every outstanding redemption booked against an order.
+     *
+     * Returns the reversals written. Already-reversed redemptions are skipped,
+     * so voiding the same order twice cannot refund it twice.
+     *
+     * @return Collection<int, AllowanceTransaction>
+     */
+    public static function reverseOrder(Order $order, ?User $actor = null, ?string $reason = null): Collection
+    {
+        return DB::transaction(function () use ($order, $actor, $reason) {
+            $redemptions = AllowanceTransaction::where('order_id', $order->id)
+                ->where('type', AllowanceTransaction::TYPE_REDEEM)
+                ->get();
+
+            $alreadyReversed = AllowanceTransaction::where('order_id', $order->id)
+                ->where('type', AllowanceTransaction::TYPE_REVERSAL)
+                ->count();
+
+            return $redemptions
+                ->skip($alreadyReversed)
+                ->map(fn (AllowanceTransaction $redemption) => self::reverse($redemption, $actor, $reason))
+                ->values();
+        });
+    }
+
+    /**
+     * A manual correction, up or down.
+     *
+     * Authorisation is the caller's job — see User::canAdjustAllowances().
+     */
+    public static function adjust(User $user, float $amount, User $actor, string $reason): ?AllowanceTransaction
+    {
+        $amount = round($amount, 2);
+        $period = self::currentPeriodFor($user);
+
+        if ($period === null || $amount == 0.0) {
+            return null;
+        }
+
+        return AllowanceTransaction::create([
+            'allowance_period_id' => $period->id,
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'type' => AllowanceTransaction::TYPE_ADJUSTMENT,
+            'description' => $reason,
+            'recorded_by' => $actor->id,
         ]);
     }
 }

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserCog, Search, Coffee, QrCode, Printer, Ban } from 'lucide-react';
+import { UserCog, Search, Coffee, QrCode, Printer, Ban, Receipt } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -43,6 +43,35 @@ interface Props {
     statuses: string[];
 }
 
+interface LedgerEntry {
+    id: number;
+    type: string;
+    signed_amount: string;
+    description: string | null;
+    order_number: string | null;
+    recorded_at: string | null;
+}
+
+interface Ledger {
+    employee: { id: number; name: string; employee_code: string | null };
+    period: string | null;
+    amount: number;
+    used: number;
+    remaining: number;
+    can_adjust: boolean;
+    transactions: LedgerEntry[];
+    history: { label: string; amount: number; used: number; remaining: number }[];
+}
+
+const peso = (amount: number): string =>
+    new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+
+const TYPE_LABELS: Record<string, string> = {
+    redeem: 'Redeem',
+    reversal: 'Reversal',
+    adjustment: 'Adjustment',
+};
+
 const initials = (name: string) =>
     name
         .split(' ')
@@ -60,6 +89,10 @@ export default function Index({ employees, filters, statuses }: Props) {
     // Bumped after issue/revoke so the <img> refetches instead of showing a
     // stale credential.
     const [qrVersion, setQrVersion] = useState(0);
+    const [ledger, setLedger] = useState<Ledger | null>(null);
+    const [ledgerLoading, setLedgerLoading] = useState(false);
+    const [adjustAmount, setAdjustAmount] = useState('');
+    const [adjustReason, setAdjustReason] = useState('');
 
     // Draft state for the edit dialog.
     const [position, setPosition] = useState('');
@@ -80,6 +113,37 @@ export default function Index({ employees, filters, statuses }: Props) {
         setPosition(employee.position ?? '');
         setStatus(employee.employment_status);
         setEligible(employee.allowance_eligible);
+    };
+
+    const openLedger = async (employee: Employee) => {
+        setLedgerLoading(true);
+        setLedger(null);
+        setAdjustAmount('');
+        setAdjustReason('');
+        try {
+            const response = await fetch(`/employees/${employee.id}/allowance`, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            setLedger(await response.json());
+        } finally {
+            setLedgerLoading(false);
+        }
+    };
+
+    const submitAdjustment = () => {
+        if (!ledger) return;
+        router.post(
+            `/employees/${ledger.employee.id}/allowance/adjust`,
+            { amount: adjustAmount, reason: adjustReason },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    const employee = employees.data.find((e) => e.id === ledger.employee.id);
+                    if (employee) void openLedger(employee);
+                },
+            },
+        );
     };
 
     const issueQr = (employee: Employee) => {
@@ -275,6 +339,14 @@ export default function Index({ employees, filters, statuses }: Props) {
                                                 >
                                                     <QrCode className="h-4 w-4" />
                                                 </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    title="Allowance ledger"
+                                                    onClick={() => void openLedger(employee)}
+                                                >
+                                                    <Receipt className="h-4 w-4" />
+                                                </Button>
                                                 <Button size="sm" variant="outline" onClick={() => openEditor(employee)}>
                                                     Edit
                                                 </Button>
@@ -287,6 +359,138 @@ export default function Index({ employees, filters, statuses }: Props) {
                     </CardContent>
                 </Card>
             </div>
+
+            <Dialog
+                open={ledger !== null || ledgerLoading}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setLedger(null);
+                        setLedgerLoading(false);
+                    }
+                }}
+            >
+                <DialogContent className="max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Allowance ledger</DialogTitle>
+                    </DialogHeader>
+
+                    {ledgerLoading && <p className="py-8 text-center text-sm text-gray-500">Loading...</p>}
+
+                    {ledger && (
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <div className="font-semibold">{ledger.employee.name}</div>
+                                {ledger.employee.employee_code && (
+                                    <div className="font-mono text-sm text-gray-600">{ledger.employee.employee_code}</div>
+                                )}
+                            </div>
+
+                            {ledger.period === null ? (
+                                <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">
+                                    No active allowance period. The employee must be active and eligible.
+                                </p>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-3 gap-2 text-center">
+                                        <div className="rounded-md border p-2">
+                                            <div className="text-xs text-gray-500">Allowance</div>
+                                            <div className="font-semibold">{peso(ledger.amount)}</div>
+                                        </div>
+                                        <div className="rounded-md border p-2">
+                                            <div className="text-xs text-gray-500">Used</div>
+                                            <div className="font-semibold">{peso(ledger.used)}</div>
+                                        </div>
+                                        <div className="rounded-md border p-2">
+                                            <div className="text-xs text-gray-500">Remaining</div>
+                                            <div className={ledger.remaining <= 0 ? 'font-semibold text-red-600' : 'font-semibold text-green-700'}>
+                                                {peso(ledger.remaining)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="mb-1 text-xs uppercase tracking-wide text-gray-500">
+                                            {ledger.period}
+                                        </div>
+                                        {ledger.transactions.length === 0 ? (
+                                            <p className="py-3 text-sm text-gray-500">No movement this period.</p>
+                                        ) : (
+                                            <ul className="divide-y text-sm">
+                                                {ledger.transactions.map((entry) => (
+                                                    <li key={entry.id} className="flex items-start justify-between gap-3 py-2">
+                                                        <div>
+                                                            <div className="font-medium">
+                                                                {TYPE_LABELS[entry.type] ?? entry.type}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {entry.order_number ?? entry.description ?? '—'}
+                                                            </div>
+                                                            {entry.recorded_at && (
+                                                                <div className="text-xs text-gray-400">{entry.recorded_at}</div>
+                                                            )}
+                                                        </div>
+                                                        <div
+                                                            className={
+                                                                entry.signed_amount.startsWith('-')
+                                                                    ? 'font-mono text-red-600'
+                                                                    : 'font-mono text-green-700'
+                                                            }
+                                                        >
+                                                            ₱{entry.signed_amount}
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+
+                                    {ledger.can_adjust && (
+                                        <div className="rounded-md border p-3">
+                                            <div className="mb-2 text-sm font-medium">Post an adjustment</div>
+                                            <div className="flex flex-col gap-2">
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="Amount (negative to claw back)"
+                                                    value={adjustAmount}
+                                                    onChange={(e) => setAdjustAmount(e.target.value)}
+                                                />
+                                                <Input
+                                                    placeholder="Reason (required)"
+                                                    value={adjustReason}
+                                                    onChange={(e) => setAdjustReason(e.target.value)}
+                                                />
+                                                <Button
+                                                    onClick={submitAdjustment}
+                                                    disabled={!adjustAmount || !adjustReason}
+                                                >
+                                                    Record adjustment
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {ledger.history.length > 1 && (
+                                <div>
+                                    <div className="mb-1 text-xs uppercase tracking-wide text-gray-500">History</div>
+                                    <ul className="divide-y text-sm">
+                                        {ledger.history.map((period) => (
+                                            <li key={period.label} className="flex justify-between py-1">
+                                                <span>{period.label}</span>
+                                                <span className="text-gray-600">
+                                                    {peso(period.used)} used of {peso(period.amount)}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={qrFor !== null} onOpenChange={(open) => !open && setQrFor(null)}>
                 <DialogContent>

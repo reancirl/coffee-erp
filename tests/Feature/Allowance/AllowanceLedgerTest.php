@@ -35,7 +35,7 @@ class AllowanceLedgerTest extends TestCase
 
         $this->assertNotNull($transaction);
         $this->assertEquals(-150, $transaction->amount);
-        $this->assertSame(AllowanceTransaction::TYPE_REDEMPTION, $transaction->type);
+        $this->assertSame(AllowanceTransaction::TYPE_REDEEM, $transaction->type);
         $this->assertSame(850.0, Allowance::balanceFor($juan)['remaining']);
     }
 
@@ -84,7 +84,7 @@ class AllowanceLedgerTest extends TestCase
         $juan = $this->employee();
         $spend = Allowance::redeem($juan, 650);
 
-        $refund = Allowance::refund($spend, null, 'Order voided');
+        $refund = Allowance::reverse($spend, null, 'Order voided');
 
         $this->assertEquals(650, $refund->amount);
         $this->assertSame($spend->allowance_period_id, $refund->allowance_period_id);
@@ -146,7 +146,7 @@ class AllowanceLedgerTest extends TestCase
     public function test_a_fully_refunded_period_also_reports_a_plain_zero(): void
     {
         $juan = $this->employee();
-        Allowance::refund(Allowance::redeem($juan, 650));
+        Allowance::reverse(Allowance::redeem($juan, 650));
 
         $this->assertSame('0', (string) Allowance::balanceFor($juan)['used']);
     }

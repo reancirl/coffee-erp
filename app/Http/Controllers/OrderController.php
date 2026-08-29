@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentMethod;
+use App\Exceptions\InsufficientAllowanceException;
+use App\Support\Allowance;
 use App\Support\EmployeeQr;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -203,6 +205,20 @@ class OrderController extends Controller
                 'split_gcash_amount' => $paymentMethod->isSplit() ? ($validated['split_gcash_amount'] ?? null) : null,
             ]);
 
+            // Draw the money down inside the same transaction as the order.
+            // If the balance cannot cover it, the exception rolls the order
+            // back with it, so no order exists without its ledger entry.
+            if ($allowanceEmployee !== null) {
+                $ledgerEntry = Allowance::redeem($allowanceEmployee, $total, $order, auth()->user());
+
+                if ($ledgerEntry === null) {
+                    throw new InsufficientAllowanceException(
+                        Allowance::balanceFor($allowanceEmployee)['remaining'],
+                        $total,
+                    );
+                }
+            }
+
             // Add order items
             foreach ($validated['items'] as $itemData) {
                 $itemTotal = ($itemData['price'] * $itemData['quantity']) - ($itemData['discount'] ?? 0);
@@ -244,6 +260,10 @@ class OrderController extends Controller
 
             return redirect()->back()->with('message', 'Order created successfully');
 
+        } catch (InsufficientAllowanceException $e) {
+            DB::rollBack();
+
+            return back()->withErrors(['payment' => $e->getMessage().' Payment rejected.']);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error creating order: ' . $e->getMessage());
@@ -303,13 +323,28 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
             
+            // Guard against a double void writing a second reversal and
+            // refunding the allowance twice.
+            if ($order->status === 'voided') {
+                DB::rollBack();
+
+                return redirect()->back()->with('message', 'This order is already voided');
+            }
+
             $order->update([
                 'status' => 'voided',
                 'payment_status' => 'voided'
             ]);
-            
+
+            // Give the allowance back, booked against the period the spend
+            // came from rather than whatever month it is now.
+            $reversals = Allowance::reverseOrder($order, auth()->user(), 'Order '.$order->order_number.' voided');
+
             DB::commit();
-            return redirect()->back()->with('message', 'Order has been voided successfully');
+
+            return redirect()->back()->with('message', $reversals->isNotEmpty()
+                ? 'Order voided and allowance returned'
+                : 'Order has been voided successfully');
             
         } catch (\Exception $e) {
             DB::rollBack();

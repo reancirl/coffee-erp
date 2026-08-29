@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\EmploymentStatus;
 use App\Models\User;
+use App\Models\AllowanceTransaction;
+use App\Support\Allowance;
 use App\Support\EmployeeCode;
 use App\Support\EmployeeQr;
 use App\Support\QrImage;
@@ -129,6 +131,77 @@ class EmployeeController extends Controller
         EmployeeQr::issueFor($user, $request->user());
 
         return back()->with('success', "New QR issued for {$user->name}. Any previous QR no longer works.");
+    }
+
+    /**
+     * The employee's allowance ledger: current period, balance and every
+     * movement behind it. This is the answer to "why do I only have P550?".
+     */
+    public function allowance(User $user)
+    {
+        $balance = Allowance::balanceFor($user);
+
+        return response()->json([
+            'employee' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'employee_code' => $user->employee_code,
+            ],
+            'period' => $balance['label'],
+            'amount' => $balance['amount'],
+            'used' => $balance['used'],
+            'remaining' => $balance['remaining'],
+            'can_adjust' => request()->user()->canAdjustAllowances(),
+            'transactions' => $balance['period'] === null ? [] : $balance['period']
+                ->transactions()
+                ->with('order:id,order_number')
+                ->latest('id')
+                ->get()
+                ->map(fn (AllowanceTransaction $t) => [
+                    'id' => $t->id,
+                    'type' => $t->type,
+                    'amount' => (float) $t->amount,
+                    'signed_amount' => $t->signed_amount,
+                    'description' => $t->description,
+                    'order_number' => $t->order?->order_number,
+                    'recorded_at' => $t->created_at?->toDayDateTimeString(),
+                ]),
+            'history' => Allowance::historyFor($user)->map(fn ($p) => [
+                'label' => $p->label,
+                'amount' => (float) $p->amount,
+                'used' => $p->used(),
+                'remaining' => $p->remaining(),
+            ]),
+        ]);
+    }
+
+    /**
+     * Post a manual adjustment against the employee's current period.
+     */
+    public function adjustAllowance(Request $request, User $user)
+    {
+        if (! $request->user()->canAdjustAllowances()) {
+            abort(403, 'You are not authorised to adjust allowances.');
+        }
+
+        $validated = $request->validate([
+            // Signed: negative claws back, positive tops up.
+            'amount' => 'required|numeric|not_in:0',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $transaction = Allowance::adjust(
+            $user,
+            (float) $validated['amount'],
+            $request->user(),
+            $validated['reason'],
+        );
+
+        if ($transaction === null) {
+            return back()->withErrors(['allowance' => 'This employee has no active allowance period to adjust.']);
+        }
+
+        return back()->with('success', "Adjustment of {$transaction->signed_amount} recorded for {$user->name}.");
     }
 
     /**

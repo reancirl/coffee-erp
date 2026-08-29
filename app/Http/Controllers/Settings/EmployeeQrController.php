@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\AllowanceTransaction;
+use App\Support\Allowance;
 use App\Support\QrImage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,7 +33,42 @@ class EmployeeQrController extends Controller
             'qr' => $credential === null ? null : [
                 'issued_at' => $credential->issued_at?->toDayDateTimeString(),
             ],
+            'allowance' => $this->allowanceSummary($user),
         ]);
+    }
+
+    /**
+     * The employee's own balance and the movements behind it, so "why do I
+     * only have P550?" is answerable without asking an admin.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function allowanceSummary($user): ?array
+    {
+        $balance = Allowance::balanceFor($user);
+
+        if ($balance['period'] === null) {
+            return null;
+        }
+
+        return [
+            'period' => $balance['label'],
+            'amount' => $balance['amount'],
+            'used' => $balance['used'],
+            'remaining' => $balance['remaining'],
+            'transactions' => $balance['period']->transactions()
+                ->with('order:id,order_number')
+                ->latest('id')
+                ->get()
+                ->map(fn (AllowanceTransaction $t) => [
+                    'id' => $t->id,
+                    'type' => $t->type,
+                    'signed_amount' => $t->signed_amount,
+                    'description' => $t->description,
+                    'order_number' => $t->order?->order_number,
+                    'recorded_at' => $t->created_at?->toDayDateTimeString(),
+                ]),
+        ];
     }
 
     public function image(Request $request)

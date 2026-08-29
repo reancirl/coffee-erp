@@ -9,6 +9,7 @@ use App\Support\EmployeeQr;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -157,6 +158,65 @@ class User extends Authenticatable
         }
 
         return null;
+    }
+
+    /**
+     * Where this user should land after logging in.
+     *
+     * Everything in the app is module-gated, so a rank-and-file employee with
+     * no modules used to be dropped straight onto a 403 dashboard with no way
+     * to reach even their own coffee QR. Send them somewhere they can actually
+     * use instead.
+     */
+    public function landingRoute(): string
+    {
+        $modules = $this->getAccessibleModules();
+
+        if (in_array('dashboard', $modules, true)) {
+            return route('dashboard', absolute: false);
+        }
+
+        $firstModuleRoute = [
+            'pos' => 'pos',
+            'orders' => 'orders.index',
+            'sales-monitoring' => 'sales-monitoring.index',
+            'products' => 'products.index',
+            'customers' => 'customers.index',
+            'categories' => 'categories.index',
+            'reports' => 'reports.z-report',
+            'event-booking' => 'event-bookings.index',
+        ];
+
+        foreach ($modules as $module) {
+            if (isset($firstModuleRoute[$module]) && Route::has($firstModuleRoute[$module])) {
+                return route($firstModuleRoute[$module], absolute: false);
+            }
+        }
+
+        // No modules at all: an employee whose only business here is their
+        // own allowance QR.
+        return route('coffee-qr.show', absolute: false);
+    }
+
+    /**
+     * May this user post a manual allowance adjustment?
+     *
+     * Adjustments move money without a sale behind them, so they are held to a
+     * higher bar than ordinary POS work: super admins, or an explicitly
+     * granted permission. Being a cashier is not enough.
+     */
+    public function canAdjustAllowances(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        // The permission may not be seeded yet; treat absence as "no".
+        try {
+            return $this->hasPermissionTo('adjust allowance');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**

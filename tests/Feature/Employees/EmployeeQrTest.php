@@ -203,6 +203,30 @@ class EmployeeQrTest extends TestCase
         $this->actingAs($juan)->get('/settings/coffee-qr/image')->assertOk();
     }
 
+    public function test_an_employee_with_no_modules_lands_on_their_qr_page(): void
+    {
+        $tenant = new \App\Models\Tenant();
+        $tenant->name = 'Swiftly Cafe';
+        $tenant->save();
+
+        $juan = $this->employee(['tenant_id' => $tenant->id]);
+
+        // No roles, so no module access anywhere in the app.
+        $this->assertSame([], $juan->getAccessibleModules());
+        $this->assertSame('/settings/coffee-qr', $juan->landingRoute());
+
+        // And the page itself is reachable, unlike the module-gated dashboard.
+        $this->actingAs($juan)->get('/settings/coffee-qr')->assertOk();
+        $this->actingAs($juan)->get('/dashboard')->assertForbidden();
+    }
+
+    public function test_a_user_with_dashboard_access_still_lands_on_the_dashboard(): void
+    {
+        $admin = User::factory()->create();
+
+        $this->assertSame('/dashboard', $admin->landingRoute());
+    }
+
     public function test_guests_cannot_reach_qr_endpoints(): void
     {
         $juan = $this->employee();
