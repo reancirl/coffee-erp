@@ -69,17 +69,26 @@ class AllowanceScanTest extends TestCase
             ]);
     }
 
-    public function test_scan_response_never_includes_balance_information(): void
+    /**
+     * Phase 4 changed this deliberately: the cashier now needs the remaining
+     * balance on screen. What must still never carry it is the QR itself —
+     * the balance is looked up server-side from the ledger.
+     */
+    public function test_scan_returns_the_balance_but_the_token_never_encodes_it(): void
     {
         $juan = $this->employee();
         $token = EmployeeQr::issueFor($juan)->token;
 
-        $response = $this->actingAs($this->cashier())
-            ->postJson('/pos/scan-employee-qr', ['token' => $token]);
+        $this->actingAs($this->cashier())
+            ->postJson('/pos/scan-employee-qr', ['token' => $token])
+            ->assertOk()
+            ->assertJsonPath('allowance.amount', 1000)
+            ->assertJsonPath('allowance.used', 0)
+            ->assertJsonPath('allowance.remaining', 1000);
 
-        $body = strtolower($response->getContent());
-        foreach (['balance', 'remaining', 'allowance_amount', '1000'] as $forbidden) {
-            $this->assertStringNotContainsString($forbidden, $body);
+        // The scanned value itself is still opaque.
+        foreach (['balance', 'remaining', '1000'] as $forbidden) {
+            $this->assertStringNotContainsString($forbidden, strtolower($token));
         }
     }
 

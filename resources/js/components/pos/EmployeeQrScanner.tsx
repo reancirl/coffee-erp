@@ -1,12 +1,20 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import QrScanner from 'qr-scanner';
 
+export interface AllowanceBalance {
+    period: string | null;
+    amount: number;
+    used: number;
+    remaining: number;
+}
+
 export interface ScannedEmployee {
     id: number;
     name: string;
     employee_code: string | null;
     position: string | null;
     token: string;
+    allowance: AllowanceBalance | null;
 }
 
 interface Props {
@@ -16,6 +24,9 @@ interface Props {
 }
 
 type Phase = 'starting' | 'scanning' | 'checking' | 'identified' | 'error';
+
+const peso = (amount: number): string =>
+    new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
 
 /** Laravel accepts the XSRF cookie value as an X-XSRF-TOKEN header. */
 const xsrfToken = (): string => {
@@ -94,7 +105,7 @@ const EmployeeQrScanner: React.FC<Props> = ({ isOpen, onClose, onIdentified }) =
                 return;
             }
 
-            setEmployee({ ...body.employee, token });
+            setEmployee({ ...body.employee, token, allowance: body.allowance ?? null });
             setPhase('identified');
         } catch {
             setMessage('Could not reach the server to verify this QR.');
@@ -202,6 +213,29 @@ const EmployeeQrScanner: React.FC<Props> = ({ isOpen, onClose, onIdentified }) =
                             <div className="font-mono text-sm text-gray-600">{employee.employee_code}</div>
                         )}
                         {employee.position && <div className="text-xs text-gray-500">{employee.position}</div>}
+
+                        {employee.allowance && (
+                            <div className="mx-auto mt-4 max-w-xs rounded-md border p-3 text-sm">
+                                <div className="mb-2 text-xs uppercase tracking-wide text-gray-500">
+                                    {employee.allowance.period ?? 'Allowance'}
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Allowance</span>
+                                    <span>{peso(employee.allowance.amount)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Used</span>
+                                    <span>{peso(employee.allowance.used)}</span>
+                                </div>
+                                <div className="mt-1 flex justify-between border-t pt-1 font-semibold">
+                                    <span>Remaining</span>
+                                    <span className={employee.allowance.remaining <= 0 ? 'text-red-600' : 'text-green-700'}>
+                                        {peso(employee.allowance.remaining)}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="mt-5 flex justify-center gap-2">
                             <button onClick={() => void start()} className="rounded border px-4 py-2 text-sm">
                                 Scan again

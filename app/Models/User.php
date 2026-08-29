@@ -90,6 +90,19 @@ class User extends Authenticatable
     }
 
     /**
+     * Allowance periods, including historical ones.
+     */
+    public function allowancePeriods(): HasMany
+    {
+        return $this->hasMany(AllowancePeriod::class);
+    }
+
+    public function allowanceTransactions(): HasMany
+    {
+        return $this->hasMany(AllowanceTransaction::class);
+    }
+
+    /**
      * Every QR credential ever issued to this user, revoked ones included.
      */
     public function qrCredentials(): HasMany

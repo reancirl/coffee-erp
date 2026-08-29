@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
+use App\Support\Allowance;
 use App\Support\EmployeeQr;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,6 +44,10 @@ class EmployeeQrScanController extends Controller
 
         $employee = $result['user'];
 
+        // Looked up server-side from the ledger. The QR itself still carries
+        // nothing but the opaque token.
+        $balance = Allowance::balanceFor($employee);
+
         return response()->json([
             'ok' => true,
             'resolution' => $resolution->value,
@@ -51,6 +56,12 @@ class EmployeeQrScanController extends Controller
                 'name' => $employee->name,
                 'employee_code' => $employee->employee_code,
                 'position' => $employee->position,
+            ],
+            'allowance' => [
+                'period' => $balance['label'],
+                'amount' => $balance['amount'],
+                'used' => $balance['used'],
+                'remaining' => $balance['remaining'],
             ],
         ]);
     }
