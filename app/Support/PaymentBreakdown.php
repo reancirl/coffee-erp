@@ -52,6 +52,19 @@ class PaymentBreakdown
         if ($method->isSplit()) {
             $allocations = [];
 
+            // The allowance half of an Allowance + Cash split. Revenue, but
+            // drawn from a pre-funded balance, so it never reaches the drawer.
+            $allowance = (float) ($order->split_allowance_amount ?? 0);
+            if ($allowance > 0) {
+                $allocations[] = [
+                    'method' => PaymentMethod::EmployeeAllowance,
+                    'raw' => PaymentMethod::EmployeeAllowance->value,
+                    'amount' => $allowance,
+                    'from_split' => true,
+                    'drawer' => false,
+                ];
+            }
+
             $cash = (float) ($order->split_cash_amount ?? 0);
             if ($cash > 0) {
                 $allocations[] = [

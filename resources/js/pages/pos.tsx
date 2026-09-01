@@ -82,6 +82,8 @@ export default function Pos() {
     // Split payment state
     const [splitCashAmount, setSplitCashAmount] = useState<string>('');
     const [splitGcashAmount, setSplitGcashAmount] = useState<string>('');
+    // The allowance half of an Allowance + Cash split.
+    const [splitAllowanceAmount, setSplitAllowanceAmount] = useState<string>('');
     
     // Helper function to check if product is an add-on
     const isAddOn = (product: any): boolean => {
@@ -163,6 +165,9 @@ export default function Pos() {
 
     // Same wording the order endpoint uses when it refuses, so the cashier
     // does not see two different explanations for one rule.
+    const usesAllowance = (methodId?: string) =>
+        methodId === 'employee-allowance' || methodId === 'allowance-cash';
+
     const allowanceBlockedReason = (): string | null =>
         ineligibleNames.length === 0
             ? null
@@ -186,7 +191,7 @@ export default function Pos() {
                 alert('Please take a picture of the transaction receipt.');
                 return;
             }
-        } else if (selectedPaymentMethod.id === 'employee-allowance') {
+        } else if (usesAllowance(selectedPaymentMethod.id)) {
             if (!scannedEmployee) {
                 alert('Scan the employee QR before confirming this payment.');
                 return;
@@ -195,6 +200,28 @@ export default function Pos() {
             if (blocked) {
                 alert(blocked);
                 return;
+            }
+            if (selectedPaymentMethod.id === 'allowance-cash') {
+                const fromAllowance = Number(splitAllowanceAmount);
+                const fromCash = Number(splitCashAmount);
+
+                if (!splitAllowanceAmount || !splitCashAmount) {
+                    alert('Enter how much comes from the allowance and how much is cash.');
+                    return;
+                }
+                if (fromAllowance <= 0 || fromCash <= 0) {
+                    alert('Both the allowance and the cash part must be more than zero. Use a single payment method instead.');
+                    return;
+                }
+                const remaining = scannedEmployee.allowance?.remaining ?? 0;
+                if (fromAllowance > remaining + 0.01) {
+                    alert(`Only \u20b1${remaining.toFixed(2)} is left on this allowance.`);
+                    return;
+                }
+                if (Math.abs(fromAllowance + fromCash - total) > 0.01) {
+                    alert(`The allowance and cash amounts must add up to \u20b1${total.toFixed(2)}.`);
+                    return;
+                }
             }
         } else if (selectedPaymentMethod.id === 'split') {
             const cashAmount = Number(splitCashAmount);
@@ -295,7 +322,7 @@ export default function Pos() {
         if (receiptImage) form.append('receipt_image', receiptImage)
         
         // The server re-validates this token before accepting the payment.
-        if (selectedPaymentMethod?.id === 'employee-allowance' && scannedEmployee) {
+        if (usesAllowance(selectedPaymentMethod?.id) && scannedEmployee) {
             form.append('employee_qr_token', scannedEmployee.token)
         }
 
@@ -303,6 +330,11 @@ export default function Pos() {
         if (selectedPaymentMethod?.id === 'split') {
             form.append('split_cash_amount', splitCashAmount)
             form.append('split_gcash_amount', splitGcashAmount)
+        }
+
+        if (selectedPaymentMethod?.id === 'allowance-cash') {
+            form.append('split_allowance_amount', splitAllowanceAmount)
+            form.append('split_cash_amount', splitCashAmount)
         }
       
         // Save current order for printing
@@ -315,7 +347,9 @@ export default function Pos() {
         const isCash = selectedPaymentMethod!.id === 'cash';
         const cashGiven = Number(cashAmountGiven);
         const hasCashGiven = isCash && cashAmountGiven !== '' && !isNaN(cashGiven);
-        const isAllowance = selectedPaymentMethod!.id === 'employee-allowance';
+        const isAllowance = usesAllowance(selectedPaymentMethod!.id);
+        const isAllowanceSplit = selectedPaymentMethod!.id === 'allowance-cash';
+        const drawnFromAllowance = isAllowanceSplit ? Number(splitAllowanceAmount) : printedTotal;
 
         setSavedPaymentForPrinting({
             method: selectedPaymentMethod!.name,
@@ -323,8 +357,12 @@ export default function Pos() {
             total: printedTotal,
             cashGiven: hasCashGiven ? cashGiven : null,
             change: hasCashGiven ? cashGiven - printedTotal : null,
-            splitCash: selectedPaymentMethod!.id === 'split' ? Number(splitCashAmount) : null,
+            splitCash:
+                selectedPaymentMethod!.id === 'split' || isAllowanceSplit
+                    ? Number(splitCashAmount)
+                    : null,
             splitGcash: selectedPaymentMethod!.id === 'split' ? Number(splitGcashAmount) : null,
+            splitAllowance: isAllowanceSplit ? Number(splitAllowanceAmount) : null,
             employee:
                 isAllowance && scannedEmployee
                     ? {
@@ -333,7 +371,7 @@ export default function Pos() {
                           // Fallback only; the server's figure replaces this
                           // once the order comes back.
                           remaining: scannedEmployee.allowance
-                              ? scannedEmployee.allowance.remaining - printedTotal
+                              ? scannedEmployee.allowance.remaining - drawnFromAllowance
                               : null,
                       }
                     : null,
@@ -605,7 +643,7 @@ export default function Pos() {
         } else if (method.id.toLowerCase() === 'debit' && !receiptImage) {
             alert('Please upload a receipt for this payment.');
             return;
-        } else if (method.id === 'employee-allowance') {
+        } else if (usesAllowance(method.id)) {
             if (!scannedEmployee) {
                 alert('Scan the employee QR before continuing.');
                 return;
@@ -878,6 +916,8 @@ export default function Pos() {
                 setSplitCashAmount={setSplitCashAmount}
                 splitGcashAmount={splitGcashAmount}
                 setSplitGcashAmount={setSplitGcashAmount}
+                splitAllowanceAmount={splitAllowanceAmount}
+                setSplitAllowanceAmount={setSplitAllowanceAmount}
             />
 
             <EmployeeQrScanner
@@ -912,6 +952,9 @@ export default function Pos() {
                     setScannedEmployee(null);
                     setSelectedCustomer(null);
                     setSavedPaymentForPrinting(null);
+                    setSplitCashAmount('');
+                    setSplitGcashAmount('');
+                    setSplitAllowanceAmount('');
                     setBeeperNumber(''); // Clear beeper number when transaction is done
                 }}
                 orderType={orderType}

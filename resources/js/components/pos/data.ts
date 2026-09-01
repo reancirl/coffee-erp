@@ -100,7 +100,8 @@ export const paymentMethods = [
     { id: 'cash', name: 'Cash' },
     { id: 'g-cash', name: 'GCash' },
     { id: 'split', name: 'Split (Cash + GCash)' },
-    { id: 'employee-allowance', name: 'Employee Allowance' }
+    { id: 'employee-allowance', name: 'Employee Allowance' },
+    { id: 'allowance-cash', name: 'Split (Allowance + Cash)' }
     // { id: 'debit', name: 'Debit Card' },
     // { id: 'pmna', name: 'PMNA Card' },
 ];

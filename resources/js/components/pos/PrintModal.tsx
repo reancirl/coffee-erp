@@ -14,6 +14,7 @@ export interface ReceiptPayment {
     change: number | null;
     splitCash: number | null;
     splitGcash: number | null;
+    splitAllowance: number | null;
     employee: {
         name: string;
         code: string | null;
@@ -129,6 +130,11 @@ const PrintModal: React.FC<PrintModalProps> = ({
             if (payment.methodId === 'split') {
               paymentDetail += row('- Cash:', `&#8369;${money(payment.splitCash)}`);
               paymentDetail += row('- GCash:', `&#8369;${money(payment.splitGcash)}`);
+            }
+
+            if (payment.methodId === 'allowance-cash') {
+              paymentDetail += row('- Allowance:', `&#8369;${money(payment.splitAllowance)}`);
+              paymentDetail += row('- Cash:', `&#8369;${money(payment.splitCash)}`);
             }
 
             if (payment.employee) {

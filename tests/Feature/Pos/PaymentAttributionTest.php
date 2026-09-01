@@ -62,6 +62,23 @@ class PaymentAttributionTest extends TestCase
         $this->assertEquals(0, $monitoring->expected_balance);
     }
 
+    public function test_an_allowance_and_cash_split_puts_only_its_cash_half_in_the_drawer(): void
+    {
+        // ₱150 order: ₱100 off the allowance, ₱50 handed over at the till.
+        $this->order(PaymentMethod::SplitAllowanceCash->value, 150, [
+            'split_allowance_amount' => 100,
+            'split_cash_amount' => 50,
+        ]);
+
+        $monitoring = $this->monitoring();
+
+        $this->assertEquals(100, $monitoring->allowance_sales);
+        $this->assertEquals(50, $monitoring->split_cash_sales);
+        $this->assertEquals(150, $monitoring->total_sales);
+        // Only the ₱50 was ever in the drawer to count.
+        $this->assertEquals(50, $monitoring->expected_balance);
+    }
+
     public function test_allowance_alongside_cash_leaves_only_the_cash_in_the_drawer(): void
     {
         $this->order(PaymentMethod::Cash->value, 200);

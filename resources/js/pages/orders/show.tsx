@@ -41,6 +41,7 @@ interface Order {
     notes: string | null;
     split_cash_amount?: number | null;
     split_gcash_amount?: number | null;
+    split_allowance_amount?: number | null;
     created_at: string;
     updated_at: string;
     items: OrderItem[];
@@ -150,10 +151,13 @@ export default function Show({ order }: Props) {
                                         {order.cashier?.name ?? <span className="text-gray-400">Not recorded</span>}
                                     </p>
                                 </div>
-                                {(order.split_cash_amount || order.split_gcash_amount) && (
+                                {(order.split_cash_amount || order.split_gcash_amount || order.split_allowance_amount) && (
                                     <div className="col-span-2">
                                         <p className="text-sm text-gray-500">Split Breakdown</p>
                                         <div className="flex flex-col gap-1 text-sm font-medium">
+                                            {order.split_allowance_amount !== null && order.split_allowance_amount !== undefined && (
+                                                <span>Allowance: {formatCurrency(Number(order.split_allowance_amount))}</span>
+                                            )}
                                             {order.split_cash_amount !== null && order.split_cash_amount !== undefined && (
                                                 <span>Cash: {formatCurrency(Number(order.split_cash_amount))}</span>
                                             )}
