@@ -237,6 +237,39 @@ class EmployeeQrTest extends TestCase
         $this->assertSame('/settings/profile', $pedro->landingRoute());
     }
 
+    /**
+     * The sidebar filters on the module list shared by HandleInertiaRequests.
+     * That list used to be a hardcoded duplicate, so a new module could be
+     * routable but invisible in the nav.
+     */
+    public function test_the_shared_module_list_includes_coffee_allowance(): void
+    {
+        $superAdmin = User::factory()->create(['tenant_id' => null]);
+
+        $this->actingAs($superAdmin)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('auth.accessibleModules', fn ($m) => collect($m)->contains('coffee-allowance'))
+            );
+    }
+
+    public function test_a_dev_sees_only_the_coffee_allowance_module_in_the_nav(): void
+    {
+        $tenant = new \App\Models\Tenant();
+        $tenant->name = 'Swiftly Cafe';
+        $tenant->save();
+
+        $juan = $this->employee(['tenant_id' => $tenant->id]);
+
+        $this->actingAs($juan)
+            ->get('/coffee-allowance')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('auth.accessibleModules', ['coffee-allowance'])
+            );
+    }
+
     public function test_the_old_settings_url_still_redirects(): void
     {
         $juan = $this->employee();
