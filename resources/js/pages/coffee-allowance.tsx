@@ -187,23 +187,23 @@ export default function CoffeeAllowance({ employee, qr, allowance }: Props) {
                                     </span>
                                 </CardHeader>
                                 <CardContent className="flex flex-col gap-4">
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div className="rounded-md border p-3">
-                                            <div className="text-xs text-muted-foreground">Allowance</div>
-                                            <div className="mt-1 text-lg font-semibold tabular-nums">
+                                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                                        <div className="min-w-0 rounded-md border p-2.5 sm:p-3">
+                                            <div className="truncate text-xs text-muted-foreground">Allowance</div>
+                                            <div className="mt-1 break-words text-sm font-semibold tabular-nums sm:text-lg">
                                                 {peso(allowance.amount)}
                                             </div>
                                         </div>
-                                        <div className="rounded-md border p-3">
-                                            <div className="text-xs text-muted-foreground">Used</div>
-                                            <div className="mt-1 text-lg font-semibold tabular-nums">
+                                        <div className="min-w-0 rounded-md border p-2.5 sm:p-3">
+                                            <div className="truncate text-xs text-muted-foreground">Used</div>
+                                            <div className="mt-1 break-words text-sm font-semibold tabular-nums sm:text-lg">
                                                 {peso(allowance.used)}
                                             </div>
                                         </div>
-                                        <div className="rounded-md border p-3">
-                                            <div className="text-xs text-muted-foreground">Remaining</div>
+                                        <div className="min-w-0 rounded-md border p-2.5 sm:p-3">
+                                            <div className="truncate text-xs text-muted-foreground">Remaining</div>
                                             <div
-                                                className={`mt-1 text-lg font-semibold tabular-nums ${
+                                                className={`mt-1 break-words text-sm font-semibold tabular-nums sm:text-lg ${
                                                     depleted
                                                         ? 'text-destructive'
                                                         : 'text-emerald-700 dark:text-emerald-400'
