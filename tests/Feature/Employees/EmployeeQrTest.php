@@ -237,6 +237,63 @@ class EmployeeQrTest extends TestCase
         $this->assertSame('/settings/profile', $pedro->landingRoute());
     }
 
+    /**
+     * The sidebar filters on the module list shared by HandleInertiaRequests.
+     * Coffee allowance is personal, so being an admin is not enough to see it.
+     */
+    public function test_an_admin_without_the_role_does_not_see_the_nav_item(): void
+    {
+        $superAdmin = User::factory()->create(['tenant_id' => null]);
+
+        $this->assertFalse($superAdmin->hasAllowanceRole());
+
+        $this->actingAs($superAdmin)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('auth.accessibleModules', fn ($m) => ! collect($m)->contains('coffee-allowance'))
+            );
+    }
+
+    public function test_an_admin_who_is_also_a_dev_does_see_the_nav_item(): void
+    {
+        $superAdmin = User::factory()->create(['tenant_id' => null]);
+        $this->grantAllowanceRole($superAdmin);
+
+        $this->actingAs($superAdmin)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('auth.accessibleModules', fn ($m) => collect($m)->contains('coffee-allowance'))
+            );
+    }
+
+    public function test_someone_in_the_role_but_switched_off_still_sees_the_nav_item(): void
+    {
+        // They need the page to learn why they cannot redeem.
+        $pedro = User::factory()->create(['allowance_eligible' => false]);
+        $this->grantAllowanceRole($pedro);
+
+        $this->assertFalse($pedro->canRedeemAllowance());
+        $this->assertContains('coffee-allowance', $pedro->getAccessibleModules());
+    }
+
+    public function test_a_dev_sees_only_the_coffee_allowance_module_in_the_nav(): void
+    {
+        $tenant = new \App\Models\Tenant();
+        $tenant->name = 'Swiftly Cafe';
+        $tenant->save();
+
+        $juan = $this->employee(['tenant_id' => $tenant->id]);
+
+        $this->actingAs($juan)
+            ->get('/coffee-allowance')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('auth.accessibleModules', ['coffee-allowance'])
+            );
+    }
+
     public function test_the_old_settings_url_still_redirects(): void
     {
         $juan = $this->employee();

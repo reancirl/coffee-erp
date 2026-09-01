@@ -348,25 +348,28 @@ class User extends Authenticatable
      */
     public function getAccessibleModules(): array
     {
-        // Super admin has access to everything
+        $general = ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking'];
+
+        // Super admin has access to every administrative module.
         if ($this->isSuperAdmin()) {
-            return ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking', 'coffee-allowance'];
+            $modules = $general;
+        } elseif (! $this->hasAnyRole()) {
+            $modules = [];
+        } else {
+            $modules = array_values(array_filter($general, fn (string $module) => $this->hasModuleAccess($module)));
         }
 
-        // If user has no roles, return empty array
-        if (!$this->hasAnyRole()) {
-            return [];
+        // Coffee allowance is personal, not administrative: it is "my
+        // allowance", so it belongs in the nav only for people who actually
+        // hold one. Being an admin does not earn you coffee, and showing the
+        // page to someone who can never use it is noise.
+        //
+        // Role, not canRedeemAllowance(): someone in the role but individually
+        // switched off still needs to see the page to learn why.
+        if ($this->hasAllowanceRole()) {
+            $modules[] = 'coffee-allowance';
         }
 
-        $modules = [];
-        $allModules = ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking', 'coffee-allowance'];
-        
-        foreach ($allModules as $module) {
-            if ($this->hasModuleAccess($module)) {
-                $modules[] = $module;
-            }
-        }
-        
         return $modules;
     }
 }

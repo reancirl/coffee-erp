@@ -78,6 +78,10 @@
 }
 
 :root {
+    /* Native UI (scrollbars, date pickers, autofill) follows this, not the
+       .dark class. Without it they render light on a dark page. */
+    color-scheme: light;
+
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -114,6 +118,8 @@
 }
 
 .dark {
+    color-scheme: dark;
+
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.145 0 0);
@@ -141,7 +147,8 @@
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
+    /* Was also 0.985 — an invisible mark on a glaring white block. */
+    --sidebar-primary-foreground: oklch(0.205 0 0);
     --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(0.269 0 0);
@@ -155,5 +162,33 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer base {
+    /* Slim scrollbars that take their colour from the theme. color-scheme
+       already fixes the light/dark rendering; this just stops the rail from
+       dominating narrow columns like the sidebar. */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+    }
+
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: var(--border);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--muted-foreground);
     }
 }

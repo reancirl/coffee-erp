@@ -1,44 +1,38 @@
 import { Head } from '@inertiajs/react';
-import { useForm } from '@inertiajs/react';
-import { Moon, Sun } from 'lucide-react';
+import { Monitor, Moon, Sun } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { type Appearance, useAppearance } from '@/hooks/use-appearance';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { type BreadcrumbItem } from '@/types';
 
-type Theme = 'light' | 'dark' | 'system';
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Appearance settings',
+        href: '/settings/appearance',
+    },
+];
 
-interface AppearanceSettingsProps {
-    theme: Theme;
-}
+const themes = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+] as const;
 
-export default function Appearance({ theme: currentTheme }: AppearanceSettingsProps) {
-    const { data, setData, patch, processing } = useForm<{ theme: Theme }>({
-        theme: currentTheme,
-    });
-
-    const themes = [
-        { value: 'light', label: 'Light', icon: Sun },
-        { value: 'dark', label: 'Dark', icon: Moon },
-        { value: 'system', label: 'System', icon: Sun },
-    ] as const;
-
-    const handleThemeChange = (value: Theme) => {
-        setData('theme', value);
-        patch(route('settings.appearance'), {
-            preserveScroll: true,
-        });
-    };
+export default function Appearance() {
+    // The theme is a client-side preference, persisted to localStorage and a
+    // cookie by this hook. There is no server route to patch — the previous
+    // implementation called a route that was never registered.
+    const { appearance, updateAppearance } = useAppearance();
 
     return (
-        <>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Appearance" />
-            <SettingsLayout
-                title="Appearance"
-                description="Customize the appearance of the application."
-            >
+            <SettingsLayout>
                 <Card>
                     <CardHeader>
                         <CardTitle>Theme</CardTitle>
@@ -46,8 +40,8 @@ export default function Appearance({ theme: currentTheme }: AppearanceSettingsPr
                     </CardHeader>
                     <CardContent>
                         <RadioGroup
-                            value={data.theme}
-                            onValueChange={(value: Theme) => handleThemeChange(value)}
+                            value={appearance}
+                            onValueChange={(value) => updateAppearance(value as Appearance)}
                             className="grid max-w-md grid-cols-3 gap-8 pt-2"
                         >
                             {themes.map(({ value, label, icon: Icon }) => (
@@ -70,6 +64,6 @@ export default function Appearance({ theme: currentTheme }: AppearanceSettingsPr
                     </CardContent>
                 </Card>
             </SettingsLayout>
-        </>
+        </AppLayout>
     );
 }

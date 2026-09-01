@@ -96,56 +96,25 @@ class HandleInertiaRequests extends Middleware
     /**
      * Safely get user accessible modules
      */
+    /**
+     * Modules the sidebar is allowed to show.
+     *
+     * Delegates to the model rather than repeating the rules: this used to
+     * carry its own hardcoded super-admin module list, which silently drifted
+     * out of sync with User::getAccessibleModules() and dropped new modules
+     * from the sidebar while their routes still worked.
+     */
     private function getUserAccessibleModules($user): array
     {
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
         try {
-            // Check if user is super admin (tenant_id is null)
-            if (is_null($user->tenant_id)) {
-                return ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking'];
-            }
+            return $user->getAccessibleModules();
+        } catch (\Throwable $e) {
+            \Log::error('Error getting accessible modules: '.$e->getMessage());
 
-            // Check if user has any roles using direct database query
-            $hasRoles = \DB::table('model_has_roles')
-                ->where('model_type', \App\Models\User::class)
-                ->where('model_id', $user->id)
-                ->exists();
-
-            if (!$hasRoles) {
-                return []; // No roles = no access
-            }
-
-            // Get user's role IDs
-            $userRoleIds = \DB::table('model_has_roles')
-                ->where('model_type', \App\Models\User::class)
-                ->where('model_id', $user->id)
-                ->pluck('role_id');
-
-            if ($userRoleIds->isEmpty()) {
-                return [];
-            }
-
-            // Get permissions for these roles
-            $permissionNames = \DB::table('role_has_permissions')
-                ->join('permissions', 'role_has_permissions.permission_id', '=', 'permissions.id')
-                ->whereIn('role_has_permissions.role_id', $userRoleIds)
-                ->pluck('permissions.name');
-
-            // Extract modules from permission names (e.g., "access dashboard" -> "dashboard")
-            $modules = [];
-            foreach ($permissionNames as $permission) {
-                if (str_starts_with($permission, 'access ')) {
-                    $module = str_replace('access ', '', $permission);
-                    $modules[] = $module;
-                }
-            }
-
-            return array_unique($modules);
-        } catch (\Exception $e) {
-            \Log::error('Error getting accessible modules: ' . $e->getMessage());
             return [];
         }
     }
