@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PaymentMethod;
 use App\Exceptions\InsufficientAllowanceException;
+use App\Exceptions\InvalidOrderTotalException;
 use App\Support\Allowance;
 use App\Support\EmployeeQr;
 use App\Models\Order;
@@ -187,6 +188,23 @@ class OrderController extends Controller
             $discount = $validated['discount'] ?? 0;
             $total = $subtotal - $discount;
 
+            // Discounts are validated as non-negative but have no upper bound,
+            // so a large enough one drives the total below zero. Persisting
+            // that would post negative revenue into sales monitoring and pull
+            // down the expected cash drawer.
+            if ($total < 0) {
+                throw new InvalidOrderTotalException('The discount cannot be greater than the order subtotal.');
+            }
+
+            // Redeeming nothing is not a redemption. Without this the order is
+            // refused further down with a confusing "this order needs 0.00".
+            if ($paymentMethod === PaymentMethod::EmployeeAllowance && $total <= 0) {
+                throw new InvalidOrderTotalException(
+                    'An employee allowance order must total more than zero.',
+                    'payment',
+                );
+            }
+
             // Create the order
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(Str::random(8)),
@@ -260,6 +278,10 @@ class OrderController extends Controller
 
             return redirect()->back()->with('message', 'Order created successfully');
 
+        } catch (InvalidOrderTotalException $e) {
+            DB::rollBack();
+
+            return back()->withErrors([$e->field => $e->getMessage()]);
         } catch (InsufficientAllowanceException $e) {
             DB::rollBack();
 

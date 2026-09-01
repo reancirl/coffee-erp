@@ -143,6 +143,55 @@ class AllowanceRedemptionTest extends TestCase
         $this->assertSame(1000.0, Allowance::balanceFor($this->juan)['remaining']);
     }
 
+    /**
+     * Review finding: `discount` is validated min:0 with no upper bound, so a
+     * large enough discount drove the total to zero or below.
+     */
+    public function test_a_discount_larger_than_the_subtotal_is_rejected(): void
+    {
+        $this->actingAs($this->cashier)
+            ->from('/pos')
+            ->post('/orders', $this->payload(150, [
+                'payment_method' => PaymentMethod::Cash->value,
+                'employee_qr_token' => null,
+                'discount' => 500,
+            ]))
+            ->assertSessionHasErrors('discount');
+
+        // No negative revenue reaches the books.
+        $this->assertSame(0, Order::count());
+    }
+
+    public function test_a_zero_total_allowance_order_is_rejected_clearly(): void
+    {
+        $this->actingAs($this->cashier)
+            ->from('/pos')
+            ->post('/orders', $this->payload(150, ['discount' => 150]))
+            ->assertSessionHasErrors('payment');
+
+        $errors = session('errors')->get('payment');
+        $this->assertSame('An employee allowance order must total more than zero.', $errors[0]);
+
+        $this->assertSame(0, Order::count());
+        $this->assertSame(0, AllowanceTransaction::count());
+        // Balance untouched.
+        $this->assertSame(1000.0, Allowance::balanceFor($this->juan)['remaining']);
+    }
+
+    public function test_a_full_discount_on_a_cash_order_is_still_allowed(): void
+    {
+        // A comped drink is legitimate; only negative totals are not.
+        $this->actingAs($this->cashier)
+            ->post('/orders', $this->payload(150, [
+                'payment_method' => PaymentMethod::Cash->value,
+                'employee_qr_token' => null,
+                'discount' => 150,
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertEquals(0, Order::sole()->total);
+    }
+
     // ---------- Task 5.2: reversal ----------
 
     public function test_voiding_an_order_records_a_reversal_and_keeps_the_original(): void
