@@ -39,11 +39,8 @@ class RolePermissionSeeder extends Seeder
             ]);
         }
         
-        // Allowance adjustments are not a module; they are a privileged action.
-        Permission::firstOrCreate(['name' => 'adjust allowance', 'guard_name' => 'web']);
-
-        // The role the coffee allowance is attached to.
-        Role::firstOrCreate(['name' => config('allowance.role')]);
+        // Coffee allowance roles and permissions live in a migration
+        // (2026_08_29_180000) so a deploy only needs `php artisan migrate`.
 
         // Create Admin role with all permissions (or get existing one)
         $admin = Role::firstOrCreate(['name' => 'Admin']);

@@ -22,11 +22,6 @@ const sidebarNavItems: NavItem[] = [
         href: '/settings/appearance',
         icon: null,
     },
-    {
-        title: 'Coffee QR',
-        href: '/settings/coffee-qr',
-        icon: null,
-    },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {

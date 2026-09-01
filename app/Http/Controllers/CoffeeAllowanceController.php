@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Settings;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\AllowanceTransaction;
 use App\Support\Allowance;
 use App\Support\QrImage;
@@ -10,19 +9,23 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 /**
- * Employee self-service: view and print your own coffee allowance QR.
+ * Employee self-service: your own coffee allowance — QR, balance and ledger.
+ *
+ * Its own module rather than an account setting: this is a feature, not a
+ * preference, and it gives devs (who have no other POS access) a real nav
+ * entry instead of an empty sidebar.
  *
  * Strictly scoped to the authenticated user — there is no route here that can
- * render somebody else's credential.
+ * render somebody else's credential or balance.
  */
-class EmployeeQrController extends Controller
+class CoffeeAllowanceController extends Controller
 {
     public function show(Request $request)
     {
         $user = $request->user();
         $credential = $user->activeQrCredential();
 
-        return Inertia::render('settings/coffee-qr', [
+        return Inertia::render('coffee-allowance', [
             'employee' => [
                 'name' => $user->name,
                 'employee_code' => $user->employee_code,

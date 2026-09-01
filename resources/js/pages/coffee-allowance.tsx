@@ -3,7 +3,8 @@ import { Coffee, Printer } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import SettingsLayout from '@/layouts/settings/layout';
+import AppLayout from '@/layouts/app-layout';
+import { type BreadcrumbItem } from '@/types';
 
 interface LedgerEntry {
     id: number;
@@ -43,10 +44,17 @@ interface Props {
     allowance: AllowanceSummary | null;
 }
 
-export default function CoffeeQr({ employee, qr, allowance }: Props) {
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Coffee Allowance',
+        href: '/coffee-allowance',
+    },
+];
+
+export default function CoffeeAllowance({ employee, qr, allowance }: Props) {
     // The image is fetched from an authenticated endpoint; the raw token is
     // never present in this page's props.
-    const imageUrl = '/settings/coffee-qr/image';
+    const imageUrl = '/coffee-allowance/qr';
 
     const print = () => {
         const win = window.open('', '_blank', 'width=420,height=620');
@@ -90,9 +98,9 @@ export default function CoffeeQr({ employee, qr, allowance }: Props) {
     };
 
     return (
-        <>
-            <Head title="Coffee QR" />
-            <SettingsLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Coffee Allowance" />
+            <div className="mx-auto flex w-full max-w-xl flex-col gap-6 p-6">
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -204,7 +212,7 @@ export default function CoffeeQr({ employee, qr, allowance }: Props) {
                         </CardContent>
                     </Card>
                 )}
-            </SettingsLayout>
-        </>
+            </div>
+        </AppLayout>
     );
 }

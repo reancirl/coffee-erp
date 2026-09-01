@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp, CalendarRange, CalendarX2, Banknote } from 'lucide-react';
+import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp, CalendarRange, CalendarX2, Banknote, Coffee } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // Define navigation groups with their items
@@ -53,6 +53,17 @@ const navigationGroups: NavGroup[] = [
                 module: 'dashboard', // All employees can access time clock
             },
         ]
+    },
+    {
+        title: 'Coffee Allowance',
+        items: [
+            {
+                title: 'My Coffee Allowance',
+                href: '/coffee-allowance',
+                icon: Coffee,
+                module: 'coffee-allowance',
+            },
+        ],
     },
     {
         title: 'Events & Catering',

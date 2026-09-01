@@ -38,6 +38,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('pos.scan-employee-qr');
     });
 
+    // Coffee allowance self-service (employees see only their own)
+    Route::middleware(['module.access:coffee-allowance'])->group(function () {
+        Route::get('coffee-allowance', [\App\Http\Controllers\CoffeeAllowanceController::class, 'show'])->name('coffee-allowance.show');
+        Route::get('coffee-allowance/qr', [\App\Http\Controllers\CoffeeAllowanceController::class, 'image'])->name('coffee-allowance.qr');
+    });
+
     // Customer routes
     Route::middleware(['module.access:customers'])->group(function () {
         Route::resource('customers', CustomerController::class);

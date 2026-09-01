@@ -158,10 +158,10 @@ class EmployeeQrTest extends TestCase
         EmployeeQr::issueFor($juan);
 
         $this->actingAs($juan)
-            ->get('/settings/coffee-qr')
+            ->get('/coffee-allowance')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('settings/coffee-qr')
+                ->component('coffee-allowance')
                 ->where('employee.name', 'Juan Dela Cruz')
                 ->where('employee.employee_code', 'SW-001')
                 ->where('employee.eligible', true)
@@ -174,7 +174,7 @@ class EmployeeQrTest extends TestCase
         $token = EmployeeQr::issueFor($juan)->token;
 
         $this->actingAs($juan)
-            ->get('/settings/coffee-qr')
+            ->get('/coffee-allowance')
             ->assertOk()
             ->assertDontSee($token);
     }
@@ -200,11 +200,11 @@ class EmployeeQrTest extends TestCase
 
         // Pedro has no credential, so his own endpoint 404s rather than
         // falling back to anybody else's.
-        $this->actingAs($pedro)->get('/settings/coffee-qr/image')->assertNotFound();
-        $this->actingAs($juan)->get('/settings/coffee-qr/image')->assertOk();
+        $this->actingAs($pedro)->get('/coffee-allowance/qr')->assertNotFound();
+        $this->actingAs($juan)->get('/coffee-allowance/qr')->assertOk();
     }
 
-    public function test_an_employee_with_no_modules_lands_on_their_qr_page(): void
+    public function test_a_dev_lands_on_their_coffee_allowance_and_nothing_else(): void
     {
         $tenant = new \App\Models\Tenant();
         $tenant->name = 'Swiftly Cafe';
@@ -212,13 +212,38 @@ class EmployeeQrTest extends TestCase
 
         $juan = $this->employee(['tenant_id' => $tenant->id]);
 
-        // No roles, so no module access anywhere in the app.
-        $this->assertSame([], $juan->getAccessibleModules());
-        $this->assertSame('/settings/coffee-qr', $juan->landingRoute());
+        // The allowance role grants exactly one module.
+        $this->assertSame(['coffee-allowance'], $juan->getAccessibleModules());
+        $this->assertSame('/coffee-allowance', $juan->landingRoute());
 
-        // And the page itself is reachable, unlike the module-gated dashboard.
-        $this->actingAs($juan)->get('/settings/coffee-qr')->assertOk();
-        $this->actingAs($juan)->get('/dashboard')->assertForbidden();
+        $this->actingAs($juan)->get('/coffee-allowance')->assertOk();
+
+        // Everything else in the app stays shut.
+        foreach (['/dashboard', '/pos', '/orders', '/employees'] as $path) {
+            $this->actingAs($juan)->get($path)->assertForbidden();
+        }
+    }
+
+    public function test_a_user_without_the_module_cannot_open_the_allowance_page(): void
+    {
+        $tenant = new \App\Models\Tenant();
+        $tenant->name = 'Swiftly Cafe';
+        $tenant->save();
+
+        $pedro = User::factory()->create(['name' => 'Pedro Santos', 'tenant_id' => $tenant->id]);
+
+        $this->actingAs($pedro)->get('/coffee-allowance')->assertForbidden();
+        // And is not dumped onto a page they cannot open.
+        $this->assertSame('/settings/profile', $pedro->landingRoute());
+    }
+
+    public function test_the_old_settings_url_still_redirects(): void
+    {
+        $juan = $this->employee();
+
+        $this->actingAs($juan)
+            ->get('/settings/coffee-qr')
+            ->assertRedirect('/coffee-allowance');
     }
 
     public function test_a_user_with_dashboard_access_still_lands_on_the_dashboard(): void
@@ -234,7 +259,7 @@ class EmployeeQrTest extends TestCase
         EmployeeQr::issueFor($juan);
 
         $this->get("/employees/{$juan->id}/qr")->assertRedirect('/login');
-        $this->get('/settings/coffee-qr/image')->assertRedirect('/login');
+        $this->get('/coffee-allowance/qr')->assertRedirect('/login');
     }
 
     // ---------- Task 2.3: revoke and regenerate ----------

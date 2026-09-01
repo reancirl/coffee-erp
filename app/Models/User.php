@@ -208,6 +208,7 @@ class User extends Authenticatable
         }
 
         $firstModuleRoute = [
+            'coffee-allowance' => 'coffee-allowance.show',
             'pos' => 'pos',
             'orders' => 'orders.index',
             'sales-monitoring' => 'sales-monitoring.index',
@@ -224,9 +225,9 @@ class User extends Authenticatable
             }
         }
 
-        // No modules at all: an employee whose only business here is their
-        // own allowance QR.
-        return route('coffee-qr.show', absolute: false);
+        // Nothing at all is reachable: send them to their profile rather than
+        // bouncing them into a 403 they cannot navigate away from.
+        return route('profile.edit', absolute: false);
     }
 
     /**
@@ -349,7 +350,7 @@ class User extends Authenticatable
     {
         // Super admin has access to everything
         if ($this->isSuperAdmin()) {
-            return ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking'];
+            return ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking', 'coffee-allowance'];
         }
 
         // If user has no roles, return empty array
@@ -358,7 +359,7 @@ class User extends Authenticatable
         }
 
         $modules = [];
-        $allModules = ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking'];
+        $allModules = ['dashboard', 'pos', 'customers', 'products', 'categories', 'orders', 'reports', 'sales-monitoring', 'event-booking', 'coffee-allowance'];
         
         foreach ($allModules as $module) {
             if ($this->hasModuleAccess($module)) {
