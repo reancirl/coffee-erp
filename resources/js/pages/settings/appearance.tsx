@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
-import { useForm } from '@inertiajs/react';
-import { Moon, Sun } from 'lucide-react';
+import { Monitor, Moon, Sun } from 'lucide-react';
+
+import { type Appearance, useAppearance } from '@/hooks/use-appearance';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -16,29 +17,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-type Theme = 'light' | 'dark' | 'system';
+const themes = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+] as const;
 
-interface AppearanceSettingsProps {
-    theme: Theme;
-}
-
-export default function Appearance({ theme: currentTheme }: AppearanceSettingsProps) {
-    const { data, setData, patch } = useForm<{ theme: Theme }>({
-        theme: currentTheme,
-    });
-
-    const themes = [
-        { value: 'light', label: 'Light', icon: Sun },
-        { value: 'dark', label: 'Dark', icon: Moon },
-        { value: 'system', label: 'System', icon: Sun },
-    ] as const;
-
-    const handleThemeChange = (value: Theme) => {
-        setData('theme', value);
-        patch(route('settings.appearance'), {
-            preserveScroll: true,
-        });
-    };
+export default function Appearance() {
+    // The theme is a client-side preference, persisted to localStorage and a
+    // cookie by this hook. There is no server route to patch — the previous
+    // implementation called a route that was never registered.
+    const { appearance, updateAppearance } = useAppearance();
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -51,8 +40,8 @@ export default function Appearance({ theme: currentTheme }: AppearanceSettingsPr
                     </CardHeader>
                     <CardContent>
                         <RadioGroup
-                            value={data.theme}
-                            onValueChange={(value: Theme) => handleThemeChange(value)}
+                            value={appearance}
+                            onValueChange={(value) => updateAppearance(value as Appearance)}
                             className="grid max-w-md grid-cols-3 gap-8 pt-2"
                         >
                             {themes.map(({ value, label, icon: Icon }) => (
