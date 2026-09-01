@@ -2,11 +2,19 @@ import { Head } from '@inertiajs/react';
 import { useForm } from '@inertiajs/react';
 import { Moon, Sun } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { type BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Appearance settings',
+        href: '/settings/appearance',
+    },
+];
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -15,7 +23,7 @@ interface AppearanceSettingsProps {
 }
 
 export default function Appearance({ theme: currentTheme }: AppearanceSettingsProps) {
-    const { data, setData, patch, processing } = useForm<{ theme: Theme }>({
+    const { data, setData, patch } = useForm<{ theme: Theme }>({
         theme: currentTheme,
     });
 
@@ -33,12 +41,9 @@ export default function Appearance({ theme: currentTheme }: AppearanceSettingsPr
     };
 
     return (
-        <>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Appearance" />
-            <SettingsLayout
-                title="Appearance"
-                description="Customize the appearance of the application."
-            >
+            <SettingsLayout>
                 <Card>
                     <CardHeader>
                         <CardTitle>Theme</CardTitle>
@@ -70,6 +75,6 @@ export default function Appearance({ theme: currentTheme }: AppearanceSettingsPr
                     </CardContent>
                 </Card>
             </SettingsLayout>
-        </>
+        </AppLayout>
     );
 }
