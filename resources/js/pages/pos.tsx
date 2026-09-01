@@ -44,7 +44,6 @@ export default function Pos() {
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<{ id: string; name: string } | null>(null);
     const [cashAmountGiven, setCashAmountGiven] = useState<string>("");
     const [receiptImage, setReceiptImage] = useState<File | null>(null);
-    const [qrCodeImage, setQrCodeImage] = useState<File | null>(null);
     // Employee allowance: identity confirmed by the server, not by the camera.
     const [scannedEmployee, setScannedEmployee] = useState<ScannedEmployee | null>(null);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -255,7 +254,6 @@ export default function Pos() {
       
         // Attach any images
         if (receiptImage) form.append('receipt_image', receiptImage)
-        if (qrCodeImage)   form.append('qr_code_image', qrCodeImage)
         
         // The server re-validates this token before accepting the payment.
         if (selectedPaymentMethod?.id === 'employee-allowance' && scannedEmployee) {
@@ -483,7 +481,6 @@ export default function Pos() {
         // setSelectedPaymentMethod(null);
         // setCashAmountGiven('');
         // setReceiptImage(null);
-        // setQrCodeImage(null);
         // setSelectedCustomer(null);
         // setSelectedPrintOptions([]);
         // setOrderType('dine-in');
@@ -782,8 +779,6 @@ export default function Pos() {
                 setCashAmountGiven={setCashAmountGiven}
                 receiptImage={receiptImage}
                 setReceiptImage={setReceiptImage}
-                qrCodeImage={qrCodeImage}
-                setQrCodeImage={setQrCodeImage}
                 onScanEmployee={() => setIsScannerOpen(true)}
                 scannedEmployee={scannedEmployee}
                 clearScannedEmployee={() => setScannedEmployee(null)}
@@ -822,7 +817,6 @@ export default function Pos() {
                     setSelectedPaymentMethod(null);
                     setCashAmountGiven('');
                     setReceiptImage(null);
-                    setQrCodeImage(null);
                     setScannedEmployee(null);
                     setSelectedCustomer(null);
                     setBeeperNumber(''); // Clear beeper number when transaction is done

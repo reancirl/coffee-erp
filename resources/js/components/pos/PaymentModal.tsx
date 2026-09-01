@@ -18,8 +18,6 @@ interface PaymentModalProps {
     setCashAmountGiven: (amount: string) => void;
     receiptImage: File | null;
     setReceiptImage: (file: File | null) => void;
-    qrCodeImage: File | null;
-    setQrCodeImage: (file: File | null) => void;
     // Employee allowance
     onScanEmployee: () => void;
     scannedEmployee: { name: string; employee_code: string | null } | null;
@@ -43,8 +41,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setCashAmountGiven,
     receiptImage,
     setReceiptImage,
-    qrCodeImage,
-    setQrCodeImage,
     onScanEmployee,
     scannedEmployee,
     clearScannedEmployee,
