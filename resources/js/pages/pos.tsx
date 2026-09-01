@@ -168,6 +168,27 @@ export default function Pos() {
     const usesAllowance = (methodId?: string) =>
         methodId === 'employee-allowance' || methodId === 'allowance-cash';
 
+    // Why this Allowance + Cash split cannot go through, or null if it can.
+    const allowanceSplitProblem = (total: number): string | null => {
+        const fromAllowance = Number(splitAllowanceAmount);
+        const fromCash = Number(splitCashAmount);
+
+        if (!splitAllowanceAmount || !splitCashAmount) {
+            return 'Enter how much comes from the allowance and how much is cash.';
+        }
+        if (fromAllowance <= 0 || fromCash <= 0) {
+            return 'Both parts must be more than zero. Use a single payment method instead.';
+        }
+        const remaining = scannedEmployee?.allowance?.remaining ?? 0;
+        if (fromAllowance > remaining + 0.01) {
+            return `Only \u20b1${remaining.toFixed(2)} is left on this allowance.`;
+        }
+        if (Math.abs(fromAllowance + fromCash - total) > 0.01) {
+            return `The allowance and cash amounts must add up to \u20b1${total.toFixed(2)}.`;
+        }
+        return null;
+    };
+
     const allowanceBlockedReason = (): string | null =>
         ineligibleNames.length === 0
             ? null
@@ -202,24 +223,9 @@ export default function Pos() {
                 return;
             }
             if (selectedPaymentMethod.id === 'allowance-cash') {
-                const fromAllowance = Number(splitAllowanceAmount);
-                const fromCash = Number(splitCashAmount);
-
-                if (!splitAllowanceAmount || !splitCashAmount) {
-                    alert('Enter how much comes from the allowance and how much is cash.');
-                    return;
-                }
-                if (fromAllowance <= 0 || fromCash <= 0) {
-                    alert('Both the allowance and the cash part must be more than zero. Use a single payment method instead.');
-                    return;
-                }
-                const remaining = scannedEmployee.allowance?.remaining ?? 0;
-                if (fromAllowance > remaining + 0.01) {
-                    alert(`Only \u20b1${remaining.toFixed(2)} is left on this allowance.`);
-                    return;
-                }
-                if (Math.abs(fromAllowance + fromCash - total) > 0.01) {
-                    alert(`The allowance and cash amounts must add up to \u20b1${total.toFixed(2)}.`);
+                const problem = allowanceSplitProblem(total);
+                if (problem) {
+                    alert(problem);
                     return;
                 }
             }
@@ -652,6 +658,13 @@ export default function Pos() {
             if (blocked) {
                 alert(blocked);
                 return;
+            }
+            if (method.id === 'allowance-cash') {
+                const problem = allowanceSplitProblem(amount);
+                if (problem) {
+                    alert(problem);
+                    return;
+                }
             }
         }
         
