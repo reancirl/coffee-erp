@@ -2,6 +2,25 @@ import React, { useState, useRef, useEffect } from 'react';
 import { primaryColor, secondaryColor, accentColor } from './types';
 import OrderSlip from './OrderSlip';
 
+/**
+ * How the order was paid, snapshotted by the POS at submit time so the slip
+ * still prints it after the terminal has been reset for the next customer.
+ */
+export interface ReceiptPayment {
+    method: string;   // the label stored on the order, e.g. "Employee Allowance"
+    methodId: string; // the POS button id, e.g. "employee-allowance"
+    total: number;
+    cashGiven: number | null;
+    change: number | null;
+    splitCash: number | null;
+    splitGcash: number | null;
+    employee: {
+        name: string;
+        code: string | null;
+        remaining: number | null;
+    } | null;
+}
+
 interface PrintModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -13,6 +32,7 @@ interface PrintModalProps {
     order: any[]; // Order items
     orderNumber: string; // Order number
     totalAmount: number; // Total amount of the order
+    payment?: ReceiptPayment | null; // How it was paid; omitted by older callers
 }
 
 const PrintModal: React.FC<PrintModalProps> = ({
@@ -25,6 +45,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
     order,
     orderNumber,
     totalAmount,
+    payment = null,
 }) => {
     if (!isOpen) return null;
     
@@ -78,7 +99,54 @@ const PrintModal: React.FC<PrintModalProps> = ({
             setIsPrinting(false);
             return;
           }
-      
+
+          const money = (n: number | null) => {
+            const v = Number(n);
+            return n === null || isNaN(v) ? '0.00' : v.toFixed(2);
+          };
+
+          // Names and codes are written straight into the print window's markup.
+          const esc = (v: string) =>
+            v.replace(/[&<>"]/g, (c) =>
+              ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string)
+            );
+
+          const row = (label: string, value: string) =>
+            `<div class="row"><span>${label}</span><span>${value}</span></div>`;
+
+          // How it was paid. Cash shows what was handed over, split shows the
+          // two halves, and an allowance sale names the employee it was drawn
+          // from so the slip can be reconciled against the ledger.
+          let paymentDetail = '';
+          if (payment) {
+            paymentDetail += row('Method:', esc(payment.method));
+
+            if (payment.methodId === 'cash' && payment.cashGiven !== null) {
+              paymentDetail += row('Cash Received:', `&#8369;${money(payment.cashGiven)}`);
+              paymentDetail += row('Change:', `&#8369;${money(payment.change)}`);
+            }
+
+            if (payment.methodId === 'split') {
+              paymentDetail += row('- Cash:', `&#8369;${money(payment.splitCash)}`);
+              paymentDetail += row('- GCash:', `&#8369;${money(payment.splitGcash)}`);
+            }
+
+            if (payment.employee) {
+              paymentDetail += '<div class="divider"></div>';
+              paymentDetail += '<div class="section-title">EMPLOYEE</div>';
+              paymentDetail += row(
+                esc(payment.employee.name),
+                esc(payment.employee.code ?? '')
+              );
+              if (payment.employee.remaining !== null) {
+                paymentDetail += row(
+                  'Remaining Allowance:',
+                  `&#8369;${money(payment.employee.remaining)}`
+                );
+              }
+            }
+          }
+
           const orderSlipContent = `
             <!DOCTYPE html>
             <html>
@@ -168,6 +236,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
               <div class="divider"></div>
               
               <div class="section-title">ORDER INFO</div>
+              ${orderNumber ? `<div class="row"><span>Order No:</span><span>${esc(orderNumber)}</span></div>` : ''}
               <div class="row">
                 <span>Date:</span>
                 <span>${new Date().toLocaleString('en-US', {
@@ -253,6 +322,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 <span>Total Amount:</span>
                 <span>₱${(!isNaN(totalAmount)&&totalAmount>0?totalAmount:0).toFixed(2)}</span>
               </div>
+              ${paymentDetail}
       
               <div class="divider"></div>
       

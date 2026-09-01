@@ -276,7 +276,19 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('message', 'Order created successfully');
+            $flash = [
+                'message' => 'Order created successfully',
+                'order_number' => $order->order_number,
+            ];
+
+            // Read back after the commit so the slip prints the balance the
+            // ledger actually holds, not the figure the terminal was shown
+            // when the QR was scanned.
+            if ($allowanceEmployee !== null) {
+                $flash['allowance_remaining'] = Allowance::balanceFor($allowanceEmployee)['remaining'];
+            }
+
+            return redirect()->back()->with($flash);
 
         } catch (InvalidOrderTotalException $e) {
             DB::rollBack();

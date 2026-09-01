@@ -7,7 +7,7 @@ import DiscountModal from '../components/pos/DiscountModal';
 import PaymentModal from '../components/pos/PaymentModal';
 import EmployeeQrScanner, { type ScannedEmployee } from '../components/pos/EmployeeQrScanner';
 import CustomerModal from '../components/pos/CustomerModal';
-import PrintModal from '../components/pos/PrintModal';
+import PrintModal, { type ReceiptPayment } from '../components/pos/PrintModal';
 import AddOnModal from '../components/pos/AddOnModal';
 import { paymentMethods } from '../components/pos/data';
 import { Product, MenuData, primaryColor } from '../components/pos/types';
@@ -17,6 +17,9 @@ interface PageProps {
         success?: string;
         order_number?: string;
         message?: string;
+        // Read back from the ledger after the sale, so the slip prints the
+        // real remaining balance rather than the terminal's stale copy.
+        allowance_remaining?: number | null;
     };
     [key: string]: any; // Allow other page props
 }
@@ -59,6 +62,9 @@ export default function Pos() {
     const [beeperNumber, setBeeperNumber] = useState<string>("");
     // Save the current order for printing after submission
     const [savedOrderForPrinting, setSavedOrderForPrinting] = useState<Product[]>([]);
+    // Same idea for the payment: captured at submit time, because the terminal
+    // is reset for the next customer as soon as the slip is dismissed.
+    const [savedPaymentForPrinting, setSavedPaymentForPrinting] = useState<ReceiptPayment | null>(null);
 
     
     // API data state
@@ -268,6 +274,37 @@ export default function Pos() {
       
         // Save current order for printing
         setSavedOrderForPrinting([...order]);
+
+        // ...and how it was paid. The employee block is attached only for an
+        // allowance sale, so a scan that was abandoned for another method
+        // cannot leak someone's balance onto an unrelated slip.
+        const printedTotal = Number(calculateFinalTotal());
+        const isCash = selectedPaymentMethod!.id === 'cash';
+        const cashGiven = Number(cashAmountGiven);
+        const hasCashGiven = isCash && cashAmountGiven !== '' && !isNaN(cashGiven);
+        const isAllowance = selectedPaymentMethod!.id === 'employee-allowance';
+
+        setSavedPaymentForPrinting({
+            method: selectedPaymentMethod!.name,
+            methodId: selectedPaymentMethod!.id,
+            total: printedTotal,
+            cashGiven: hasCashGiven ? cashGiven : null,
+            change: hasCashGiven ? cashGiven - printedTotal : null,
+            splitCash: selectedPaymentMethod!.id === 'split' ? Number(splitCashAmount) : null,
+            splitGcash: selectedPaymentMethod!.id === 'split' ? Number(splitGcashAmount) : null,
+            employee:
+                isAllowance && scannedEmployee
+                    ? {
+                          name: scannedEmployee.name,
+                          code: scannedEmployee.employee_code,
+                          // Fallback only; the server's figure replaces this
+                          // once the order comes back.
+                          remaining: scannedEmployee.allowance
+                              ? scannedEmployee.allowance.remaining - printedTotal
+                              : null,
+                      }
+                    : null,
+        });
         
         // Send as multipart
         router.post('/orders', form, {
@@ -545,6 +582,20 @@ export default function Pos() {
         setIsCustomerModalOpen(true);
     };
 
+    // The balance the server read back after the sale wins over the estimate
+    // taken at submit time; a concurrent redemption or adjustment would have
+    // moved it.
+    const receiptPayment: ReceiptPayment | null =
+        savedPaymentForPrinting && savedPaymentForPrinting.employee && typeof flash?.allowance_remaining === 'number'
+            ? {
+                  ...savedPaymentForPrinting,
+                  employee: {
+                      ...savedPaymentForPrinting.employee,
+                      remaining: flash.allowance_remaining,
+                  },
+              }
+            : savedPaymentForPrinting;
+
     return (
         <div
             className="h-screen w-screen p-4"
@@ -819,13 +870,15 @@ export default function Pos() {
                     setReceiptImage(null);
                     setScannedEmployee(null);
                     setSelectedCustomer(null);
+                    setSavedPaymentForPrinting(null);
                     setBeeperNumber(''); // Clear beeper number when transaction is done
                 }}
                 orderType={orderType}
                 beeperNumber={beeperNumber}
                 order={savedOrderForPrinting}
-                orderNumber={flash?.order_number || 'N/A'}
+                orderNumber={flash?.order_number || ''}
                 totalAmount={Number(calculateFinalTotal())}
+                payment={receiptPayment}
             />
         </div>
     );
