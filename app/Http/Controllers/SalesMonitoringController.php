@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SalesMonitoring;
 use App\Models\Order;
 use App\Models\CashRemittance;
+use App\Support\PaymentBreakdown;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -135,33 +136,12 @@ class SalesMonitoringController extends Controller
             ->where('payment_status', 'completed')
             ->get();
 
-        $cashSales = 0;
-        $gcashSales = 0;
-        $splitCashSales = 0;
-        $splitGcashSales = 0;
+        // PaymentBreakdown owns the attribution rules, so a new payment
+        // method needs no change here and nothing falls through unrecorded.
+        $totals = PaymentBreakdown::monitoringTotals($orders);
 
-        foreach ($orders as $order) {
-            switch ($order->payment_method) {
-                case 'Cash':
-                    $cashSales += $order->total;
-                    break;
-                case 'GCash':
-                case 'G-Cash':
-                    $gcashSales += $order->total;
-                    break;
-                case 'Split (Cash + GCash)':
-                    $splitCashSales += $order->split_cash_amount ?? 0;
-                    $splitGcashSales += $order->split_gcash_amount ?? 0;
-                    break;
-            }
-        }
-
-        $monitoring->update([
-            'cash_sales' => $cashSales,
-            'gcash_sales' => $gcashSales,
-            'split_cash_sales' => $splitCashSales,
-            'split_gcash_sales' => $splitGcashSales,
-            'expected_balance' => $monitoring->calculateExpectedBalance(),
-        ]);
+        $monitoring->fill($totals);
+        $monitoring->expected_balance = $monitoring->calculateExpectedBalance();
+        $monitoring->save();
     }
 }

@@ -1,18 +1,17 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import React, { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserCog, Plus, Search, Filter, Download, Mail, Phone, MapPin, Calendar, Clock, Shield, Edit, Trash2, Eye } from 'lucide-react';
+import { UserCog, Search, Coffee, QrCode, Printer, Ban, Receipt } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -21,491 +20,617 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Mock employee data
-const mockEmployeeData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'john.doe@coffeeshop.com',
-        phone: '+63 912 345 6789',
-        position: 'Manager',
-        department: 'Operations',
-        status: 'active',
-        hireDate: '2024-01-15',
-        hourlyRate: 250.00,
-        totalHours: 160,
-        avatar: null,
-        address: '123 Main St, Manila',
-        emergencyContact: 'Jane Doe - +63 912 345 6790',
-        roles: ['Admin', 'Manager'],
-        lastClockIn: '2025-01-04 08:00:00',
-        lastClockOut: '2025-01-03 17:00:00'
-    },
-    {
-        id: 2,
-        name: 'Maria Santos',
-        email: 'maria.santos@coffeeshop.com',
-        phone: '+63 912 345 6788',
-        position: 'Barista',
-        department: 'Front of House',
-        status: 'active',
-        hireDate: '2024-03-20',
-        hourlyRate: 180.00,
-        totalHours: 144,
-        avatar: null,
-        address: '456 Oak Ave, Quezon City',
-        emergencyContact: 'Carlos Santos - +63 912 345 6791',
-        roles: ['Cashier'],
-        lastClockIn: '2025-01-04 09:00:00',
-        lastClockOut: '2025-01-03 18:00:00'
-    },
-    {
-        id: 3,
-        name: 'Alex Rivera',
-        email: 'alex.rivera@coffeeshop.com',
-        phone: '+63 912 345 6787',
-        position: 'Shift Supervisor',
-        department: 'Operations',
-        status: 'active',
-        hireDate: '2024-02-10',
-        hourlyRate: 220.00,
-        totalHours: 152,
-        avatar: null,
-        address: '789 Pine St, Makati',
-        emergencyContact: 'Lisa Rivera - +63 912 345 6792',
-        roles: ['Supervisor'],
-        lastClockIn: '2025-01-04 07:30:00',
-        lastClockOut: '2025-01-03 16:30:00'
-    },
-    {
-        id: 4,
-        name: 'Sarah Kim',
-        email: 'sarah.kim@coffeeshop.com',
-        phone: '+63 912 345 6786',
-        position: 'Barista',
-        department: 'Front of House',
-        status: 'on_leave',
-        hireDate: '2024-05-01',
-        hourlyRate: 180.00,
-        totalHours: 120,
-        avatar: null,
-        address: '321 Elm St, Pasig',
-        emergencyContact: 'David Kim - +63 912 345 6793',
-        roles: ['Cashier'],
-        lastClockIn: '2025-01-02 08:30:00',
-        lastClockOut: '2025-01-02 17:30:00'
-    }
-];
+interface Employee {
+    id: number;
+    name: string;
+    email: string;
+    employee_code: string | null;
+    position: string | null;
+    employment_status: string;
+    allowance_eligible: boolean;
+    has_allowance_role: boolean;
+    can_redeem_allowance: boolean;
+    ineligibility_reason: string | null;
+    has_qr: boolean;
+    qr_issued_at: string | null;
+}
 
-const getStatusBadge = (status: string) => {
-    switch (status) {
-        case 'active':
-            return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
-        case 'on_leave':
-            return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">On Leave</Badge>;
-        case 'inactive':
-            return <Badge variant="destructive">Inactive</Badge>;
-        default:
-            return <Badge variant="outline">{status}</Badge>;
-    }
+interface Props {
+    employees: {
+        data: Employee[];
+        meta: { current_page: number; last_page: number; total: number };
+    };
+    filters: { search?: string; eligible_only?: boolean };
+    statuses: string[];
+    allowance_role: string;
+}
+
+interface LedgerEntry {
+    id: number;
+    type: string;
+    signed_amount: string;
+    description: string | null;
+    order_number: string | null;
+    recorded_at: string | null;
+}
+
+interface Ledger {
+    employee: { id: number; name: string; employee_code: string | null };
+    period: string | null;
+    amount: number;
+    used: number;
+    remaining: number;
+    can_adjust: boolean;
+    transactions: LedgerEntry[];
+    history: { label: string; amount: number; used: number; remaining: number }[];
+}
+
+const peso = (amount: number): string =>
+    new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+
+const TYPE_LABELS: Record<string, string> = {
+    redeem: 'Redeem',
+    reversal: 'Reversal',
+    adjustment: 'Adjustment',
 };
 
-export default function EmployeesIndex() {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedDepartment, setSelectedDepartment] = useState('all');
-    const [selectedStatus, setSelectedStatus] = useState('all');
-    const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
-    const [isViewEmployeeModalOpen, setIsViewEmployeeModalOpen] = useState(false);
-    const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+const initials = (name: string) =>
+    name
+        .split(' ')
+        .map((part) => part[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
 
-    const departments = ['all', 'Operations', 'Front of House', 'Kitchen', 'Management'];
-    const statuses = ['all', 'active', 'on_leave', 'inactive'];
-    const positions = ['Manager', 'Shift Supervisor', 'Barista', 'Cashier', 'Kitchen Staff'];
+export default function Index({ employees, filters, statuses, allowance_role }: Props) {
+    const [search, setSearch] = useState(filters.search ?? '');
+    const [editing, setEditing] = useState<Employee | null>(null);
+    const [qrFor, setQrFor] = useState<Employee | null>(null);
+    const [qrBusy, setQrBusy] = useState(false);
+    // Bumped after issue/revoke so the <img> refetches instead of showing a
+    // stale credential.
+    const [qrVersion, setQrVersion] = useState(0);
+    const [ledger, setLedger] = useState<Ledger | null>(null);
+    const [ledgerLoading, setLedgerLoading] = useState(false);
+    const [adjustAmount, setAdjustAmount] = useState('');
+    const [adjustReason, setAdjustReason] = useState('');
 
-    const filteredData = mockEmployeeData.filter(employee => {
-        const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            employee.position.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesDepartment = selectedDepartment === 'all' || employee.department === selectedDepartment;
-        const matchesStatus = selectedStatus === 'all' || employee.status === selectedStatus;
-        
-        return matchesSearch && matchesDepartment && matchesStatus;
-    });
+    // Draft state for the edit dialog.
+    const [position, setPosition] = useState('');
+    const [status, setStatus] = useState('active');
+    const [eligible, setEligible] = useState(false);
+    const [saving, setSaving] = useState(false);
 
-    const totalEmployees = mockEmployeeData.length;
-    const activeEmployees = mockEmployeeData.filter(emp => emp.status === 'active').length;
-    const onLeaveEmployees = mockEmployeeData.filter(emp => emp.status === 'on_leave').length;
-    const totalPayroll = mockEmployeeData.reduce((sum, emp) => sum + (emp.hourlyRate * emp.totalHours), 0);
+    const applyFilters = (overrides: Record<string, unknown> = {}) => {
+        router.get(
+            '/employees',
+            { search: search || undefined, eligible_only: filters.eligible_only || undefined, ...overrides },
+            { preserveState: true, replace: true },
+        );
+    };
 
-    const handleViewEmployee = (employee: any) => {
-        setSelectedEmployee(employee);
-        setIsViewEmployeeModalOpen(true);
+    const openEditor = (employee: Employee) => {
+        setEditing(employee);
+        setPosition(employee.position ?? '');
+        setStatus(employee.employment_status);
+        setEligible(employee.allowance_eligible);
+    };
+
+    const openLedger = async (employee: Employee) => {
+        setLedgerLoading(true);
+        setLedger(null);
+        setAdjustAmount('');
+        setAdjustReason('');
+        try {
+            const response = await fetch(`/employees/${employee.id}/allowance`, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            setLedger(await response.json());
+        } finally {
+            setLedgerLoading(false);
+        }
+    };
+
+    const submitAdjustment = () => {
+        if (!ledger) return;
+        router.post(
+            `/employees/${ledger.employee.id}/allowance/adjust`,
+            { amount: adjustAmount, reason: adjustReason },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    const employee = employees.data.find((e) => e.id === ledger.employee.id);
+                    if (employee) void openLedger(employee);
+                },
+            },
+        );
+    };
+
+    const issueQr = (employee: Employee) => {
+        setQrBusy(true);
+        router.post(
+            `/employees/${employee.id}/qr`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setQrBusy(false);
+                    setQrVersion((v) => v + 1);
+                },
+                onSuccess: () => setQrFor({ ...employee, has_qr: true }),
+            },
+        );
+    };
+
+    const revokeQr = (employee: Employee) => {
+        setQrBusy(true);
+        router.delete(`/employees/${employee.id}/qr`, {
+            preserveScroll: true,
+            onFinish: () => {
+                setQrBusy(false);
+                setQrVersion((v) => v + 1);
+            },
+            onSuccess: () => setQrFor({ ...employee, has_qr: false }),
+        });
+    };
+
+    const printQr = (employee: Employee) => {
+        const win = window.open('', '_blank', 'width=420,height=620');
+        if (!win) return;
+        win.document.write(
+            `<html><head><title>Coffee Allowance QR - ${employee.employee_code ?? ''}</title>` +
+                `<style>body{font-family:system-ui,sans-serif;text-align:center;padding:32px}` +
+                `img{width:260px;height:260px}.name{font-size:18px;font-weight:600;margin-top:12px}` +
+                `.code{font-family:ui-monospace,monospace;font-size:15px;color:#444}` +
+                `.position{font-size:13px;color:#666}</style></head><body>` +
+                `<img src="/employees/${employee.id}/qr" alt="Coffee allowance QR" />` +
+                `<div class="name">${employee.name}</div>` +
+                `<div class="code">${employee.employee_code ?? ''}</div>` +
+                `<div class="position">${employee.position ?? ''}</div>` +
+                `</body></html>`,
+        );
+        win.document.close();
+        const img = win.document.querySelector('img');
+        const go = () => {
+            win.focus();
+            win.print();
+        };
+        if (img && !img.complete) {
+            img.addEventListener('load', go);
+            img.addEventListener('error', go);
+        } else {
+            go();
+        }
+    };
+
+    const save = () => {
+        if (!editing) return;
+        setSaving(true);
+        router.patch(
+            `/employees/${editing.id}`,
+            { position: position || null, employment_status: status, allowance_eligible: eligible },
+            {
+                preserveScroll: true,
+                onFinish: () => setSaving(false),
+                onSuccess: () => setEditing(null),
+            },
+        );
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Employee Management" />
-            
-            <div className="space-y-6 p-6">
-                {/* Header */}
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Employee Management</h1>
-                        <p className="text-muted-foreground">
-                            Manage your team members and their information
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" className="flex items-center gap-2">
-                            <Download className="w-4 h-4" />
-                            Export
-                        </Button>
-                        <Button 
-                            className="flex items-center gap-2"
-                            onClick={() => setIsAddEmployeeModalOpen(true)}
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Employee
-                        </Button>
-                    </div>
+            <div className="flex h-full flex-1 flex-col gap-4 p-6">
+                <div className="flex flex-col gap-1">
+                    <h1 className="flex items-center gap-2 text-2xl font-bold">
+                        <UserCog className="h-6 w-6" />
+                        Employee Management
+                    </h1>
+                    <p className="text-sm text-gray-600">
+                        {employees.meta.total} {employees.meta.total === 1 ? 'employee' : 'employees'} &middot; allowance eligibility is
+                        set here
+                    </p>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-                            <UserCog className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{totalEmployees}</div>
-                            <p className="text-xs text-muted-foreground">
-                                All team members
-                            </p>
-                        </CardContent>
-                    </Card>
-                    
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Active</CardTitle>
-                            <Shield className="h-4 w-4 text-green-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{activeEmployees}</div>
-                            <p className="text-xs text-muted-foreground">
-                                Currently working
-                            </p>
-                        </CardContent>
-                    </Card>
-                    
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">On Leave</CardTitle>
-                            <Calendar className="h-4 w-4 text-yellow-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-yellow-600">{onLeaveEmployees}</div>
-                            <p className="text-xs text-muted-foreground">
-                                Temporary absence
-                            </p>
-                        </CardContent>
-                    </Card>
-                    
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Monthly Payroll</CardTitle>
-                            <Clock className="h-4 w-4 text-blue-600" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">₱{totalPayroll.toLocaleString()}</div>
-                            <p className="text-xs text-muted-foreground">
-                                Based on hours worked
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Filters */}
                 <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Search employees..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-10"
-                                    />
-                                </div>
+                    <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <CardTitle className="text-base">Directory</CardTitle>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="relative">
+                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                                <Input
+                                    className="w-64 pl-8"
+                                    placeholder="Search name, email or code"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                                />
                             </div>
-                            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                                <SelectTrigger className="w-full sm:w-[180px]">
-                                    <SelectValue placeholder="Department" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {departments.map(dept => (
-                                        <SelectItem key={dept} value={dept}>
-                                            {dept === 'all' ? 'All Departments' : dept}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                                <SelectTrigger className="w-full sm:w-[180px]">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {statuses.map(status => (
-                                        <SelectItem key={status} value={status}>
-                                            {status === 'all' ? 'All Status' : 
-                                             status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Button variant="outline" onClick={() => applyFilters()}>
+                                Search
+                            </Button>
+                            <Button
+                                variant={filters.eligible_only ? 'default' : 'outline'}
+                                onClick={() => applyFilters({ eligible_only: !filters.eligible_only || undefined })}
+                            >
+                                <Coffee className="mr-1 h-4 w-4" />
+                                Allowance eligible
+                            </Button>
                         </div>
-                    </CardContent>
-                </Card>
-
-                {/* Employee Table */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Team Members</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Employee</TableHead>
+                                    <TableHead>Code</TableHead>
+                                    <TableHead>Position</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Allowance Eligible</TableHead>
+                                    <TableHead>QR</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {employees.data.length === 0 && (
                                     <TableRow>
-                                        <TableHead>Employee</TableHead>
-                                        <TableHead>Position</TableHead>
-                                        <TableHead>Department</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Hire Date</TableHead>
-                                        <TableHead>Hourly Rate</TableHead>
-                                        <TableHead>Hours (Month)</TableHead>
-                                        <TableHead>Actions</TableHead>
+                                        <TableCell colSpan={7} className="py-8 text-center text-gray-500">
+                                            No employees found.
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredData.map((employee) => (
-                                        <TableRow key={employee.id}>
-                                            <TableCell>
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="h-8 w-8">
-                                                        <AvatarImage src={employee.avatar} />
-                                                        <AvatarFallback>
-                                                            {employee.name.split(' ').map(n => n[0]).join('')}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <div className="font-medium">{employee.name}</div>
-                                                        <div className="text-sm text-muted-foreground">{employee.email}</div>
-                                                    </div>
+                                )}
+                                {employees.data.map((employee) => (
+                                    <TableRow key={employee.id}>
+                                        <TableCell>
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                                                    {initials(employee.name)}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell>{employee.position}</TableCell>
-                                            <TableCell>{employee.department}</TableCell>
-                                            <TableCell>{getStatusBadge(employee.status)}</TableCell>
-                                            <TableCell>{employee.hireDate}</TableCell>
-                                            <TableCell>₱{employee.hourlyRate.toFixed(2)}</TableCell>
-                                            <TableCell>{employee.totalHours}h</TableCell>
-                                            <TableCell>
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleViewEmployee(employee)}
-                                                        className="flex items-center gap-1"
-                                                    >
-                                                        <Eye className="w-3 h-3" />
-                                                        View
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        className="flex items-center gap-1"
-                                                    >
-                                                        <Edit className="w-3 h-3" />
-                                                        Edit
-                                                    </Button>
+                                                <div>
+                                                    <div className="font-medium">{employee.name}</div>
+                                                    <div className="text-xs text-gray-500">{employee.email}</div>
                                                 </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {employee.employee_code ? (
+                                                <span className="font-mono text-sm">{employee.employee_code}</span>
+                                            ) : (
+                                                <span className="text-gray-400">&mdash;</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>{employee.position ?? <span className="text-gray-400">&mdash;</span>}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={employee.employment_status === 'active' ? 'default' : 'secondary'}>
+                                                {employee.employment_status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {employee.can_redeem_allowance ? (
+                                                <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Yes</Badge>
+                                            ) : (
+                                                <span
+                                                    className="text-sm text-gray-500"
+                                                    title={employee.ineligibility_reason ?? undefined}
+                                                >
+                                                    No
+                                                </span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            {employee.has_qr ? (
+                                                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Issued</Badge>
+                                            ) : (
+                                                <span className="text-gray-400">&mdash;</span>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    disabled={!employee.can_redeem_allowance && !employee.has_qr}
+                                                    title={
+                                                        employee.can_redeem_allowance
+                                                            ? 'Manage QR'
+                                                            : (employee.ineligibility_reason ?? undefined)
+                                                    }
+                                                    onClick={() => setQrFor(employee)}
+                                                >
+                                                    <QrCode className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    title="Allowance ledger"
+                                                    onClick={() => void openLedger(employee)}
+                                                >
+                                                    <Receipt className="h-4 w-4" />
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => openEditor(employee)}>
+                                                    Edit
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </CardContent>
                 </Card>
+            </div>
 
-                {/* Add Employee Modal */}
-                <Dialog open={isAddEmployeeModalOpen} onOpenChange={setIsAddEmployeeModalOpen}>
-                    <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>Add New Employee</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">Full Name</Label>
-                                    <Input id="name" placeholder="Enter full name" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input id="email" type="email" placeholder="Enter email address" />
-                                </div>
+            <Dialog
+                open={ledger !== null || ledgerLoading}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setLedger(null);
+                        setLedgerLoading(false);
+                    }
+                }}
+            >
+                <DialogContent className="max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Allowance ledger</DialogTitle>
+                    </DialogHeader>
+
+                    {ledgerLoading && <p className="py-8 text-center text-sm text-gray-500">Loading...</p>}
+
+                    {ledger && (
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                <div className="font-semibold">{ledger.employee.name}</div>
+                                {ledger.employee.employee_code && (
+                                    <div className="font-mono text-sm text-gray-600">{ledger.employee.employee_code}</div>
+                                )}
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone">Phone Number</Label>
-                                    <Input id="phone" placeholder="Enter phone number" />
+
+                            {ledger.period === null ? (
+                                <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-700">
+                                    No active allowance period. The employee must be active and eligible.
+                                </p>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-3 gap-2 text-center">
+                                        <div className="rounded-md border p-2">
+                                            <div className="text-xs text-gray-500">Allowance</div>
+                                            <div className="font-semibold">{peso(ledger.amount)}</div>
+                                        </div>
+                                        <div className="rounded-md border p-2">
+                                            <div className="text-xs text-gray-500">Used</div>
+                                            <div className="font-semibold">{peso(ledger.used)}</div>
+                                        </div>
+                                        <div className="rounded-md border p-2">
+                                            <div className="text-xs text-gray-500">Remaining</div>
+                                            <div className={ledger.remaining <= 0 ? 'font-semibold text-red-600' : 'font-semibold text-green-700'}>
+                                                {peso(ledger.remaining)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="mb-1 text-xs uppercase tracking-wide text-gray-500">
+                                            {ledger.period}
+                                        </div>
+                                        {ledger.transactions.length === 0 ? (
+                                            <p className="py-3 text-sm text-gray-500">No movement this period.</p>
+                                        ) : (
+                                            <ul className="divide-y text-sm">
+                                                {ledger.transactions.map((entry) => (
+                                                    <li key={entry.id} className="flex items-start justify-between gap-3 py-2">
+                                                        <div>
+                                                            <div className="font-medium">
+                                                                {TYPE_LABELS[entry.type] ?? entry.type}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {entry.order_number ?? entry.description ?? '—'}
+                                                            </div>
+                                                            {entry.recorded_at && (
+                                                                <div className="text-xs text-gray-400">{entry.recorded_at}</div>
+                                                            )}
+                                                        </div>
+                                                        <div
+                                                            className={
+                                                                entry.signed_amount.startsWith('-')
+                                                                    ? 'font-mono text-red-600'
+                                                                    : 'font-mono text-green-700'
+                                                            }
+                                                        >
+                                                            ₱{entry.signed_amount}
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+
+                                    {ledger.can_adjust && (
+                                        <div className="rounded-md border p-3">
+                                            <div className="mb-2 text-sm font-medium">Post an adjustment</div>
+                                            <div className="flex flex-col gap-2">
+                                                <Input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="Amount (negative to claw back)"
+                                                    value={adjustAmount}
+                                                    onChange={(e) => setAdjustAmount(e.target.value)}
+                                                />
+                                                <Input
+                                                    placeholder="Reason (required)"
+                                                    value={adjustReason}
+                                                    onChange={(e) => setAdjustReason(e.target.value)}
+                                                />
+                                                <Button
+                                                    onClick={submitAdjustment}
+                                                    disabled={!adjustAmount || !adjustReason}
+                                                >
+                                                    Record adjustment
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {ledger.history.length > 1 && (
+                                <div>
+                                    <div className="mb-1 text-xs uppercase tracking-wide text-gray-500">History</div>
+                                    <ul className="divide-y text-sm">
+                                        {ledger.history.map((period) => (
+                                            <li key={period.label} className="flex justify-between py-1">
+                                                <span>{period.label}</span>
+                                                <span className="text-gray-600">
+                                                    {peso(period.used)} used of {peso(period.amount)}
+                                                </span>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="position">Position</Label>
-                                    <Select>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select position" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {positions.map(pos => (
-                                                <SelectItem key={pos} value={pos}>{pos}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                            )}
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={qrFor !== null} onOpenChange={(open) => !open && setQrFor(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Coffee allowance QR</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="text-center">
+                            <div className="font-semibold">{qrFor?.name}</div>
+                            {qrFor?.employee_code && (
+                                <div className="font-mono text-sm text-gray-600">{qrFor.employee_code}</div>
+                            )}
+                        </div>
+
+                        {qrFor?.has_qr ? (
+                            <>
+                                <div className="rounded-lg border bg-white p-4">
+                                    <img
+                                        key={qrVersion}
+                                        src={`/employees/${qrFor.id}/qr?v=${qrVersion}`}
+                                        alt={`QR code for ${qrFor.name}`}
+                                        className="h-52 w-52"
+                                    />
                                 </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="department">Department</Label>
-                                    <Select>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select department" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {departments.filter(d => d !== 'all').map(dept => (
-                                                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="hourlyRate">Hourly Rate (₱)</Label>
-                                    <Input id="hourlyRate" type="number" placeholder="Enter hourly rate" />
-                                </div>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <Label htmlFor="address">Address</Label>
-                                <Textarea id="address" placeholder="Enter complete address" rows={2} />
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <Label htmlFor="emergency">Emergency Contact</Label>
-                                <Input id="emergency" placeholder="Name - Phone Number" />
-                            </div>
-                            
-                            <div className="flex justify-end gap-2 pt-4">
-                                <Button variant="outline" onClick={() => setIsAddEmployeeModalOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={() => setIsAddEmployeeModalOpen(false)}>
-                                    Add Employee
-                                </Button>
+                                {qrFor.qr_issued_at && (
+                                    <p className="text-xs text-gray-400">Issued {qrFor.qr_issued_at}</p>
+                                )}
+                            </>
+                        ) : (
+                            <p className="py-8 text-center text-sm text-gray-500">
+                                No QR issued yet.
+                            </p>
+                        )}
+
+                        <p className="text-center text-xs text-gray-500">
+                            The QR holds an opaque token only &mdash; no name, balance or entitlement is encoded in it.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap justify-end gap-2">
+                        {qrFor?.has_qr && (
+                            <Button variant="outline" onClick={() => qrFor && printQr(qrFor)}>
+                                <Printer className="mr-2 h-4 w-4" />
+                                Print
+                            </Button>
+                        )}
+                        {qrFor?.has_qr && (
+                            <Button
+                                variant="outline"
+                                className="text-red-600"
+                                disabled={qrBusy}
+                                onClick={() => qrFor && revokeQr(qrFor)}
+                            >
+                                <Ban className="mr-2 h-4 w-4" />
+                                Revoke
+                            </Button>
+                        )}
+                        <Button
+                            disabled={qrBusy || !qrFor?.can_redeem_allowance}
+                            title={qrFor?.can_redeem_allowance ? undefined : (qrFor?.ineligibility_reason ?? undefined)}
+                            onClick={() => qrFor && issueQr(qrFor)}
+                        >
+                            <QrCode className="mr-2 h-4 w-4" />
+                            {qrFor?.has_qr ? 'Generate new QR' : 'Generate QR'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editing?.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="position">Position</Label>
+                            <Input
+                                id="position"
+                                value={position}
+                                placeholder="e.g. Barista"
+                                onChange={(e) => setPosition(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="status">Employment status</Label>
+                            <Select value={status} onValueChange={setStatus}>
+                                <SelectTrigger id="status">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {statuses.map((value) => (
+                                        <SelectItem key={value} value={value}>
+                                            {value}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex items-start gap-3 rounded-md border p-3">
+                            <Checkbox
+                                id="eligible"
+                                checked={eligible}
+                                onCheckedChange={(value) => setEligible(value === true)}
+                            />
+                            <div className="flex flex-col gap-1">
+                                <Label htmlFor="eligible">Eligible for coffee allowance</Label>
+                                <p className="text-xs text-gray-500">
+                                    {editing?.employee_code
+                                        ? `Employee code ${editing.employee_code} is permanent and will not change.`
+                                        : 'An employee code will be issued on save.'}
+                                </p>
+                                {editing && !editing.has_allowance_role && (
+                                    <p className="text-xs text-amber-600">
+                                        Also needs the <strong>{allowance_role}</strong> role, assigned in User Roles.
+                                        Ticking this alone will not grant the allowance.
+                                    </p>
+                                )}
                             </div>
                         </div>
-                    </DialogContent>
-                </Dialog>
 
-                {/* View Employee Modal */}
-                <Dialog open={isViewEmployeeModalOpen} onOpenChange={setIsViewEmployeeModalOpen}>
-                    <DialogContent className="sm:max-w-[500px]">
-                        <DialogHeader>
-                            <DialogTitle>Employee Details</DialogTitle>
-                        </DialogHeader>
-                        {selectedEmployee && (
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-16 w-16">
-                                        <AvatarImage src={selectedEmployee.avatar} />
-                                        <AvatarFallback className="text-lg">
-                                            {selectedEmployee.name.split(' ').map((n: string) => n[0]).join('')}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <h3 className="text-lg font-semibold">{selectedEmployee.name}</h3>
-                                        <p className="text-muted-foreground">{selectedEmployee.position}</p>
-                                        {getStatusBadge(selectedEmployee.status)}
-                                    </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Mail className="w-4 h-4" />
-                                            <span className="font-medium">Email</span>
-                                        </div>
-                                        <p className="text-muted-foreground">{selectedEmployee.email}</p>
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Phone className="w-4 h-4" />
-                                            <span className="font-medium">Phone</span>
-                                        </div>
-                                        <p className="text-muted-foreground">{selectedEmployee.phone}</p>
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Calendar className="w-4 h-4" />
-                                            <span className="font-medium">Hire Date</span>
-                                        </div>
-                                        <p className="text-muted-foreground">{selectedEmployee.hireDate}</p>
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Clock className="w-4 h-4" />
-                                            <span className="font-medium">Hourly Rate</span>
-                                        </div>
-                                        <p className="text-muted-foreground">₱{selectedEmployee.hourlyRate.toFixed(2)}</p>
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <MapPin className="w-4 h-4" />
-                                        <span className="font-medium">Address</span>
-                                    </div>
-                                    <p className="text-muted-foreground text-sm">{selectedEmployee.address}</p>
-                                </div>
-                                
-                                <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Phone className="w-4 h-4" />
-                                        <span className="font-medium">Emergency Contact</span>
-                                    </div>
-                                    <p className="text-muted-foreground text-sm">{selectedEmployee.emergencyContact}</p>
-                                </div>
-                                
-                                <div>
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Shield className="w-4 h-4" />
-                                        <span className="font-medium">Roles</span>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {selectedEmployee.roles.map((role: string) => (
-                                            <Badge key={role} variant="outline">{role}</Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                        {editing && !editing.can_redeem_allowance && editing.ineligibility_reason && (
+                            <p className="text-xs text-amber-600">Currently blocked: {editing.ineligibility_reason}</p>
                         )}
-                    </DialogContent>
-                </Dialog>
-            </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setEditing(null)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={save} disabled={saving}>
+                            {saving ? 'Saving...' : 'Save'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

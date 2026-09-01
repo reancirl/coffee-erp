@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\PaymentMethod;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemAddOn;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -26,7 +28,7 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'payment_method' => 'required|string',
+            'payment_method' => ['required', 'string', Rule::in(PaymentMethod::acceptedValues())],
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.product_name' => 'required|string',
@@ -67,6 +69,7 @@ class OrderController extends Controller
 
             // Create the order
             $order = Order::create([
+                'user_id' => auth()->id(),
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'total' => $total,

@@ -31,6 +31,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('pos', [OrderController::class, 'pos'])->name('pos');
         Route::get('pos/products', [\App\Http\Controllers\ProductController::class, 'getProductsForPOS'])->name('pos.products');
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+        // Throttled: the token is unguessable, but there is no reason for a
+        // till to be resolving hundreds of codes a minute.
+        Route::post('pos/scan-employee-qr', [\App\Http\Controllers\Pos\EmployeeQrScanController::class, 'resolve'])
+            ->middleware('throttle:30,1')
+            ->name('pos.scan-employee-qr');
+    });
+
+    // Coffee allowance self-service (employees see only their own)
+    Route::middleware(['module.access:coffee-allowance'])->group(function () {
+        Route::get('coffee-allowance', [\App\Http\Controllers\CoffeeAllowanceController::class, 'show'])->name('coffee-allowance.show');
+        Route::get('coffee-allowance/qr', [\App\Http\Controllers\CoffeeAllowanceController::class, 'image'])->name('coffee-allowance.qr');
     });
 
     // Customer routes
@@ -106,9 +117,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Employee Management routes (Admin only)
     Route::middleware(['module.access:sales-monitoring'])->group(function () {
-        Route::get('employees', function () {
-            return \Inertia\Inertia::render('employees/index');
-        })->name('employees.index');
+        Route::get('employees', [\App\Http\Controllers\EmployeeController::class, 'index'])->name('employees.index');
+        Route::patch('employees/{user}', [\App\Http\Controllers\EmployeeController::class, 'update'])->name('employees.update');
+        Route::get('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'qr'])->name('employees.qr');
+        Route::post('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'issueQr'])->name('employees.qr.issue');
+        Route::delete('employees/{user}/qr', [\App\Http\Controllers\EmployeeController::class, 'revokeQr'])->name('employees.qr.revoke');
+        Route::get('employees/{user}/allowance', [\App\Http\Controllers\EmployeeController::class, 'allowance'])->name('employees.allowance');
+        Route::post('employees/{user}/allowance/adjust', [\App\Http\Controllers\EmployeeController::class, 'adjustAllowance'])->name('employees.allowance.adjust');
         
         // Shift Management
         Route::get('/shifts', function () {

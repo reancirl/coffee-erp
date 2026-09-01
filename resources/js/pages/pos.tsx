@@ -5,6 +5,7 @@ import OrderSummary from '../components/pos/OrderSummary';
 import CustomizationModal from '../components/pos/CustomizationModal';
 import DiscountModal from '../components/pos/DiscountModal';
 import PaymentModal from '../components/pos/PaymentModal';
+import EmployeeQrScanner, { type ScannedEmployee } from '../components/pos/EmployeeQrScanner';
 import CustomerModal from '../components/pos/CustomerModal';
 import PrintModal from '../components/pos/PrintModal';
 import AddOnModal from '../components/pos/AddOnModal';
@@ -43,7 +44,9 @@ export default function Pos() {
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<{ id: string; name: string } | null>(null);
     const [cashAmountGiven, setCashAmountGiven] = useState<string>("");
     const [receiptImage, setReceiptImage] = useState<File | null>(null);
-    const [qrCodeImage, setQrCodeImage] = useState<File | null>(null);
+    // Employee allowance: identity confirmed by the server, not by the camera.
+    const [scannedEmployee, setScannedEmployee] = useState<ScannedEmployee | null>(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
     const [discountType, setDiscountType] = useState<string>('Senior Citizen');
     const [discountSelections, setDiscountSelections] = useState<{ [orderItemId: number]: boolean }>({});
@@ -149,9 +152,9 @@ export default function Pos() {
                 alert('Please take a picture of the transaction receipt.');
                 return;
             }
-        } else if (selectedPaymentMethod.id === 'pmna') {
-            if (!qrCodeImage) {
-                alert('Please scan the QR Code using your camera.');
+        } else if (selectedPaymentMethod.id === 'employee-allowance') {
+            if (!scannedEmployee) {
+                alert('Scan the employee QR before confirming this payment.');
                 return;
             }
         } else if (selectedPaymentMethod.id === 'split') {
@@ -251,8 +254,12 @@ export default function Pos() {
       
         // Attach any images
         if (receiptImage) form.append('receipt_image', receiptImage)
-        if (qrCodeImage)   form.append('qr_code_image', qrCodeImage)
         
+        // The server re-validates this token before accepting the payment.
+        if (selectedPaymentMethod?.id === 'employee-allowance' && scannedEmployee) {
+            form.append('employee_qr_token', scannedEmployee.token)
+        }
+
         // Add split payment data if applicable
         if (selectedPaymentMethod?.id === 'split') {
             form.append('split_cash_amount', splitCashAmount)
@@ -474,7 +481,6 @@ export default function Pos() {
         // setSelectedPaymentMethod(null);
         // setCashAmountGiven('');
         // setReceiptImage(null);
-        // setQrCodeImage(null);
         // setSelectedCustomer(null);
         // setSelectedPrintOptions([]);
         // setOrderType('dine-in');
@@ -529,8 +535,8 @@ export default function Pos() {
         } else if (method.id.toLowerCase() === 'debit' && !receiptImage) {
             alert('Please upload a receipt for this payment.');
             return;
-        } else if (method.id.toLowerCase() === 'pmna' && !qrCodeImage) {
-            alert('Please scan the QR code for this payment.');
+        } else if (method.id === 'employee-allowance' && !scannedEmployee) {
+            alert('Scan the employee QR before continuing.');
             return;
         }
         
@@ -773,12 +779,22 @@ export default function Pos() {
                 setCashAmountGiven={setCashAmountGiven}
                 receiptImage={receiptImage}
                 setReceiptImage={setReceiptImage}
-                qrCodeImage={qrCodeImage}
-                setQrCodeImage={setQrCodeImage}
+                onScanEmployee={() => setIsScannerOpen(true)}
+                scannedEmployee={scannedEmployee}
+                clearScannedEmployee={() => setScannedEmployee(null)}
                 splitCashAmount={splitCashAmount}
                 setSplitCashAmount={setSplitCashAmount}
                 splitGcashAmount={splitGcashAmount}
                 setSplitGcashAmount={setSplitGcashAmount}
+            />
+
+            <EmployeeQrScanner
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onIdentified={(employee) => {
+                    setScannedEmployee(employee);
+                    setIsScannerOpen(false);
+                }}
             />
 
             <CustomerModal
@@ -801,7 +817,7 @@ export default function Pos() {
                     setSelectedPaymentMethod(null);
                     setCashAmountGiven('');
                     setReceiptImage(null);
-                    setQrCodeImage(null);
+                    setScannedEmployee(null);
                     setSelectedCustomer(null);
                     setBeeperNumber(''); // Clear beeper number when transaction is done
                 }}

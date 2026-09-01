@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentMethod;
+use App\Exceptions\InsufficientAllowanceException;
+use App\Exceptions\InvalidOrderTotalException;
+use App\Support\Allowance;
+use App\Support\EmployeeQr;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderItemAddOn;
@@ -9,6 +14,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Carbon\Carbon;
 
@@ -28,7 +34,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with('items.addOns');
+        $query = Order::with(['items.addOns', 'cashier:id,name']);
 
         // Apply date filters if provided
         if ($request->filled('start_date')) {
@@ -88,7 +94,7 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'payment_method' => 'required|string',
+            'payment_method' => ['required', 'string', Rule::in(PaymentMethod::acceptedValues())],
             'order_type' => 'nullable|string',
             'beeper_number' => 'nullable|string',
             'items' => 'required|array|min:1',
@@ -110,10 +116,35 @@ class OrderController extends Controller
             // Split payment fields
             'split_cash_amount' => 'nullable|numeric|min:0',
             'split_gcash_amount' => 'nullable|numeric|min:0',
+            // Employee allowance
+            'employee_qr_token' => 'nullable|string|max:255',
         ]);
 
+        $paymentMethod = PaymentMethod::tryFromLabel($validated['payment_method']);
+
+        // An allowance order is only valid against a live, eligible employee.
+        // The token is re-resolved here rather than trusting whatever the
+        // scanner screen decided a moment ago.
+        $allowanceEmployee = null;
+
+        if ($paymentMethod === PaymentMethod::EmployeeAllowance) {
+            if (blank($validated['employee_qr_token'] ?? null)) {
+                return back()->withErrors(['payment' => 'Scan the employee QR to use the employee allowance.']);
+            }
+
+            $result = EmployeeQr::resolve($validated['employee_qr_token']);
+
+            if (! $result['resolution']->isOk()) {
+                return back()->withErrors([
+                    'payment' => ($result['message'] ?? 'This QR cannot be used.').' Payment rejected.',
+                ]);
+            }
+
+            $allowanceEmployee = $result['user'];
+        }
+
         // Additional validation for split payment
-        if ($validated['payment_method'] === 'Split (Cash + GCash)') {
+        if ($paymentMethod->isSplit()) {
             if (empty($validated['split_cash_amount']) || empty($validated['split_gcash_amount'])) {
                 return back()->withErrors(['payment' => 'Both cash and GCash amounts are required for split payment.']);
             }
@@ -157,22 +188,54 @@ class OrderController extends Controller
             $discount = $validated['discount'] ?? 0;
             $total = $subtotal - $discount;
 
+            // Discounts are validated as non-negative but have no upper bound,
+            // so a large enough one drives the total below zero. Persisting
+            // that would post negative revenue into sales monitoring and pull
+            // down the expected cash drawer.
+            if ($total < 0) {
+                throw new InvalidOrderTotalException('The discount cannot be greater than the order subtotal.');
+            }
+
+            // Redeeming nothing is not a redemption. Without this the order is
+            // refused further down with a confusing "this order needs 0.00".
+            if ($paymentMethod === PaymentMethod::EmployeeAllowance && $total <= 0) {
+                throw new InvalidOrderTotalException(
+                    'An employee allowance order must total more than zero.',
+                    'payment',
+                );
+            }
+
             // Create the order
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(Str::random(8)),
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'total' => $total,
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => $paymentMethod->value,
                 'payment_status' => 'completed',
                 'status' => 'pending', // Start as pending, will be completed via kitchen queue
                 'order_type' => $validated['order_type'] ?? 'dine-in',
                 'beeper_number' => $validated['beeper_number'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'user_id' => auth()->id(),
-                'split_cash_amount' => $validated['split_cash_amount'] ?? null,
-                'split_gcash_amount' => $validated['split_gcash_amount'] ?? null,
+                'allowance_user_id' => $allowanceEmployee?->id,
+                'split_cash_amount' => $paymentMethod->isSplit() ? ($validated['split_cash_amount'] ?? null) : null,
+                'split_gcash_amount' => $paymentMethod->isSplit() ? ($validated['split_gcash_amount'] ?? null) : null,
             ]);
+
+            // Draw the money down inside the same transaction as the order.
+            // If the balance cannot cover it, the exception rolls the order
+            // back with it, so no order exists without its ledger entry.
+            if ($allowanceEmployee !== null) {
+                $ledgerEntry = Allowance::redeem($allowanceEmployee, $total, $order, auth()->user());
+
+                if ($ledgerEntry === null) {
+                    throw new InsufficientAllowanceException(
+                        Allowance::balanceFor($allowanceEmployee)['remaining'],
+                        $total,
+                    );
+                }
+            }
 
             // Add order items
             foreach ($validated['items'] as $itemData) {
@@ -215,6 +278,14 @@ class OrderController extends Controller
 
             return redirect()->back()->with('message', 'Order created successfully');
 
+        } catch (InvalidOrderTotalException $e) {
+            DB::rollBack();
+
+            return back()->withErrors([$e->field => $e->getMessage()]);
+        } catch (InsufficientAllowanceException $e) {
+            DB::rollBack();
+
+            return back()->withErrors(['payment' => $e->getMessage().' Payment rejected.']);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error creating order: ' . $e->getMessage());
@@ -229,7 +300,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         return Inertia::render('orders/show', [
-            'order' => $order->load('items.addOns')
+            'order' => $order->load(['items.addOns', 'cashier:id,name'])
         ]);
     }
     
@@ -274,13 +345,28 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
             
+            // Guard against a double void writing a second reversal and
+            // refunding the allowance twice.
+            if ($order->status === 'voided') {
+                DB::rollBack();
+
+                return redirect()->back()->with('message', 'This order is already voided');
+            }
+
             $order->update([
                 'status' => 'voided',
                 'payment_status' => 'voided'
             ]);
-            
+
+            // Give the allowance back, booked against the period the spend
+            // came from rather than whatever month it is now.
+            $reversals = Allowance::reverseOrder($order, auth()->user(), 'Order '.$order->order_number.' voided');
+
             DB::commit();
-            return redirect()->back()->with('message', 'Order has been voided successfully');
+
+            return redirect()->back()->with('message', $reversals->isNotEmpty()
+                ? 'Order voided and allowance returned'
+                : 'Order has been voided successfully');
             
         } catch (\Exception $e) {
             DB::rollBack();

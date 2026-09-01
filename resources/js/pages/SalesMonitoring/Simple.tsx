@@ -46,6 +46,8 @@ interface SalesMonitoring {
     gcash_sales: number;
     split_cash_sales: number;
     split_gcash_sales: number;
+    allowance_sales: number;
+    other_sales: number;
     cash_in: number;
     cash_out: number;
     expected_balance: number;
@@ -241,6 +243,14 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                 <div className="text-xs text-gray-500 space-y-1">
                                     <div>Cash: {formatCurrency(currentMonitoring.total_cash)}</div>
                                     <div>GCash: {formatCurrency(currentMonitoring.total_gcash)}</div>
+                                    {Number(currentMonitoring.allowance_sales) > 0 && (
+                                        <div>Employee Allowance: {formatCurrency(currentMonitoring.allowance_sales)}</div>
+                                    )}
+                                    {Number(currentMonitoring.other_sales) > 0 && (
+                                        <div className="text-amber-600">
+                                            Unrecognised: {formatCurrency(currentMonitoring.other_sales)}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

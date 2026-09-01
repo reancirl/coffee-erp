@@ -15,6 +15,10 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('settings/password', [PasswordController::class, 'update'])->name('password.update');
 
+    // Coffee allowance moved out of settings into its own module. Kept as a
+    // redirect so existing bookmarks do not 404.
+    Route::redirect('settings/coffee-qr', '/coffee-allowance');
+
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/appearance');
     })->name('appearance');
