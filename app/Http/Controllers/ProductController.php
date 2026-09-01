@@ -11,6 +11,22 @@ use Illuminate\Support\Facades\Artisan;
 class ProductController extends Controller
 {
     /**
+     * Versioned so a deploy cannot serve a menu cached before allowance
+     * eligibility was part of the payload.
+     */
+    private const POS_MENU_CACHE_KEY = 'pos_products.v2';
+
+    /**
+     * Drop the cached POS menu. Called wherever the menu can change, which
+     * now includes eligibility, not just names and prices.
+     */
+    public static function forgetPosMenu(): void
+    {
+        Cache::forget(self::POS_MENU_CACHE_KEY);
+        Artisan::call('optimize:clear');
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -77,6 +93,8 @@ class ProductController extends Controller
             'prices.iced' => 'nullable|numeric|min:0',
             'is_add_on' => 'boolean',
             'customizations' => 'nullable|array',
+            // Tri-state: null defers to the category.
+            'allowance_eligible' => 'nullable|boolean',
         ]);
 
         $validated = $this->normalizePricing($validated);
@@ -93,6 +111,8 @@ class ProductController extends Controller
         }
 
         Product::create($validated);
+
+        self::forgetPosMenu();
 
         return redirect()->route('products.index')
             ->with('success', 'Product created successfully.');
@@ -137,6 +157,8 @@ class ProductController extends Controller
             'prices.iced' => 'nullable|numeric|min:0',
             'is_add_on' => 'boolean',
             'customizations' => 'nullable|array',
+            // Tri-state: null defers to the category.
+            'allowance_eligible' => 'nullable|boolean',
         ]);
 
         $validated = $this->normalizePricing($validated);
@@ -153,8 +175,7 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        Cache::forget('pos_products');
-        Artisan::call('optimize:clear');
+        self::forgetPosMenu();
 
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully.');
@@ -167,6 +188,8 @@ class ProductController extends Controller
     {
         $product->delete();
 
+        self::forgetPosMenu();
+
         return redirect()->route('products.index')
             ->with('success', 'Product deleted successfully.');
     }
@@ -177,7 +200,7 @@ class ProductController extends Controller
     public function getProductsForPOS()
     {
         // Cache the products for 10 minutes to improve performance
-        return Cache::remember('pos_products', 600, function () {
+        return Cache::remember(self::POS_MENU_CACHE_KEY, 600, function () {
             // Get all categories
             $categories = Category::all();
             
@@ -196,11 +219,19 @@ class ProductController extends Controller
                 }
                 
                 // Format products according to the data.ts structure
-                $formattedProducts = $categoryProducts->map(function ($product) {
+                $formattedProducts = $categoryProducts->map(function ($product) use ($category) {
+                    // Hand the product its category so the eligibility rule can
+                    // be asked once, in one place, without a query per product.
+                    $product->setRelation('categoryRelation', $category);
+
                     $data = [
                         'name' => $product->name,
                         'type' => $product->is_add_on ? 'addon' : 'product',
                         'id' => $product->id,
+                        // The POS uses this to keep ineligible items out of an
+                        // allowance sale before the cashier gets an error. The
+                        // order endpoint checks it again regardless.
+                        'allowance_eligible' => $product->allowanceEligible(),
                     ];
                     
                     // Handle prices based on whether it has variants

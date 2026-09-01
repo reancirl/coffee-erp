@@ -8,6 +8,9 @@ interface OrderSummaryProps {
     onProceedToPayment: () => void;
     discountSelections: { [key: number]: boolean };
     discountType: string;
+    // Products the coffee allowance does not cover. Flagged in the cart so a
+    // cashier sees the problem before choosing how to pay.
+    ineligibleForAllowance?: Set<number>;
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -17,6 +20,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
     onProceedToPayment,
     discountSelections,
     discountType,
+    ineligibleForAllowance,
 }) => {
     // Helper function to safely convert any value to a number
     const safeNumber = (value: any): number => {
@@ -102,6 +106,11 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
                                                         ? item.selectedCustomizations?.['Variant'] // For cookies, show the actual variant
                                                         : (item.selectedVariant === 'hot' || item.selectedCustomizations?.['Variant'] === 'Hot' ? 'Hot' : 'Iced') // For other products
                                                     }
+                                                </span>
+                                            )}
+                                            {ineligibleForAllowance?.has(item.id) && (
+                                                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-900">
+                                                    Not on allowance
                                                 </span>
                                             )}
                                         </div>

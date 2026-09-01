@@ -141,6 +141,34 @@ export default function Pos() {
         }
     }, [flash]);
 
+    // Which products the allowance cannot pay for. Read off the menu rather
+    // than off the cart, so it holds however an item got added.
+    const ineligibleForAllowance = new Set<number>();
+    Object.values(menuData).forEach((products) =>
+        products.forEach((product) => {
+            if (product.allowance_eligible === false) {
+                ineligibleForAllowance.add(product.id);
+            }
+        })
+    );
+
+    const ineligibleNames = Array.from(
+        new Set(
+            order
+                .flatMap((item) => [item, ...(item.addOns ?? [])])
+                .filter((item) => ineligibleForAllowance.has(item.id))
+                .map((item) => item.name)
+        )
+    );
+
+    // Same wording the order endpoint uses when it refuses, so the cashier
+    // does not see two different explanations for one rule.
+    const allowanceBlockedReason = (): string | null =>
+        ineligibleNames.length === 0
+            ? null
+            : `The coffee allowance does not cover ${ineligibleNames.join(', ')}. ` +
+              `Remove ${ineligibleNames.length === 1 ? 'it' : 'them'} or pay another way.`;
+
     const handlePayment = () => {
         const total = Number(calculateFinalTotal());
         if (!selectedPaymentMethod) {
@@ -161,6 +189,11 @@ export default function Pos() {
         } else if (selectedPaymentMethod.id === 'employee-allowance') {
             if (!scannedEmployee) {
                 alert('Scan the employee QR before confirming this payment.');
+                return;
+            }
+            const blocked = allowanceBlockedReason();
+            if (blocked) {
+                alert(blocked);
                 return;
             }
         } else if (selectedPaymentMethod.id === 'split') {
@@ -572,9 +605,16 @@ export default function Pos() {
         } else if (method.id.toLowerCase() === 'debit' && !receiptImage) {
             alert('Please upload a receipt for this payment.');
             return;
-        } else if (method.id === 'employee-allowance' && !scannedEmployee) {
-            alert('Scan the employee QR before continuing.');
-            return;
+        } else if (method.id === 'employee-allowance') {
+            if (!scannedEmployee) {
+                alert('Scan the employee QR before continuing.');
+                return;
+            }
+            const blocked = allowanceBlockedReason();
+            if (blocked) {
+                alert(blocked);
+                return;
+            }
         }
         
         setSelectedPaymentMethod(method);
@@ -774,6 +814,7 @@ export default function Pos() {
                     onProceedToPayment={handleProceedToPayment}
                     discountSelections={discountSelections}
                     discountType={discountType}
+                    ineligibleForAllowance={ineligibleForAllowance}
                 />
             </div>
 

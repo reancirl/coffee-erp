@@ -19,6 +19,7 @@ export interface Product {
     isAddOn?: boolean;
     type?: 'product' | 'addon';
     is_alternative_milk?: boolean; // For distinguishing alternative milk products with teal styling
+    allowance_eligible?: boolean; // Whether the coffee allowance may pay for it
 };
 
 export type ProductCategory = {
@@ -37,6 +38,7 @@ export type MenuData = {
         };
         type?: 'product' | 'addon';
         is_alternative_milk?: boolean; // For alternative milk styling
+        allowance_eligible?: boolean; // Resolved server-side from the product and its category
         customizations?: Customization[]; // Support for variant options in cookies and other items
     }>;
 };

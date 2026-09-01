@@ -12,6 +12,7 @@ interface Category {
     id: number;
     name: string;
     description?: string;
+    allowance_eligible?: boolean;
 }
 
 interface Product {
@@ -24,6 +25,7 @@ interface Product {
         iced?: number;
     };
     is_add_on: boolean;
+    allowance_eligible?: boolean | null;
     customizations?: Array<{
         name: string;
         options: string[];
@@ -33,6 +35,13 @@ interface Product {
     created_at: string;
     updated_at: string;
 }
+
+/**
+ * Display only. The order endpoint is the authority; this mirrors its rule so
+ * the list can show which products the allowance will refuse.
+ */
+const onAllowance = (product: Product): boolean =>
+    product.allowance_eligible ?? product.category_relation?.allowance_eligible ?? true;
 
 interface PaginatedProducts {
     data: Product[];
@@ -213,6 +222,11 @@ export default function Index({ products, categories, filters }: Props) {
                                                         <div className="text-sm font-medium text-gray-900">
                                                             {product.name}
                                                         </div>
+                                                        {!onAllowance(product) && (
+                                                            <div className="text-xs text-amber-700">
+                                                                Not on allowance
+                                                            </div>
+                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         {product.category_relation ? (

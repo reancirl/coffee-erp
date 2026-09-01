@@ -141,6 +141,22 @@ class OrderController extends Controller
             }
 
             $allowanceEmployee = $result['user'];
+
+            // Not every product is on the allowance. Checked here, server-side,
+            // because the POS only knows what the menu endpoint told it and
+            // that answer is cached.
+            $ineligible = Product::ineligibleForAllowance(
+                $this->productIdsIn($validated['items'])
+            );
+
+            if ($ineligible->isNotEmpty()) {
+                return back()->withErrors([
+                    'payment' => 'The coffee allowance does not cover '.
+                        $ineligible->pluck('name')->join(', ', ' and ').
+                        '. Remove '.($ineligible->count() === 1 ? 'it' : 'them').
+                        ' or pay another way.',
+                ]);
+            }
         }
 
         // Additional validation for split payment
@@ -330,6 +346,30 @@ class OrderController extends Controller
      * @param string $productId Frontend product ID
      * @return int Category ID (1-5) or 0 for non-categorized products
      */
+    /**
+     * Every product referenced by an order payload, add-ons included.
+     *
+     * An add-on is a product too, so a drink that is on the allowance can
+     * still carry something that is not.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, mixed>
+     */
+    private function productIdsIn(array $items): array
+    {
+        $ids = [];
+
+        foreach ($items as $item) {
+            $ids[] = $item['product_id'] ?? null;
+
+            foreach ($item['add_ons'] ?? [] as $addOn) {
+                $ids[] = $addOn['product_id'] ?? null;
+            }
+        }
+
+        return array_filter($ids, fn ($id) => $id !== null);
+    }
+
     private function getCategoryIdFromProductId($productId)
     {
         $id = (int) $productId;

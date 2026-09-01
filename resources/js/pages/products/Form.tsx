@@ -29,6 +29,7 @@ interface Product {
         iced?: number;
     };
     is_add_on: boolean;
+    allowance_eligible?: boolean | null;
     customizations?: Array<{
         name: string;
         options: string[];
@@ -50,6 +51,8 @@ type ProductForm = {
         iced: number | null;
     };
     is_add_on: boolean;
+    // 'inherit' defers to the category; the other two override it.
+    allowance_eligible: 'inherit' | 'yes' | 'no';
     customizations: Array<{
         name: string;
         options: string[];
@@ -83,6 +86,12 @@ export default function Form({ product, categories }: Props) {
             iced: product?.prices?.iced || null,
         },
         is_add_on: product?.is_add_on || false,
+        allowance_eligible:
+            product?.allowance_eligible === undefined || product?.allowance_eligible === null
+                ? 'inherit'
+                : product.allowance_eligible
+                  ? 'yes'
+                  : 'no',
         customizations: (product?.customizations || []).map(customization => ({
             ...customization,
             options: Array.isArray(customization.options) ? customization.options : []
@@ -96,6 +105,8 @@ export default function Form({ product, categories }: Props) {
             ...data,
             category: data.category === 'none' ? null : data.category,
             prices: hasVariantPricing ? data.prices : null,
+            allowance_eligible:
+                data.allowance_eligible === 'inherit' ? null : data.allowance_eligible === 'yes',
         };
 
         if (isEditing) {
@@ -211,6 +222,31 @@ export default function Form({ product, categories }: Props) {
                                         onCheckedChange={(checked) => setData('is_add_on', !!checked)}
                                     />
                                     <Label htmlFor="is_add_on">This is an add-on item</Label>
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="allowance_eligible">Coffee allowance</Label>
+                                    <Select
+                                        value={data.allowance_eligible}
+                                        onValueChange={(value) =>
+                                            setData('allowance_eligible', value as ProductForm['allowance_eligible'])
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="inherit">Follow the category</SelectItem>
+                                            <SelectItem value="yes">Always allowed</SelectItem>
+                                            <SelectItem value="no">Never allowed</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={errors.allowance_eligible} />
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        Whether employees can pay for this with their coffee
+                                        allowance. Leave it on the category unless this one
+                                        product is an exception.
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
