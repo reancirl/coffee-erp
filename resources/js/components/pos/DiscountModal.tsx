@@ -29,9 +29,9 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
             <div
-                className="bg-white p-6 rounded shadow-lg w-96"
+                className="bg-card p-6 rounded shadow-lg w-96"
                 style={{ backgroundColor: primaryColor, color: accentColor }}
             >
                 <h2 className="text-xl font-semibold mb-4">Apply Discount</h2>

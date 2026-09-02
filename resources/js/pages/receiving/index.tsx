@@ -78,15 +78,15 @@ const mockReceivingOrders = [
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'pending':
-            return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
+            return <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />Pending
             </Badge>;
         case 'partial':
-            return <Badge variant="default" className="bg-orange-100 text-orange-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-orange-100 dark:bg-orange-950/40 text-orange-800 dark:text-orange-300 flex items-center gap-1">
                 <Package className="w-3 h-3" />Partial
             </Badge>;
         case 'completed':
-            return <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />Completed
             </Badge>;
         case 'discrepancy':
@@ -101,7 +101,7 @@ const getStatusBadge = (status: string) => {
 const getConditionBadge = (condition: string) => {
     switch (condition) {
         case 'good':
-            return <Badge variant="default" className="bg-green-100 text-green-800">Good</Badge>;
+            return <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300">Good</Badge>;
         case 'damaged':
             return <Badge variant="destructive">Damaged</Badge>;
         case 'missing':
@@ -184,10 +184,10 @@ export default function ReceivingIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-yellow-600">{pendingOrders}</div>
+                            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pendingOrders}</div>
                             <p className="text-xs text-muted-foreground">
                                 Awaiting delivery
                             </p>
@@ -197,10 +197,10 @@ export default function ReceivingIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{completedOrders}</div>
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{completedOrders}</div>
                             <p className="text-xs text-muted-foreground">
                                 Successfully received
                             </p>
@@ -210,10 +210,10 @@ export default function ReceivingIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Discrepancies</CardTitle>
-                            <XCircle className="h-4 w-4 text-red-600" />
+                            <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-red-600">{totalDiscrepancies}</div>
+                            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{totalDiscrepancies}</div>
                             <p className="text-xs text-muted-foreground">
                                 Items with issues
                             </p>
@@ -278,7 +278,7 @@ export default function ReceivingIndex() {
                                             <TableCell>
                                                 <div className="font-medium">{order.poNumber}</div>
                                                 {order.discrepancies > 0 && (
-                                                    <div className="text-sm text-red-600">
+                                                    <div className="text-sm text-red-600 dark:text-red-400">
                                                         {order.discrepancies} discrepancy(ies)
                                                     </div>
                                                 )}

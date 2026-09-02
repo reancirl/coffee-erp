@@ -32,7 +32,7 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
                 <button
                     onClick={() => setIsGuest(true)}
                     className={`flex-1 p-2 rounded text-sm font-semibold ${
-                        isGuest ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                        isGuest ? 'bg-blue-500 text-white' : 'bg-muted text-foreground'
                     }`}
                 >
                     Guest
@@ -40,7 +40,7 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
                 <button
                     onClick={() => setIsGuest(false)}
                     className={`flex-1 p-2 rounded text-sm font-semibold ${
-                        !isGuest ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                        !isGuest ? 'bg-blue-500 text-white' : 'bg-muted text-foreground'
                     }`}
                 >
                     Existing Customer
@@ -106,8 +106,8 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
                                     <div
                                         key={customer.id}
                                         onClick={() => onCustomerSelect(customer)}
-                                        className={`p-2 cursor-pointer hover:bg-gray-700 ${
-                                            selectedCustomer?.id === customer.id ? 'bg-gray-700' : ''
+                                        className={`p-2 cursor-pointer hover:bg-accent ${
+                                            selectedCustomer?.id === customer.id ? 'bg-accent' : ''
                                         }`}
                                     >
                                         {customer.name}

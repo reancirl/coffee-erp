@@ -64,18 +64,18 @@ export default function Form({ customer }: Props) {
                     </h2>
                     <Link
                         href={route('customers.index')}
-                        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                        className="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-bold py-2 px-4 rounded"
                     >
                         Back
                     </Link>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 text-gray-900">
+                <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="p-6 text-foreground">
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label htmlFor="known_name" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="known_name" className="block text-sm font-medium text-foreground">
                                         Known Name
                                     </label>
                                     <input
@@ -83,15 +83,15 @@ export default function Form({ customer }: Props) {
                                         id="known_name"
                                         value={data.known_name}
                                         onChange={(e) => setData('known_name', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
                                     />
                                     {errors.known_name && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.known_name}</p>
+                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.known_name}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="first_name" className="block text-sm font-medium text-foreground">
                                         First Name
                                     </label>
                                     <input
@@ -99,15 +99,15 @@ export default function Form({ customer }: Props) {
                                         id="first_name"
                                         value={data.first_name}
                                         onChange={(e) => setData('first_name', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
                                     />
                                     {errors.first_name && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>
+                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.first_name}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="last_name" className="block text-sm font-medium text-foreground">
                                         Last Name
                                     </label>
                                     <input
@@ -115,15 +115,15 @@ export default function Form({ customer }: Props) {
                                         id="last_name"
                                         value={data.last_name}
                                         onChange={(e) => setData('last_name', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
                                     />
                                     {errors.last_name && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>
+                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.last_name}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="email" className="block text-sm font-medium text-foreground">
                                         Email
                                     </label>
                                     <input
@@ -131,15 +131,15 @@ export default function Form({ customer }: Props) {
                                         id="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
                                     />
                                     {errors.email && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="phone_number" className="block text-sm font-medium text-foreground">
                                         Phone Number
                                     </label>
                                     <input
@@ -147,15 +147,15 @@ export default function Form({ customer }: Props) {
                                         id="phone_number"
                                         value={data.phone_number}
                                         onChange={(e) => setData('phone_number', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
                                     />
                                     {errors.phone_number && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.phone_number}</p>
+                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone_number}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="date_of_birth" className="block text-sm font-medium text-foreground">
                                         Date of Birth
                                     </label>
                                     <input
@@ -163,22 +163,22 @@ export default function Form({ customer }: Props) {
                                         id="date_of_birth"
                                         value={data.date_of_birth}
                                         onChange={(e) => setData('date_of_birth', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
                                     />
                                     {errors.date_of_birth && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.date_of_birth}</p>
+                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date_of_birth}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="membership_tier" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="membership_tier" className="block text-sm font-medium text-foreground">
                                         Membership Tier
                                     </label>
                                     <select
                                         id="membership_tier"
                                         value={data.membership_tier}
                                         onChange={(e) => setData('membership_tier', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
                                     >
                                         <option value="">Select Tier</option>
                                         <option value="bronze">Bronze</option>
@@ -187,12 +187,12 @@ export default function Form({ customer }: Props) {
                                         <option value="platinum">Platinum</option>
                                     </select>
                                     {errors.membership_tier && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.membership_tier}</p>
+                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.membership_tier}</p>
                                     )}
                                 </div>
 
                                 <div className="md:col-span-2">
-                                    <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="notes" className="block text-sm font-medium text-foreground">
                                         Notes
                                     </label>
                                     <textarea
@@ -200,10 +200,10 @@ export default function Form({ customer }: Props) {
                                         value={data.notes}
                                         onChange={(e) => setData('notes', e.target.value)}
                                         rows={3}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
+                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
                                     />
                                     {errors.notes && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.notes}</p>
+                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.notes}</p>
                                     )}
                                 </div>
                             </div>

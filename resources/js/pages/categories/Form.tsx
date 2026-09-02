@@ -114,7 +114,7 @@ export default function Form({ category }: Props) {
                                         rows={4}
                                     />
                                     <InputError message={errors.description} />
-                                    <p className="text-sm text-gray-500 mt-1">
+                                    <p className="text-sm text-muted-foreground mt-1">
                                         Provide a brief description of what products belong to this category.
                                     </p>
                                 </div>

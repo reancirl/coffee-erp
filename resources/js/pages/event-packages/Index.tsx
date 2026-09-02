@@ -55,14 +55,14 @@ export default function EventPackagesIndex() {
             <Head title="Event Packages" />
             <div className="flex flex-col gap-6 p-6">
                 {flash?.success && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-green-800">{flash.success}</div>
+                    <div className="rounded-lg border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40 px-4 py-2 text-green-800 dark:text-green-300">{flash.success}</div>
                 )}
 
-                <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
                         <div>
-                            <p className="text-sm uppercase tracking-wide text-gray-500">Packages</p>
-                            <h2 className="text-xl font-semibold text-gray-900">Available options</h2>
+                            <p className="text-sm uppercase tracking-wide text-muted-foreground">Packages</p>
+                            <h2 className="text-xl font-semibold text-foreground">Available options</h2>
                         </div>
                         <Link href="/event-packages/create">
                             <Button size="sm" className="shadow">
@@ -72,7 +72,7 @@ export default function EventPackagesIndex() {
                         </Link>
                     </div>
 
-                    <div className="overflow-hidden rounded-lg border border-gray-200">
+                    <div className="overflow-hidden rounded-lg border border-border">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -87,7 +87,7 @@ export default function EventPackagesIndex() {
                             <TableBody>
                                 {sortedPackages.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center text-sm text-gray-600">
+                                        <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
                                             No packages yet. Add your first event package.
                                         </TableCell>
                                     </TableRow>
@@ -96,22 +96,22 @@ export default function EventPackagesIndex() {
                                     <Fragment key={pkg.id}>
                                         <TableRow>
                                             <TableCell>
-                                                <div className="font-semibold text-gray-900">{pkg.name}</div>
+                                                <div className="font-semibold text-foreground">{pkg.name}</div>
                                             </TableCell>
-                                            <TableCell className="text-gray-900">{pkg.cup_count} cups</TableCell>
-                                            <TableCell className="font-semibold text-gray-900">{currency(pkg.price)}</TableCell>
+                                            <TableCell className="text-foreground">{pkg.cup_count} cups</TableCell>
+                                            <TableCell className="font-semibold text-foreground">{currency(pkg.price)}</TableCell>
                                             <TableCell>
                                                 {pkg.is_active ? (
-                                                    <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100" variant="secondary">
+                                                    <Badge className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/40" variant="secondary">
                                                         Public
                                                     </Badge>
                                                 ) : (
-                                                    <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
+                                                    <Badge variant="secondary" className="bg-muted text-foreground hover:bg-muted">
                                                         Hidden
                                                     </Badge>
                                                 )}
                                             </TableCell>
-                                            <TableCell className="text-sm text-gray-700">
+                                            <TableCell className="text-sm text-foreground">
                                                 {pkg.products?.length ? (
                                                     <button
                                                         type="button"
@@ -131,7 +131,7 @@ export default function EventPackagesIndex() {
                                                         )}
                                                     </button>
                                                 ) : (
-                                                    <span className="text-gray-500">No products</span>
+                                                    <span className="text-muted-foreground">No products</span>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
@@ -145,7 +145,7 @@ export default function EventPackagesIndex() {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="text-red-600 hover:text-red-700"
+                                                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                                                         disabled={deletingId === pkg.id}
                                                         onClick={() => handleDelete(pkg)}
                                                     >
@@ -156,11 +156,11 @@ export default function EventPackagesIndex() {
                                             </TableCell>
                                         </TableRow>
                                         {expandedId === pkg.id && pkg.products?.length ? (
-                                            <TableRow className="bg-gray-50/70">
+                                            <TableRow className="bg-muted/70">
                                                 <TableCell colSpan={6}>
                                                     <div className="flex flex-wrap gap-2">
                                                         {pkg.products.map((product) => (
-                                                            <Badge key={product.id} variant="secondary" className="bg-white text-gray-800 shadow-sm">
+                                                            <Badge key={product.id} variant="secondary" className="bg-card text-foreground shadow-sm">
                                                                 {product.name}
                                                             </Badge>
                                                         ))}

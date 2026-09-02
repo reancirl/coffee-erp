@@ -102,15 +102,15 @@ const mockPerformanceData = [
 const getPerformanceBadge = (performance: string) => {
     switch (performance) {
         case 'excellent':
-            return <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />Excellent
             </Badge>;
         case 'good':
-            return <Badge variant="default" className="bg-blue-100 text-blue-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />Good
             </Badge>;
         case 'needs_improvement':
-            return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
+            return <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />Needs Improvement
             </Badge>;
         case 'poor':
@@ -126,7 +126,7 @@ const getRatingStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
         <Star
             key={i}
-            className={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+            className={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
         />
     ));
 };
@@ -185,7 +185,7 @@ export default function SupplierPerformanceIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Avg On-Time Rate</CardTitle>
-                            <Clock className="h-4 w-4 text-blue-600" />
+                            <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{avgOnTimeRate.toFixed(1)}%</div>
@@ -196,7 +196,7 @@ export default function SupplierPerformanceIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Avg Quality Score</CardTitle>
-                            <Star className="h-4 w-4 text-yellow-600" />
+                            <Star className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{avgQualityScore.toFixed(1)}</div>
@@ -209,7 +209,7 @@ export default function SupplierPerformanceIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Avg Lead Time</CardTitle>
-                            <Calendar className="h-4 w-4 text-green-600" />
+                            <Calendar className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{avgLeadTime.toFixed(1)}</div>
@@ -222,10 +222,10 @@ export default function SupplierPerformanceIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Issues</CardTitle>
-                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-red-600">{totalIssues}</div>
+                            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{totalIssues}</div>
                             <p className="text-xs text-muted-foreground">
                                 across all suppliers
                             </p>
@@ -336,7 +336,7 @@ export default function SupplierPerformanceIndex() {
                                                 {supplier.issues > 0 ? (
                                                     <Badge variant="destructive">{supplier.issues}</Badge>
                                                 ) : (
-                                                    <Badge variant="default" className="bg-green-100 text-green-800">0</Badge>
+                                                    <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300">0</Badge>
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -379,7 +379,7 @@ export default function SupplierPerformanceIndex() {
                                     <Card>
                                         <CardContent className="pt-4">
                                             <div className="text-center">
-                                                <div className="text-2xl font-bold text-blue-600">
+                                                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                                     {((selectedSupplier.onTimeDeliveries / selectedSupplier.totalOrders) * 100).toFixed(1)}%
                                                 </div>
                                                 <div className="text-sm text-muted-foreground">On-Time Rate</div>
@@ -394,7 +394,7 @@ export default function SupplierPerformanceIndex() {
                                     <Card>
                                         <CardContent className="pt-4">
                                             <div className="text-center">
-                                                <div className="text-2xl font-bold text-yellow-600">
+                                                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                                                     {selectedSupplier.qualityScore}
                                                 </div>
                                                 <div className="text-sm text-muted-foreground">Quality Score</div>
@@ -408,7 +408,7 @@ export default function SupplierPerformanceIndex() {
                                     <Card>
                                         <CardContent className="pt-4">
                                             <div className="text-center">
-                                                <div className="text-2xl font-bold text-green-600">
+                                                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                                                     {selectedSupplier.avgLeadTime}
                                                 </div>
                                                 <div className="text-sm text-muted-foreground">Avg Lead Time (days)</div>
@@ -419,7 +419,7 @@ export default function SupplierPerformanceIndex() {
                                     <Card>
                                         <CardContent className="pt-4">
                                             <div className="text-center">
-                                                <div className="text-2xl font-bold text-purple-600">
+                                                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                                                     {selectedSupplier.orderAccuracy}%
                                                 </div>
                                                 <div className="text-sm text-muted-foreground">Order Accuracy</div>
@@ -452,9 +452,9 @@ export default function SupplierPerformanceIndex() {
                                         <div className="font-medium mb-1">Issues Reported</div>
                                         <p className="text-muted-foreground">
                                             {selectedSupplier.issues > 0 ? (
-                                                <span className="text-red-600">{selectedSupplier.issues}</span>
+                                                <span className="text-red-600 dark:text-red-400">{selectedSupplier.issues}</span>
                                             ) : (
-                                                <span className="text-green-600">0</span>
+                                                <span className="text-green-600 dark:text-green-400">0</span>
                                             )}
                                         </p>
                                     </div>

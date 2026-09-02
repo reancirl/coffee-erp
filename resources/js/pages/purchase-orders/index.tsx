@@ -87,15 +87,15 @@ const mockPurchaseOrders = [
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'pending':
-            return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
+            return <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
                 <Clock className="w-3 h-3" />Pending
             </Badge>;
         case 'approved':
-            return <Badge variant="default" className="bg-blue-100 text-blue-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />Approved
             </Badge>;
         case 'received':
-            return <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />Received
             </Badge>;
         case 'cancelled':
@@ -180,10 +180,10 @@ export default function PurchaseOrdersIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                            <Clock className="h-4 w-4 text-yellow-600" />
+                            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-yellow-600">{pendingPOs}</div>
+                            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pendingPOs}</div>
                             <p className="text-xs text-muted-foreground">
                                 Awaiting approval
                             </p>
@@ -193,10 +193,10 @@ export default function PurchaseOrdersIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Approved</CardTitle>
-                            <CheckCircle className="h-4 w-4 text-blue-600" />
+                            <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">{approvedPOs}</div>
+                            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{approvedPOs}</div>
                             <p className="text-xs text-muted-foreground">
                                 Ready for delivery
                             </p>
@@ -206,7 +206,7 @@ export default function PurchaseOrdersIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                            <DollarSign className="h-4 w-4 text-green-600" />
+                            <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">₱{totalValue.toLocaleString()}</div>

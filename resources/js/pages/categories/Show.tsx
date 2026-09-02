@@ -72,7 +72,7 @@ export default function Show({ category }: Props) {
                             </Button>
                         </Link>
                         <div className="flex items-center gap-3">
-                            <Package className="h-8 w-8 text-blue-600" />
+                            <Package className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                             <h2 className="text-2xl font-bold">{category.name}</h2>
                         </div>
                     </div>
@@ -93,21 +93,21 @@ export default function Show({ category }: Props) {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
-                                    <h4 className="font-medium text-gray-700">Name</h4>
+                                    <h4 className="font-medium text-foreground">Name</h4>
                                     <p className="text-lg">{category.name}</p>
                                 </div>
 
                                 <div>
-                                    <h4 className="font-medium text-gray-700">Description</h4>
+                                    <h4 className="font-medium text-foreground">Description</h4>
                                     {category.description ? (
-                                        <p className="text-gray-600">{category.description}</p>
+                                        <p className="text-muted-foreground">{category.description}</p>
                                     ) : (
-                                        <span className="text-gray-400 italic">No description provided</span>
+                                        <span className="text-muted-foreground italic">No description provided</span>
                                     )}
                                 </div>
 
                                 <div>
-                                    <h4 className="font-medium text-gray-700">Total Products</h4>
+                                    <h4 className="font-medium text-foreground">Total Products</h4>
                                     <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                                         <Package className="h-3 w-3" />
                                         {category.products_count} product{category.products_count !== 1 ? 's' : ''}
@@ -115,16 +115,16 @@ export default function Show({ category }: Props) {
                                 </div>
 
                                 <div>
-                                    <h4 className="font-medium text-gray-700">Created</h4>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <h4 className="font-medium text-foreground">Created</h4>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <Calendar className="h-4 w-4" />
                                         {formatDate(category.created_at)}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <h4 className="font-medium text-gray-700">Last Updated</h4>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <h4 className="font-medium text-foreground">Last Updated</h4>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <Calendar className="h-4 w-4" />
                                         {formatDate(category.updated_at)}
                                     </div>
@@ -148,8 +148,8 @@ export default function Show({ category }: Props) {
                             <CardContent>
                                 {category.products.length === 0 ? (
                                     <div className="text-center py-8">
-                                        <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                                        <p className="text-gray-500 mb-4">No products in this category yet.</p>
+                                        <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                                        <p className="text-muted-foreground mb-4">No products in this category yet.</p>
                                         <Link href={route('products.create')}>
                                             <Button>Add First Product</Button>
                                         </Link>
@@ -157,13 +157,13 @@ export default function Show({ category }: Props) {
                                 ) : (
                                     <div className="space-y-3">
                                         {category.products.map((product) => (
-                                            <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                                            <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted">
                                                 <div className="flex items-center gap-3">
-                                                    <Package className="h-5 w-5 text-gray-400" />
+                                                    <Package className="h-5 w-5 text-muted-foreground" />
                                                     <div>
                                                         <h4 className="font-medium">{product.name}</h4>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <span className="text-sm text-gray-600">
+                                                            <span className="text-sm text-muted-foreground">
                                                                 {formatCurrency(product.price)}
                                                             </span>
                                                             {product.is_add_on && (

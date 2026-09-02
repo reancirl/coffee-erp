@@ -61,13 +61,13 @@ export default function EditBooking() {
             <Head title="Edit Booking" />
             <div className="flex flex-col gap-6 p-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">Edit booking</h1>
+                    <h1 className="text-2xl font-bold text-foreground">Edit booking</h1>
                     <Link href="/event-bookings" className="text-sm font-semibold text-primary hover:underline">
                         Back to bookings
                     </Link>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -75,10 +75,10 @@ export default function EditBooking() {
                         }}
                         className="grid grid-cols-1 gap-4 md:grid-cols-2"
                     >
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Package
                             <select
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.event_package_id}
                                 onChange={(e) => form.setData('event_package_id', e.target.value)}
                             >
@@ -89,13 +89,13 @@ export default function EditBooking() {
                                     </option>
                                 ))}
                             </select>
-                            {form.errors.event_package_id && <p className="text-sm text-red-700">{form.errors.event_package_id}</p>}
+                            {form.errors.event_package_id && <p className="text-sm text-red-700 dark:text-red-300">{form.errors.event_package_id}</p>}
                         </label>
 
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Status
                             <select
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.status}
                                 onChange={(e) => form.setData('status', e.target.value)}
                             >
@@ -107,63 +107,63 @@ export default function EditBooking() {
                             </select>
                         </label>
 
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Event date
                             <input
                                 type="date"
                                 required
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.event_date}
                                 onChange={(e) => form.setData('event_date', e.target.value)}
                             />
-                            {form.errors.event_date && <p className="text-sm text-red-700">{form.errors.event_date}</p>}
+                            {form.errors.event_date && <p className="text-sm text-red-700 dark:text-red-300">{form.errors.event_date}</p>}
                         </label>
 
                         <div className="grid grid-cols-2 gap-3">
-                            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                            <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                                 Start time
                                 <input
                                     type="time"
-                                    className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                     value={form.data.event_start_time}
                                     onChange={(e) => form.setData('event_start_time', e.target.value)}
                                 />
                             </label>
-                            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                            <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                                 Duration (mins)
                                 <input
                                     type="number"
                                     min={30}
-                                    className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                     value={form.data.duration_minutes}
                                     onChange={(e) => form.setData('duration_minutes', e.target.value)}
                                 />
                             </label>
                         </div>
 
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Event name
                             <input
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.event_name}
                                 onChange={(e) => form.setData('event_name', e.target.value)}
                                 required
                             />
                         </label>
 
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Event type
                             <input
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.event_type}
                                 onChange={(e) => form.setData('event_type', e.target.value)}
                             />
                         </label>
 
-                        <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-foreground">
                             Venue address
                             <textarea
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.venue_address}
                                 onChange={(e) => form.setData('venue_address', e.target.value)}
                                 required
@@ -171,50 +171,50 @@ export default function EditBooking() {
                             />
                         </label>
 
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Contact name
                             <input
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.contact_name}
                                 onChange={(e) => form.setData('contact_name', e.target.value)}
                                 required
                             />
                         </label>
 
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Contact email
                             <input
                                 type="email"
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.contact_email}
                                 onChange={(e) => form.setData('contact_email', e.target.value)}
                             />
                         </label>
 
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Contact phone
                             <input
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.contact_phone}
                                 onChange={(e) => form.setData('contact_phone', e.target.value)}
                             />
                         </label>
 
-                        <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                             Expected guests
                             <input
                                 type="number"
                                 min={1}
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.expected_guests}
                                 onChange={(e) => form.setData('expected_guests', e.target.value)}
                             />
                         </label>
 
-                        <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                        <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-foreground">
                             Notes
                             <textarea
-                                className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 value={form.data.notes}
                                 onChange={(e) => form.setData('notes', e.target.value)}
                                 rows={3}
@@ -224,7 +224,7 @@ export default function EditBooking() {
                         <div className="md:col-span-2 flex items-center justify-end gap-3">
                             <Link
                                 href="/event-bookings"
-                                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-100"
+                                className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
                             >
                                 Cancel
                             </Link>

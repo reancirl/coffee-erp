@@ -72,9 +72,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
             <div
-                className="bg-white p-6 rounded shadow-lg w-96"
+                className="bg-card p-6 rounded shadow-lg w-96"
                 style={{ backgroundColor: primaryColor, color: accentColor }}
             >
                 <h2 className="text-xl font-semibold mb-4">Select Payment Method</h2>
@@ -86,7 +86,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                             className={`p-4 border rounded cursor-pointer text-center ${
                                 selectedPaymentMethod?.id === method.id
                                     ? 'bg-blue-500 text-white border-blue-500'
-                                    : 'bg-gray-200 text-black'
+                                    : 'bg-muted text-foreground'
                             }`}
                         >
                             {method.name}
@@ -148,12 +148,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                                 <div>
                                     <div className="font-semibold">{scannedEmployee.name}</div>
                                     {scannedEmployee.employee_code && (
-                                        <div className="font-mono text-sm text-gray-600">
+                                        <div className="font-mono text-sm text-muted-foreground">
                                             {scannedEmployee.employee_code}
                                         </div>
                                     )}
                                     {scannedEmployee.allowance && (
-                                        <div className="text-sm text-gray-600">
+                                        <div className="text-sm text-muted-foreground">
                                             ₱{scannedEmployee.allowance.remaining.toFixed(2)} left
                                             this month
                                         </div>
@@ -171,7 +171,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                             <button
                                 type="button"
                                 onClick={onScanEmployee}
-                                className="w-full rounded border-2 border-dashed p-4 text-sm text-gray-600 hover:bg-gray-50"
+                                className="w-full rounded border-2 border-dashed p-4 text-sm text-muted-foreground hover:bg-muted"
                             >
                                 Scan Employee QR
                             </button>
@@ -200,7 +200,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                                                 setSplitAllowanceAmount(covers.toFixed(2));
                                                 setSplitCashAmount((amount - covers).toFixed(2));
                                             }}
-                                            className="mb-3 w-full rounded border-2 border-dashed p-3 text-sm hover:bg-gray-50"
+                                            className="mb-3 w-full rounded border-2 border-dashed p-3 text-sm hover:bg-muted"
                                         >
                                             Use ₱{covers.toFixed(2)} of allowance and take ₱
                                             {(amount - covers).toFixed(2)} in cash
@@ -233,7 +233,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                                                 type="number"
                                                 value={splitCashAmount}
                                                 onChange={(e) => setSplitCashAmount(e.target.value)}
-                                                className="w-full p-2 border rounded bg-gray-100 text-black"
+                                                className="w-full p-2 border rounded bg-muted text-foreground"
                                                 placeholder="Auto-calculated"
                                                 readOnly
                                             />
@@ -241,7 +241,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                                     </div>
 
                                     {splitAllowanceAmount && (
-                                        <div className="mt-3 p-3 bg-gray-100 rounded text-black">
+                                        <div className="mt-3 p-3 bg-muted rounded text-foreground">
                                             <p className="text-sm">
                                                 <strong>Allowance:</strong> ₱{fromAllowance.toFixed(2)} +
                                                 <strong> Cash:</strong> ₱{fromCash.toFixed(2)} =
@@ -299,7 +299,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                                     type="number"
                                     value={splitGcashAmount}
                                     onChange={(e) => setSplitGcashAmount(e.target.value)}
-                                    className="w-full p-2 border rounded bg-gray-100 text-black"
+                                    className="w-full p-2 border rounded bg-muted text-foreground"
                                     placeholder="Auto-calculated"
                                     readOnly
                                 />
@@ -307,7 +307,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         </div>
                         
                         {splitCashAmount && splitGcashAmount && (
-                            <div className="mt-3 p-3 bg-gray-100 rounded text-black">
+                            <div className="mt-3 p-3 bg-muted rounded text-foreground">
                                 <p className="text-sm">
                                     <strong>Cash:</strong> ₱{parseFloat(splitCashAmount || '0').toFixed(2)} + 
                                     <strong> GCash:</strong> ₱{parseFloat(splitGcashAmount || '0').toFixed(2)} = 
@@ -326,7 +326,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <div className="mt-6 flex justify-end space-x-2">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                        className="px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80"
                     >
                         Cancel
                     </button>

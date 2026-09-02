@@ -109,7 +109,7 @@ export default function Show({ order }: Props) {
                         )}
                         <Link
                             href={route('orders.index')}
-                            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                            className="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-bold py-2 px-4 rounded"
                         >
                             Back to Orders
                         </Link>
@@ -118,42 +118,42 @@ export default function Show({ order }: Props) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Order Information */}
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
+                    <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg">
+                        <div className="p-6 text-foreground">
                             <h3 className="text-lg font-semibold mb-4">Order Information</h3>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-sm text-gray-500">Order Number</p>
+                                    <p className="text-sm text-muted-foreground">Order Number</p>
                                     <p className="font-medium">{order.order_number}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Date</p>
+                                    <p className="text-sm text-muted-foreground">Date</p>
                                     <p className="font-medium">{new Date(order.created_at).toLocaleString()}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Status</p>
+                                    <p className="text-sm text-muted-foreground">Status</p>
                                     <p className="font-medium">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            ${order.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                              'bg-gray-100 text-gray-800'}`}>
+                                            ${order.status === 'completed' ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300' : 
+                                              order.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300' : 
+                                              'bg-muted text-foreground'}`}>
                                             {order.status}
                                         </span>
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Payment</p>
+                                    <p className="text-sm text-muted-foreground">Payment</p>
                                     <p className="font-medium">{order.payment_method}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Cashier</p>
+                                    <p className="text-sm text-muted-foreground">Cashier</p>
                                     <p className="font-medium">
-                                        {order.cashier?.name ?? <span className="text-gray-400">Not recorded</span>}
+                                        {order.cashier?.name ?? <span className="text-muted-foreground">Not recorded</span>}
                                     </p>
                                 </div>
                                 {(order.split_cash_amount || order.split_gcash_amount || order.split_allowance_amount) && (
                                     <div className="col-span-2">
-                                        <p className="text-sm text-gray-500">Split Breakdown</p>
+                                        <p className="text-sm text-muted-foreground">Split Breakdown</p>
                                         <div className="flex flex-col gap-1 text-sm font-medium">
                                             {order.split_allowance_amount !== null && order.split_allowance_amount !== undefined && (
                                                 <span>Allowance: {formatCurrency(Number(order.split_allowance_amount))}</span>
@@ -168,18 +168,18 @@ export default function Show({ order }: Props) {
                                     </div>
                                 )}
                                 <div>
-                                    <p className="text-sm text-gray-500">Order Type</p>
+                                    <p className="text-sm text-muted-foreground">Order Type</p>
                                     <p className="font-medium">{order.order_type}</p>
                                 </div>
                                 {order.beeper_number && (
                                     <div>
-                                        <p className="text-sm text-gray-500">Beeper Number</p>
+                                        <p className="text-sm text-muted-foreground">Beeper Number</p>
                                         <p className="font-medium">#{order.beeper_number}</p>
                                     </div>
                                 )}
                                 {order.notes && (
                                     <div className="col-span-2">
-                                        <p className="text-sm text-gray-500">Notes</p>
+                                        <p className="text-sm text-muted-foreground">Notes</p>
                                         <p className="font-medium">{order.notes}</p>
                                     </div>
                                 )}
@@ -188,8 +188,8 @@ export default function Show({ order }: Props) {
                     </div>
 
                     {/* Order Summary */}
-                    <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
+                    <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg">
+                        <div className="p-6 text-foreground">
                             <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
                             <div className="space-y-2">
                                 <div className="flex justify-between">
@@ -212,28 +212,28 @@ export default function Show({ order }: Props) {
                 </div>
 
                 {/* Order Items */}
-                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 text-gray-900">
+                <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="p-6 text-foreground">
                         <h3 className="text-lg font-semibold mb-4">Order Items</h3>
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-border">
+                                <thead className="bg-muted">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variant</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Item</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Variant</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Price</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Total</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-card divide-y divide-border">
                                     {order.items.map((item) => (
                                         <>
-                                            <tr key={item.id} className="bg-gray-50">
+                                            <tr key={item.id} className="bg-muted">
                                                 <td className="px-6 py-4">
                                                     <div className="font-medium">{item.product_name}</div>
                                                     {item.customizations && (
-                                                        <div className="text-sm text-gray-500">
+                                                        <div className="text-sm text-muted-foreground">
                                                             {Object.entries(item.customizations)
                                                                 .filter(([key]) => key !== 'Variant') // Exclude Variant as it's shown separately
                                                                 .map(([key, value]) => (
@@ -259,7 +259,7 @@ export default function Show({ order }: Props) {
                                             </tr>
                                             {/* Add-ons for this item */}
                                             {item.addOns && item.addOns.length > 0 && item.addOns.map((addon) => (
-                                                <tr key={`${item.id}-addon-${addon.id}`} className="text-gray-500 bg-gray-100">
+                                                <tr key={`${item.id}-addon-${addon.id}`} className="text-muted-foreground bg-muted">
                                                     <td className="px-6 py-2 pl-10 italic">{addon.product_name} (Add-on)</td>
                                                     <td className="px-6 py-2">
                                                         {addon.variant === 'hot' ? 'Hot' : 
@@ -281,16 +281,16 @@ export default function Show({ order }: Props) {
             
             {/* Void Confirmation Modal */}
             {showVoidConfirm && (
-                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-card p-6 rounded-lg shadow-lg max-w-md w-full">
                         <h3 className="text-xl font-bold mb-4">Void Order</h3>
-                        <p className="mb-6 text-gray-700">
+                        <p className="mb-6 text-foreground">
                             Are you sure you want to void this order? This action cannot be undone.
                         </p>
                         <div className="flex justify-end space-x-3">
                             <button
                                 onClick={() => setShowVoidConfirm(false)}
-                                className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
+                                className="px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded"
                                 disabled={isVoiding}
                             >
                                 Cancel

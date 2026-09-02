@@ -63,9 +63,9 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
             <div
-                className="bg-white p-6 rounded shadow-lg w-96"
+                className="bg-card p-6 rounded shadow-lg w-96"
                 style={{ backgroundColor: primaryColor, color: accentColor }}
             >
                 <div className="flex justify-between items-center mb-4">
@@ -79,7 +79,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
                     </h2>
                     <button 
                         onClick={onClose}
-                        className="text-gray-300 hover:text-white text-2xl"
+                        className="text-muted-foreground hover:text-white text-2xl"
                     >
                         &times;
                     </button>
@@ -103,7 +103,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
                                         className={`p-4 border rounded cursor-pointer text-center ${
                                             isSelected
                                                 ? 'bg-blue-500 text-white border-blue-500'
-                                                : 'bg-gray-200 text-black'
+                                                : 'bg-muted text-foreground'
                                         }`}
                                     >
                                         {option}
@@ -129,7 +129,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
                                 <label className="block font-semibold mb-2">
                                     {customization.name}
                                 </label>
-                                <div className="p-2 bg-blue-100 text-blue-800 rounded">
+                                <div className="p-2 bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 rounded">
                                     {customization.options[0]} selected automatically
                                 </div>
                             </div>
@@ -157,7 +157,7 @@ const CustomizationModal: React.FC<CustomizationModalProps> = ({ product, onClos
                                             className={`p-4 border rounded cursor-pointer text-center ${
                                                 isSelected
                                                     ? 'bg-blue-500 text-white border-blue-500'
-                                                    : 'bg-gray-200 text-black'
+                                                    : 'bg-muted text-foreground'
                                             }`}
                                         >
                                             {option}

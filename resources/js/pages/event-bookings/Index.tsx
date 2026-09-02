@@ -55,11 +55,11 @@ const currency = (value: number | string) =>
     new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(Number(value || 0));
 
 const statusTone: Record<string, { bg: string; text: string; border: string }> = {
-    pending: { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
-    reserved: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
-    confirmed: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
-    completed: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
-    cancelled: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200' },
+    pending: { bg: 'bg-amber-100 dark:bg-amber-950/40', text: 'text-amber-800 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-900' },
+    reserved: { bg: 'bg-blue-100 dark:bg-blue-950/40', text: 'text-blue-800 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-900' },
+    confirmed: { bg: 'bg-emerald-100 dark:bg-emerald-950/40', text: 'text-emerald-800 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-900' },
+    completed: { bg: 'bg-emerald-100 dark:bg-emerald-950/40', text: 'text-emerald-800 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-900' },
+    cancelled: { bg: 'bg-muted', text: 'text-foreground', border: 'border-border' },
 };
 
 export default function EventBookingsIndex() {
@@ -72,21 +72,21 @@ export default function EventBookingsIndex() {
             <Head title="Event Bookings" />
             <div className="flex flex-col gap-6 p-4 md:p-6">
                 {flash?.success && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-green-800">{flash.success}</div>
+                    <div className="rounded-lg border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40 px-4 py-2 text-green-800 dark:text-green-300">{flash.success}</div>
                 )}
 
-                <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-gray-500">Pipeline</p>
-                                <h2 className="text-xl font-semibold text-gray-900">Bookings</h2>
-                                <p className="text-sm text-gray-600">Quick view of requests and their status.</p>
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">Pipeline</p>
+                                <h2 className="text-xl font-semibold text-foreground">Bookings</h2>
+                                <p className="text-sm text-muted-foreground">Quick view of requests and their status.</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <label className="text-sm font-medium text-gray-700">Status</label>
+                                <label className="text-sm font-medium text-foreground">Status</label>
                                 <select
-                                    className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                     value={filters.status || ''}
                                     onChange={(e) => {
                                         router.get('/event-bookings', { status: e.target.value || undefined }, { preserveScroll: true });
@@ -110,9 +110,9 @@ export default function EventBookingsIndex() {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-full divide-y divide-border">
                             <thead>
-                                <tr className="bg-gray-50 text-left text-xs font-semibold uppercase text-gray-500">
+                                <tr className="bg-muted text-left text-xs font-semibold uppercase text-muted-foreground">
                                     <th className="px-3 py-3 md:px-4">Date</th>
                                     <th className="px-3 py-3 md:px-4">Event</th>
                                     <th className="px-3 py-3 md:px-4">Package</th>
@@ -122,7 +122,7 @@ export default function EventBookingsIndex() {
                                     <th className="px-3 py-3 text-right md:px-4">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-border">
                                 {bookings.data.map((booking) => (
                                     <BookingRow key={booking.id} booking={booking} packages={packages} statuses={statuses} />
                                 ))}
@@ -164,37 +164,37 @@ function BookingRow({ booking, packages, statuses }: { booking: EventBooking; pa
 
     return (
         <tr className="align-top">
-            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
-                <div className="font-semibold text-gray-900">{formattedDate}</div>
-                {formattedTime && <div className="text-xs text-gray-600">Start: {formattedTime}</div>}
+            <td className="px-3 py-3 text-sm text-foreground md:px-4">
+                <div className="font-semibold text-foreground">{formattedDate}</div>
+                {formattedTime && <div className="text-xs text-muted-foreground">Start: {formattedTime}</div>}
             </td>
-            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
-                <div className="font-semibold text-gray-900">{form.data.event_name}</div>
-                {form.data.event_type && <div className="text-xs text-gray-600">{form.data.event_type}</div>}
-                <div className="text-xs text-gray-600">{form.data.venue_address}</div>
+            <td className="px-3 py-3 text-sm text-foreground md:px-4">
+                <div className="font-semibold text-foreground">{form.data.event_name}</div>
+                {form.data.event_type && <div className="text-xs text-muted-foreground">{form.data.event_type}</div>}
+                <div className="text-xs text-muted-foreground">{form.data.venue_address}</div>
             </td>
-            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
-                <div className="font-semibold text-gray-900">{booking.package?.name ?? 'Custom'}</div>
+            <td className="px-3 py-3 text-sm text-foreground md:px-4">
+                <div className="font-semibold text-foreground">{booking.package?.name ?? 'Custom'}</div>
                 {booking.package?.cup_count ? (
-                    <div className="text-xs text-gray-600">{booking.package.cup_count} cups</div>
+                    <div className="text-xs text-muted-foreground">{booking.package.cup_count} cups</div>
                 ) : null}
-                {booking.expected_guests ? <div className="text-xs text-gray-600">{booking.expected_guests} guests</div> : null}
+                {booking.expected_guests ? <div className="text-xs text-muted-foreground">{booking.expected_guests} guests</div> : null}
             </td>
-            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
-                <div className="font-semibold text-gray-900">{form.data.contact_name}</div>
-                {form.data.contact_email && <div className="text-xs text-gray-600">{form.data.contact_email}</div>}
-                {form.data.contact_phone && <div className="text-xs text-gray-600">{form.data.contact_phone}</div>}
+            <td className="px-3 py-3 text-sm text-foreground md:px-4">
+                <div className="font-semibold text-foreground">{form.data.contact_name}</div>
+                {form.data.contact_email && <div className="text-xs text-muted-foreground">{form.data.contact_email}</div>}
+                {form.data.contact_phone && <div className="text-xs text-muted-foreground">{form.data.contact_phone}</div>}
             </td>
-            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
+            <td className="px-3 py-3 text-sm text-foreground md:px-4">
                 <StatusPill status={form.data.status} />
             </td>
-            <td className="px-3 py-3 text-sm text-gray-800 md:px-4">
-                <div className="text-gray-800">{form.data.notes || '—'}</div>
+            <td className="px-3 py-3 text-sm text-foreground md:px-4">
+                <div className="text-foreground">{form.data.notes || '—'}</div>
             </td>
-            <td className="px-3 py-3 text-right text-sm text-gray-800 space-y-2 md:px-4">
+            <td className="px-3 py-3 text-right text-sm text-foreground space-y-2 md:px-4">
                 <Link
                     href={`/event-bookings/${booking.id}/edit`}
-                    className="block rounded-lg border border-gray-300 px-3 py-2 text-center text-sm font-semibold text-gray-800 hover:bg-gray-100"
+                    className="block rounded-lg border border-border px-3 py-2 text-center text-sm font-semibold text-foreground hover:bg-muted"
                 >
                     Edit
                 </Link>
@@ -216,7 +216,7 @@ function PaginationLinks({ bookings }: { bookings: Paginated<EventBooking> }) {
                 <Link
                     key={idx}
                     href={link.url || '#'}
-                    className={`rounded px-2 py-1 text-sm ${link.active ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-100'}`}
+                    className={`rounded px-2 py-1 text-sm ${link.active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}
                     dangerouslySetInnerHTML={{ __html: link.label }}
                 />
             ))}

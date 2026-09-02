@@ -112,11 +112,11 @@ const mockSupplierData = [
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'active':
-            return <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />Active
             </Badge>;
         case 'pending':
-            return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
+            return <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
                 <Clock className="w-3 h-3" />Pending
             </Badge>;
         case 'inactive':
@@ -132,7 +132,7 @@ const getRatingStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
         <Star
             key={i}
-            className={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+            className={`w-4 h-4 ${i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
         />
     ));
 };
@@ -215,10 +215,10 @@ export default function SuppliersIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Active</CardTitle>
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{activeSuppliers}</div>
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{activeSuppliers}</div>
                             <p className="text-xs text-muted-foreground">
                                 Currently working with
                             </p>
@@ -228,10 +228,10 @@ export default function SuppliersIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-                            <Clock className="h-4 w-4 text-yellow-600" />
+                            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-yellow-600">{pendingSuppliers}</div>
+                            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{pendingSuppliers}</div>
                             <p className="text-xs text-muted-foreground">
                                 Awaiting approval
                             </p>
@@ -241,7 +241,7 @@ export default function SuppliersIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-                            <Building className="h-4 w-4 text-blue-600" />
+                            <Building className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">₱{totalSpent.toLocaleString()}</div>

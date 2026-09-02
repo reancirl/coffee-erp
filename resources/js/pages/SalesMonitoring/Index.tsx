@@ -137,7 +137,7 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold">Cash Monitoring</h1>
-                        <p className="text-gray-600">
+                        <p className="text-muted-foreground">
                             Daily cash flow tracking and end-of-day reconciliation
                         </p>
                     </div>
@@ -171,7 +171,7 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                                     <Wallet className="h-4 w-4 text-blue-500" />
                                     <span className="text-sm font-medium">Opening Balance</span>
                                 </div>
-                                <p className="text-2xl font-bold text-blue-600">
+                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                     {formatCurrency(currentMonitoring.opening_balance)}
                                 </p>
                             </div>
@@ -182,10 +182,10 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                                     <DollarSign className="h-4 w-4 text-green-500" />
                                     <span className="text-sm font-medium">Total Sales</span>
                                 </div>
-                                <p className="text-2xl font-bold text-green-600">
+                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                                     {formatCurrency(currentMonitoring.total_sales)}
                                 </p>
-                                <div className="text-xs text-gray-500 space-y-1">
+                                <div className="text-xs text-muted-foreground space-y-1">
                                     <div>Cash: {formatCurrency(currentMonitoring.total_cash)}</div>
                                     <div>GCash: {formatCurrency(currentMonitoring.total_gcash)}</div>
                                 </div>
@@ -199,11 +199,11 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-green-600">Cash In:</span>
+                                        <span className="text-green-600 dark:text-green-400">Cash In:</span>
                                         <span>{formatCurrency(currentMonitoring.cash_in)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-red-600">Cash Out:</span>
+                                        <span className="text-red-600 dark:text-red-400">Cash Out:</span>
                                         <span>{formatCurrency(currentMonitoring.cash_out)}</span>
                                     </div>
                                 </div>
@@ -227,8 +227,8 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                                                 <span>{formatCurrency(currentMonitoring.actual_balance)}</span>
                                             </div>
                                             <div className={`flex justify-between text-sm font-medium ${
-                                                currentMonitoring.variance === 0 ? 'text-green-600' : 
-                                                currentMonitoring.variance > 0 ? 'text-blue-600' : 'text-red-600'
+                                                currentMonitoring.variance === 0 ? 'text-green-600 dark:text-green-400' : 
+                                                currentMonitoring.variance > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'
                                             }`}>
                                                 <span>Variance:</span>
                                                 <span>{formatCurrency(currentMonitoring.variance)}</span>
@@ -343,8 +343,8 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4">
-                                    <div className="p-4 bg-gray-50 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-2">Expected Balance:</div>
+                                    <div className="p-4 bg-muted rounded-lg">
+                                        <div className="text-sm text-muted-foreground mb-2">Expected Balance:</div>
                                         <div className="text-2xl font-bold">
                                             {formatCurrency(currentMonitoring.expected_balance)}
                                         </div>
@@ -361,11 +361,11 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                                         />
                                     </div>
                                     {actualBalance && (
-                                        <div className="p-3 bg-blue-50 rounded-lg">
-                                            <div className="text-sm text-gray-600">Variance:</div>
+                                        <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
+                                            <div className="text-sm text-muted-foreground">Variance:</div>
                                             <div className={`text-lg font-semibold ${
-                                                (parseFloat(actualBalance) - currentMonitoring.expected_balance) === 0 ? 'text-green-600' :
-                                                (parseFloat(actualBalance) - currentMonitoring.expected_balance) > 0 ? 'text-blue-600' : 'text-red-600'
+                                                (parseFloat(actualBalance) - currentMonitoring.expected_balance) === 0 ? 'text-green-600 dark:text-green-400' :
+                                                (parseFloat(actualBalance) - currentMonitoring.expected_balance) > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'
                                             }`}>
                                                 {formatCurrency(parseFloat(actualBalance) - currentMonitoring.expected_balance)}
                                             </div>
@@ -421,8 +421,8 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                                         <TableCell>{formatCurrency(monitoring.total_sales)}</TableCell>
                                         <TableCell>
                                             <div className="text-xs">
-                                                <div className="text-green-600">+{formatCurrency(monitoring.cash_in)}</div>
-                                                <div className="text-red-600">-{formatCurrency(monitoring.cash_out)}</div>
+                                                <div className="text-green-600 dark:text-green-400">+{formatCurrency(monitoring.cash_in)}</div>
+                                                <div className="text-red-600 dark:text-red-400">-{formatCurrency(monitoring.cash_out)}</div>
                                             </div>
                                         </TableCell>
                                         <TableCell>{formatCurrency(monitoring.expected_balance)}</TableCell>
@@ -435,8 +435,8 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
                                         <TableCell>
                                             {monitoring.actual_balance !== null ? (
                                                 <span className={
-                                                    monitoring.variance === 0 ? 'text-green-600' :
-                                                    monitoring.variance > 0 ? 'text-blue-600' : 'text-red-600'
+                                                    monitoring.variance === 0 ? 'text-green-600 dark:text-green-400' :
+                                                    monitoring.variance > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'
                                                 }>
                                                     {formatCurrency(monitoring.variance)}
                                                 </span>

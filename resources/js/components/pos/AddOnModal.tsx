@@ -30,9 +30,9 @@ const AddOnModal: React.FC<AddOnModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div 
-                className="bg-white p-6 rounded shadow-lg w-96"
+                className="bg-card p-6 rounded shadow-lg w-96"
                 style={{ backgroundColor: primaryColor, color: accentColor }}
             >
                 <div className="flex justify-between items-center mb-4">
@@ -42,7 +42,7 @@ const AddOnModal: React.FC<AddOnModalProps> = ({
                     </h2>
                     <button 
                         onClick={onClose}
-                        className="text-gray-300 hover:text-white text-2xl"
+                        className="text-muted-foreground hover:text-white text-2xl"
                     >
                         &times;
                     </button>
@@ -54,13 +54,13 @@ const AddOnModal: React.FC<AddOnModalProps> = ({
                             <button
                                 key={item.id}
                                 onClick={() => onSelectItem(item.id)}
-                                className="w-full text-left p-3 rounded-lg hover:bg-gray-100 hover:bg-opacity-20 transition-colors"
+                                className="w-full text-left p-3 rounded-lg hover:bg-muted transition-colors"
                             >
                                 <div className="flex justify-between items-center">
                                     <span>
                                         {item.name}
                                         {item.selectedVariant && (
-                                            <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                                            <span className="ml-2 text-sm px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300">
                                                 {item.selectedVariant === 'hot' ? 'Hot' : 'Iced'}
                                             </span>
                                         )}
@@ -77,7 +77,7 @@ const AddOnModal: React.FC<AddOnModalProps> = ({
                 <div className="mt-6 flex justify-end space-x-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors"
+                        className="px-4 py-2 rounded-lg bg-muted text-foreground hover:bg-muted/80 transition-colors"
                     >
                         Cancel
                     </button>

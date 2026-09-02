@@ -186,10 +186,10 @@ const EmployeeQrScanner: React.FC<Props> = ({ isOpen, onClose, onIdentified }) =
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-            <div className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl">
+            <div className="w-full max-w-md rounded-lg bg-card p-5 shadow-xl">
                 <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-lg font-semibold">Scan Employee QR</h2>
-                    <button onClick={close} className="text-2xl leading-none text-gray-400 hover:text-gray-700" aria-label="Close scanner">
+                    <button onClick={close} className="text-2xl leading-none text-muted-foreground hover:text-foreground" aria-label="Close scanner">
                         &times;
                     </button>
                 </div>
@@ -199,7 +199,7 @@ const EmployeeQrScanner: React.FC<Props> = ({ isOpen, onClose, onIdentified }) =
                     <div className="overflow-hidden rounded-md bg-black">
                         <video ref={videoRef} className="h-64 w-full object-cover" muted playsInline />
                     </div>
-                    <p className="mt-3 text-center text-sm text-gray-600">
+                    <p className="mt-3 text-center text-sm text-muted-foreground">
                         {phase === 'starting' && 'Starting camera...'}
                         {phase === 'scanning' && "Hold the employee's QR inside the frame."}
                         {phase === 'checking' && 'Verifying with the server...'}
@@ -210,26 +210,26 @@ const EmployeeQrScanner: React.FC<Props> = ({ isOpen, onClose, onIdentified }) =
                     <div className="py-4 text-center">
                         <div className="mb-1 text-xl font-semibold">{employee.name}</div>
                         {employee.employee_code && (
-                            <div className="font-mono text-sm text-gray-600">{employee.employee_code}</div>
+                            <div className="font-mono text-sm text-muted-foreground">{employee.employee_code}</div>
                         )}
-                        {employee.position && <div className="text-xs text-gray-500">{employee.position}</div>}
+                        {employee.position && <div className="text-xs text-muted-foreground">{employee.position}</div>}
 
                         {employee.allowance && (
                             <div className="mx-auto mt-4 max-w-xs rounded-md border p-3 text-sm">
-                                <div className="mb-2 text-xs uppercase tracking-wide text-gray-500">
+                                <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
                                     {employee.allowance.period ?? 'Allowance'}
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Allowance</span>
+                                    <span className="text-muted-foreground">Allowance</span>
                                     <span>{peso(employee.allowance.amount)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Used</span>
+                                    <span className="text-muted-foreground">Used</span>
                                     <span>{peso(employee.allowance.used)}</span>
                                 </div>
                                 <div className="mt-1 flex justify-between border-t pt-1 font-semibold">
                                     <span>Remaining</span>
-                                    <span className={employee.allowance.remaining <= 0 ? 'text-red-600' : 'text-green-700'}>
+                                    <span className={employee.allowance.remaining <= 0 ? 'text-red-600 dark:text-red-400' : 'text-green-700 dark:text-green-300'}>
                                         {peso(employee.allowance.remaining)}
                                     </span>
                                 </div>
@@ -255,7 +255,7 @@ const EmployeeQrScanner: React.FC<Props> = ({ isOpen, onClose, onIdentified }) =
 
                 {phase === 'error' && (
                     <div className="py-4 text-center">
-                        <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{message}</p>
+                        <p className="mb-4 rounded-md bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-700 dark:text-red-300">{message}</p>
                         <div className="flex justify-center gap-2">
                             <button onClick={close} className="rounded border px-4 py-2 text-sm">
                                 Close

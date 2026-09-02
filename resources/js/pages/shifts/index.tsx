@@ -115,9 +115,9 @@ const availableEmployees = [
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'scheduled':
-            return <Badge variant="default" className="bg-blue-100 text-blue-800">Scheduled</Badge>;
+            return <Badge variant="default" className="bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300">Scheduled</Badge>;
         case 'fully_staffed':
-            return <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />Fully Staffed
             </Badge>;
         case 'understaffed':
@@ -134,9 +134,9 @@ const getStatusBadge = (status: string) => {
 const getEmployeeStatusBadge = (status: string) => {
     switch (status) {
         case 'confirmed':
-            return <Badge variant="default" className="bg-green-100 text-green-800">Confirmed</Badge>;
+            return <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300">Confirmed</Badge>;
         case 'pending':
-            return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+            return <Badge variant="secondary" className="bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300">Pending</Badge>;
         case 'declined':
             return <Badge variant="destructive">Declined</Badge>;
         default:
@@ -228,10 +228,10 @@ export default function ShiftsIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Fully Staffed</CardTitle>
-                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{fullyStaffedShifts}</div>
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{fullyStaffedShifts}</div>
                             <p className="text-xs text-muted-foreground">
                                 Ready to go
                             </p>
@@ -241,10 +241,10 @@ export default function ShiftsIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Understaffed</CardTitle>
-                            <AlertCircle className="h-4 w-4 text-red-600" />
+                            <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-red-600">{understaffedShifts}</div>
+                            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{understaffedShifts}</div>
                             <p className="text-xs text-muted-foreground">
                                 Need attention
                             </p>
@@ -254,7 +254,7 @@ export default function ShiftsIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Scheduled</CardTitle>
-                            <Users className="h-4 w-4 text-blue-600" />
+                            <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{totalEmployeesScheduled}</div>

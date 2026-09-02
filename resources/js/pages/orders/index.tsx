@@ -196,41 +196,41 @@ export default function Index({ orders, filters, products }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Orders" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl bg-white/60 p-6 text-sm shadow-sm lg:p-8">
+            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl bg-card/60 p-6 text-sm shadow-sm lg:p-8">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                         <h2 className="text-xl font-bold">Orders</h2>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted-foreground">
                             {orders.meta.total} {orders.meta.total === 1 ? 'order' : 'orders'} found
                             {(filters?.start_date || filters?.end_date || filters?.product) && ' with current filters'}
                         </p>
                     </div>
                     
                     {/* Filters */}
-                    <div className="w-full rounded-2xl border border-gray-100 bg-white/80 p-4 shadow-lg ring-1 ring-black/5">
+                    <div className="w-full rounded-2xl border border-border bg-card/80 p-4 shadow-lg ring-1 ring-black/5">
                         <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                             <div className="flex flex-col">
-                                <label htmlFor="start-date" className="mb-1 text-xs font-semibold text-gray-800">From</label>
+                                <label htmlFor="start-date" className="mb-1 text-xs font-semibold text-foreground">From</label>
                                 <input 
                                     type="date" 
                                     id="start-date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 />
                             </div>
                             <div className="flex flex-col">
-                                <label htmlFor="end-date" className="mb-1 text-xs font-semibold text-gray-800">To</label>
+                                <label htmlFor="end-date" className="mb-1 text-xs font-semibold text-foreground">To</label>
                                 <input 
                                     type="date" 
                                     id="end-date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 />
                             </div>
                             <div className="flex flex-col">
-                                <label htmlFor="order-number" className="mb-1 text-xs font-semibold text-gray-800">Order #</label>
+                                <label htmlFor="order-number" className="mb-1 text-xs font-semibold text-foreground">Order #</label>
                                 <input
                                     type="search"
                                     id="order-number"
@@ -238,11 +238,11 @@ export default function Index({ orders, filters, products }: Props) {
                                     onChange={(e) => setOrderNumberQuery(e.target.value)}
                                     autoComplete="off"
                                     placeholder="Search order number"
-                                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 />
                             </div>
                             <div className="flex flex-col">
-                                <label htmlFor="product" className="mb-1 text-xs font-semibold text-gray-800">Product</label>
+                                <label htmlFor="product" className="mb-1 text-xs font-semibold text-foreground">Product</label>
                                 <div className="relative">
                                     <input
                                         type="search"
@@ -256,10 +256,10 @@ export default function Index({ orders, filters, products }: Props) {
                                         onBlur={() => setTimeout(() => setShowProductSuggestions(false), 150)}
                                         autoComplete="off"
                                         placeholder="Enter product name or ID"
-                                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                     />
                                     {showProductSuggestions && (productQuery.trim().length > 0 || products.length > 0) && (
-                                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg">
+                                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-card shadow-lg">
                                             <div className="max-h-64 overflow-y-auto py-1 text-sm">
                                                 {filteredProducts.slice(0, 8).map((product) => (
                                                     <button
@@ -269,14 +269,14 @@ export default function Index({ orders, filters, products }: Props) {
                                                             setProductQuery(product.name);
                                                             setShowProductSuggestions(false);
                                                         }}
-                                                        className="flex w-full items-center justify-between px-3 py-2 text-left text-gray-800 hover:bg-primary/10"
+                                                        className="flex w-full items-center justify-between px-3 py-2 text-left text-foreground hover:bg-primary/10"
                                                     >
                                                         <span className="font-medium">{product.name}</span>
-                                                        <span className="text-xs text-gray-500">#{product.id}</span>
+                                                        <span className="text-xs text-muted-foreground">#{product.id}</span>
                                                     </button>
                                                 ))}
                                                 {filteredProducts.length === 0 && (
-                                                    <div className="px-3 py-2 text-xs text-gray-500">No matches found</div>
+                                                    <div className="px-3 py-2 text-xs text-muted-foreground">No matches found</div>
                                                 )}
                                             </div>
                                         </div>
@@ -292,7 +292,7 @@ export default function Index({ orders, filters, products }: Props) {
                                 </button>
                                 <button 
                                     onClick={resetFilter}
-                                    className="cursor-pointer rounded-xl border border-gray-300 bg-white px-5 py-2 text-sm font-semibold text-gray-800 shadow-sm transition hover:border-primary hover:text-primary"
+                                    className="cursor-pointer rounded-xl border border-border bg-card px-5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:border-primary hover:text-primary"
                                 >
                                     Reset
                                 </button>
@@ -301,24 +301,24 @@ export default function Index({ orders, filters, products }: Props) {
                     </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 text-gray-900">
+                <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="p-6 text-foreground">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 text-sm">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-border text-sm">
+                                <thead className="bg-muted">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cashier</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Order #</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Items</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Total</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Cashier</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-card divide-y divide-border">
                                     {orders.data.map((order) => {
                                         const isExpanded = expandedOrders.has(order.id);
                                         return (
@@ -341,7 +341,7 @@ export default function Index({ orders, filters, products }: Props) {
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <button
                                                             onClick={() => toggleExpanded(order.id)}
-                                                            className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-800 transition hover:border-primary hover:text-primary"
+                                                            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-semibold text-foreground transition hover:border-primary hover:text-primary"
                                                         >
                                                             {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                                                             <span className={`text-xs transition-transform ${isExpanded ? 'rotate-90' : 'rotate-0'}`}>&gt;</span>
@@ -352,51 +352,51 @@ export default function Index({ orders, filters, products }: Props) {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">{order.payment_method}</td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        {order.cashier?.name ?? <span className="text-gray-400">&mdash;</span>}
+                                                        {order.cashier?.name ?? <span className="text-muted-foreground">&mdash;</span>}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                            ${order.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                                              'bg-gray-100 text-gray-800'}`}>
+                                                            ${order.status === 'completed' ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300' : 
+                                                              order.status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300' : 
+                                                              'bg-muted text-foreground'}`}>
                                                             {order.status}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                         <Link
                                                             href={route('orders.show', order.id)}
-                                                            className="cursor-pointer text-indigo-600 hover:text-indigo-900"
+                                                            className="cursor-pointer text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-200"
                                                         >
                                                             View
                                                         </Link>
                                                     </td>
                                                 </tr>
                                                 {isExpanded && (
-                                                    <tr className="bg-gray-50">
+                                                    <tr className="bg-muted">
                                                         <td colSpan={9} className="px-6 py-4">
                                                             <div className="flex flex-col gap-3">
                                                                 {aggregateOrderItems(order.items).map((item, idx) => (
-                                                                    <div key={item.id} className="rounded-lg border border-gray-200 bg-white/80 p-3 shadow-sm">
+                                                                    <div key={item.id} className="rounded-lg border border-border bg-card/80 p-3 shadow-sm">
                                                                         <div className="flex items-start justify-between">
-                                                                            <div className="font-semibold text-gray-900">{item.product_name}</div>
-                                                                            <div className="text-xs text-gray-600">x{item.quantity}</div>
+                                                                            <div className="font-semibold text-foreground">{item.product_name}</div>
+                                                                            <div className="text-xs text-muted-foreground">x{item.quantity}</div>
                                                                         </div>
-                                                                        <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-600">
-                                                                            {item.variant && <span className="rounded-full bg-gray-100 px-2 py-0.5">Variant: {item.variant}</span>}
+                                                                        <div className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                                                            {item.variant && <span className="rounded-full bg-muted px-2 py-0.5">Variant: {item.variant}</span>}
                                                                             {item.customizations && Object.keys(item.customizations).length > 0 && (
-                                                                                <span className="rounded-full bg-gray-100 px-2 py-0.5">
+                                                                                <span className="rounded-full bg-muted px-2 py-0.5">
                                                                                     {Object.entries(item.customizations).map(([key, value]) => `${key}: ${value}`).join(' • ')}
                                                                                 </span>
                                                                             )}
                                                                         </div>
                                                                         {item.addOns && item.addOns.length > 0 && (
-                                                                            <div className="mt-2 rounded-lg border border-gray-100 bg-gray-50 p-2 text-xs text-gray-700">
-                                                                                <div className="mb-1 font-semibold text-gray-800">Add-ons</div>
+                                                                            <div className="mt-2 rounded-lg border border-border bg-muted p-2 text-xs text-foreground">
+                                                                                <div className="mb-1 font-semibold text-foreground">Add-ons</div>
                                                                                 <ul className="list-disc space-y-1 pl-4">
                                                                                     {item.addOns.map((addon) => (
                                                                                         <li key={addon.id} className="flex items-center justify-between">
                                                                                             <span>{addon.product_name}</span>
-                                                                                            <span className="text-gray-500">x{addon.quantity ?? 1}</span>
+                                                                                            <span className="text-muted-foreground">x{addon.quantity ?? 1}</span>
                                                                                         </li>
                                                                                     ))}
                                                                                 </ul>

@@ -716,7 +716,7 @@ export default function Pos() {
                     {/* Loading State */}
                     {isLoading ? (
                         <div className="flex justify-center items-center h-32 my-4">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground"></div>
                         </div>
                     ) : (
                         <>

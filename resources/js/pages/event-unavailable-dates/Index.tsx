@@ -31,14 +31,14 @@ export default function EventUnavailableDates() {
             <Head title="Blocked Dates" />
             <div className="flex flex-col gap-6 p-6">
                 {flash?.success && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-green-800">{flash.success}</div>
+                    <div className="rounded-lg border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40 px-4 py-2 text-green-800 dark:text-green-300">{flash.success}</div>
                 )}
 
-                <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
                         <div>
-                            <p className="text-sm uppercase tracking-wide text-gray-500">Calendar</p>
-                            <h2 className="text-xl font-semibold text-gray-900">Upcoming blocked days</h2>
+                            <p className="text-sm uppercase tracking-wide text-muted-foreground">Calendar</p>
+                            <h2 className="text-xl font-semibold text-foreground">Upcoming blocked days</h2>
                         </div>
                         <Dialog open={showCreate} onOpenChange={setShowCreate}>
                             <DialogTrigger asChild>
@@ -64,20 +64,20 @@ export default function EventUnavailableDates() {
                                     }}
                                     className="grid grid-cols-1 gap-4 md:grid-cols-2"
                                 >
-                                    <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+                                    <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                                         Date
                                         <input
                                             type="date"
                                             required
-                                            className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                            className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                             value={form.data.unavailable_date}
                                             onChange={(e) => form.setData('unavailable_date', e.target.value)}
                                         />
                                     </label>
-                                    <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+                                    <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-foreground">
                                         Reason (optional)
                                         <input
-                                            className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                            className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                                             value={form.data.reason}
                                             onChange={(e) => form.setData('reason', e.target.value)}
                                             placeholder="Private event, machine service day, staff training"
@@ -87,7 +87,7 @@ export default function EventUnavailableDates() {
                                         <button
                                             type="button"
                                             onClick={() => setShowCreate(false)}
-                                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                                            className="rounded-lg border border-border px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted"
                                         >
                                             Cancel
                                         </button>
@@ -104,9 +104,9 @@ export default function EventUnavailableDates() {
                         </Dialog>
                     </div>
 
-                    <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 bg-gray-50/60">
+                    <div className="divide-y divide-border rounded-xl border border-border bg-muted/60">
                         {dates.length === 0 && (
-                            <p className="p-4 text-sm text-gray-600">No blackout dates yet.</p>
+                            <p className="p-4 text-sm text-muted-foreground">No blackout dates yet.</p>
                         )}
 
                         {dates.map((date) => (
@@ -132,14 +132,14 @@ function DateRow({ date }: { date: BlockedDate }) {
     return (
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
             <div>
-                <p className="font-semibold text-gray-900">{formatted}</p>
-                {date.reason && <p className="text-sm text-gray-600">{date.reason}</p>}
+                <p className="font-semibold text-foreground">{formatted}</p>
+                {date.reason && <p className="text-sm text-muted-foreground">{date.reason}</p>}
             </div>
             <button
                 type="button"
                 onClick={() => destroy(`/event-unavailable-dates/${date.id}`, { preserveScroll: true })}
                 disabled={processing}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:border-red-400 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg border border-border px-3 py-2 text-sm font-semibold text-foreground hover:border-red-400 hover:text-red-600 dark:hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
                 Remove
             </button>

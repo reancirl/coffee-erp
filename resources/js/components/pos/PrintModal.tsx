@@ -359,9 +359,9 @@ const PrintModal: React.FC<PrintModalProps> = ({
         <>
             
             {/* Print modal UI */}
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
                 <div
-                    className="bg-white p-6 rounded shadow-lg w-96"
+                    className="bg-card p-6 rounded shadow-lg w-96"
                     style={{ backgroundColor: primaryColor, color: accentColor }}
                 >
                     <h2 className="text-xl font-semibold mb-4">Print Options</h2>
@@ -378,7 +378,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
                                     className={`p-4 border rounded cursor-pointer text-center ${
                                         isSelected
                                             ? 'bg-blue-500 text-white border-blue-500'
-                                            : 'bg-gray-200 text-black'
+                                            : 'bg-muted text-foreground'
                                     }`}
                                 >
                                     {option}
