@@ -375,7 +375,7 @@ export default function Index({ orders, filters, products }: Props) {
                                                     <tr className="bg-muted">
                                                         <td colSpan={9} className="px-6 py-4">
                                                             <div className="flex flex-col gap-3">
-                                                                {aggregateOrderItems(order.items).map((item, idx) => (
+                                                                {aggregateOrderItems(order.items).map((item) => (
                                                                     <div key={item.id} className="rounded-lg border border-border bg-card/80 p-3 shadow-sm">
                                                                         <div className="flex items-start justify-between">
                                                                             <div className="font-semibold text-foreground">{item.product_name}</div>

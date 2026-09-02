@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { primaryColor, secondaryColor, accentColor } from './types';
-import OrderSlip from './OrderSlip';
+import { primaryColor, accentColor, Product } from './types';
 
 /**
  * How the order was paid, snapshotted by the POS at submit time so the slip
@@ -30,7 +29,7 @@ interface PrintModalProps {
     onDone: () => void;
     orderType: string; // Added order type (dine-in or takeout)
     beeperNumber: string; // Added beeper number
-    order: any[]; // Order items
+    order: Product[]; // Order items
     orderNumber: string; // Order number
     totalAmount: number; // Total amount of the order
     payment?: ReceiptPayment | null; // How it was paid; omitted by older callers
@@ -48,8 +47,6 @@ const PrintModal: React.FC<PrintModalProps> = ({
     totalAmount,
     payment = null,
 }) => {
-    if (!isOpen) return null;
-    
     // State for print window
     const [isPrinting, setIsPrinting] = useState(false);
     const printWindowRef = useRef<Window | null>(null);
@@ -63,6 +60,9 @@ const PrintModal: React.FC<PrintModalProps> = ({
             }
         };
     }, []);
+
+    // Hooks above run on every render; the modal only draws when open.
+    if (!isOpen) return null;
 
     const togglePrintOption = (option: string) => {
         if (option === 'Skip Printing') {
@@ -258,8 +258,8 @@ const PrintModal: React.FC<PrintModalProps> = ({
               <div class="divider"></div>
       
               <div class="section-title">ORDER ITEMS</div>
-              ${(order||[]).map((item:any) => {
-                const fmt = (p:any) => {
+              ${(order||[]).map((item: Product) => {
+                const fmt = (p: unknown) => {
                   const n = Number(p);
                   return isNaN(n) ? '0.00' : n.toFixed(2);
                 };
@@ -295,7 +295,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
                 
                 // Display add-ons with their variants too
                 if (item.addOns?.length) {
-                  item.addOns.forEach((a:any) => {
+                  item.addOns.forEach((a: Product) => {
                     // Get add-on variant if available
                     let addOnVariant = '';
                     if (a.selectedVariant) {
@@ -307,7 +307,7 @@ const PrintModal: React.FC<PrintModalProps> = ({
                     
                     // Format add-on name with variant
                     const addOnName = addOnVariant ? `${a.name} ${addOnVariant}` : a.name;
-                    const type = a.type === 'alt-milk' ? 'ALT MILK' : 'ADD-ON';
+                    const type = a.is_alternative_milk === true ? 'ALT MILK' : 'ADD-ON';
                     details += `<div class="row" style="padding-left:10px;"><span>- ${type}: ${addOnName}</span><span>+₱${fmt(a.price)}</span></div>`;
                   });
                 }

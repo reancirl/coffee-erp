@@ -29,6 +29,12 @@ export default [
         },
     },
     {
+        rules: {
+            // Destructuring a key only to drop it from the rest object is a use of that name.
+            '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
+        },
+    },
+    {
         plugins: {
             'react-hooks': reactHooks,
         },
@@ -38,7 +44,7 @@ export default [
         },
     },
     {
-        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js'],
+        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', '.claude'],
     },
     prettier, // Turn off all rules that might conflict with Prettier
 ];

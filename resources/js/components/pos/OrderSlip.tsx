@@ -1,10 +1,11 @@
 import React from 'react';
+import { Product } from './types';
 
 interface OrderSlipProps {
     orderNumber: string;
     orderType: string;
     beeperNumber: string;
-    orderItems: any[];
+    orderItems: Product[];
     orderDate: Date;
     totalAmount: number;
 }
@@ -23,7 +24,7 @@ const OrderSlip: React.FC<OrderSlipProps> = ({
     totalAmount
 }) => {
     // Format price safely
-    const formatPrice = (price: any): string => {
+    const formatPrice = (price: unknown): string => {
         const num = Number(price);
         return isNaN(num) ? '0.00' : num.toFixed(2);
     };
@@ -74,7 +75,7 @@ const OrderSlip: React.FC<OrderSlipProps> = ({
     };
 
     // Format item customization details
-    const getItemDetails = (item: any): string => {
+    const getItemDetails = (item: Product): string => {
         let details = '';
         
         // Add variant if selected (e.g., Hot/Iced)
@@ -94,7 +95,7 @@ const OrderSlip: React.FC<OrderSlipProps> = ({
         // Add add-ons if any
         if (item.addOns && item.addOns.length > 0) {
             details += '   Add-ons:\n';
-            item.addOns.forEach((addon: any) => {
+            item.addOns.forEach((addon: Product) => {
                 details += `      ${addon.name} (${formatPrice(addon.price)})\n`;
                 if (addon.selectedVariant) {
                     details += `         Variant: ${addon.selectedVariant}\n`;

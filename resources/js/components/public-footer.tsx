@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 
 export function PublicFooter() {
     return (

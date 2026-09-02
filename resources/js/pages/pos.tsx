@@ -22,7 +22,7 @@ interface PageProps {
         // real remaining balance rather than the terminal's stale copy.
         allowance_remaining?: number | null;
     };
-    [key: string]: any; // Allow other page props
+    [key: string]: unknown; // Allow other page props
 }
 
 interface Customer {
@@ -87,7 +87,7 @@ export default function Pos() {
     const [splitAllowanceAmount, setSplitAllowanceAmount] = useState<string>('');
     
     // Helper function to check if product is an add-on
-    const isAddOn = (product: any): boolean => {
+    const isAddOn = (product: Pick<Product, 'name' | 'type'>): boolean => {
         // Primary check: use the explicit type property
         if (product.type !== undefined) {
             return product.type === 'addon';
@@ -97,12 +97,7 @@ export default function Pos() {
         const knownAddOns = ['Oat Milk', 'Espresso', 'Extra Shot', 'Vanilla Syrup', 'Caramel Syrup'];
         return knownAddOns.includes(product.name);
     };
-    
-    // Helper function to check if product is an alternative milk
-    const isAlternativeMilk = (product: any): boolean => {
-        if (!isAddOn(product)) return false;
-        return product.name.toLowerCase().includes('milk');
-    };
+
     
     // Fetch products from the API
     useEffect(() => {
@@ -190,68 +185,29 @@ export default function Pos() {
         return null;
     };
 
+    // Why this Cash + GCash split cannot go through, or null if it can.
+    const cashGcashSplitProblem = (total: number): string | null => {
+        const cashAmount = Number(splitCashAmount);
+        const gcashAmount = Number(splitGcashAmount);
+
+        if (!splitCashAmount || !splitGcashAmount) {
+            return 'Please enter both cash and GCash amounts for split payment.';
+        }
+        if (cashAmount <= 0 || gcashAmount <= 0) {
+            return 'Both cash and GCash amounts must be greater than zero.';
+        }
+        if (Math.abs(cashAmount + gcashAmount - total) > 0.01) {
+            return `Split payment amounts must equal the total amount of \u20b1${total.toFixed(2)}`;
+        }
+        return null;
+    };
+
     const allowanceBlockedReason = (): string | null =>
         ineligibleNames.length === 0
             ? null
             : `The coffee allowance does not cover ${ineligibleNames.join(', ')}. ` +
               `Remove ${ineligibleNames.length === 1 ? 'it' : 'them'} or pay another way.`;
 
-    const handlePayment = () => {
-        const total = Number(calculateFinalTotal());
-        if (!selectedPaymentMethod) {
-            alert('Please select a payment method.');
-            return;
-        }
-        if (selectedPaymentMethod.id === 'cash') {
-            const given = Number(cashAmountGiven);
-            if (isNaN(given) || given < total) {
-                alert('Please enter an amount that covers the final total.');
-                return;
-            }
-        } else if (selectedPaymentMethod.id === 'g-cash' || selectedPaymentMethod.id === 'debit') {
-            if (!receiptImage) {
-                alert('Please take a picture of the transaction receipt.');
-                return;
-            }
-        } else if (usesAllowance(selectedPaymentMethod.id)) {
-            if (!scannedEmployee) {
-                alert('Scan the employee QR before confirming this payment.');
-                return;
-            }
-            const blocked = allowanceBlockedReason();
-            if (blocked) {
-                alert(blocked);
-                return;
-            }
-            if (selectedPaymentMethod.id === 'allowance-cash') {
-                const problem = allowanceSplitProblem(total);
-                if (problem) {
-                    alert(problem);
-                    return;
-                }
-            }
-        } else if (selectedPaymentMethod.id === 'split') {
-            const cashAmount = Number(splitCashAmount);
-            const gcashAmount = Number(splitGcashAmount);
-            const splitTotal = cashAmount + gcashAmount;
-            
-            if (!splitCashAmount || !splitGcashAmount) {
-                alert('Please enter both cash and GCash amounts for split payment.');
-                return;
-            }
-            if (Math.abs(splitTotal - total) > 0.01) { // Allow for small floating point differences
-                alert(`Split payment amounts must equal the total amount of ₱${total.toFixed(2)}`);
-                return;
-            }
-            if (cashAmount <= 0 || gcashAmount <= 0) {
-                alert('Both cash and GCash amounts must be greater than zero.');
-                return;
-            }
-        }
-
-        setIsPaymentModalOpen(false);
-        setIsCustomerModalOpen(true);
-    };
 
     const handleCustomerComplete = (orderTypeValue: string, beeperNumberValue: string) => {
         // Prevent double order submission
@@ -404,7 +360,7 @@ export default function Pos() {
               setIsProcessingOrder(false); // Allow new orders after 5 seconds
             }, 5000);
           },
-          onError: (errors: any) => {
+          onError: (errors: Record<string, string>) => {
             console.error('Error creating order:', errors)
             setNotificationMessage('Failed to create order. Please try again.');
             setShowNotification(true);
@@ -448,7 +404,7 @@ export default function Pos() {
                 
                 // Auto-select customization options if there's only one option per customization
                 if (product.customizations) {
-                    product.customizations.forEach((c, index) => {
+                    product.customizations.forEach((c) => {
                         if (c.options.length === 1) {
                             customizations[c.name] = c.options[0];
                         }
@@ -578,32 +534,10 @@ export default function Pos() {
         }
         setIsPaymentModalOpen(true);
     };
-    
-    // Reset all form fields and state values after transaction completion
-    const resetForm = () => {
-        // Just force a full page refresh for a completely clean state
-        // This is the most reliable way to reset everything
-        window.location.reload();
-        
-        // If we didn't reload, we would need to reset all these states:
-        // setIsPrintModalOpen(false);
-        // setIsPaymentModalOpen(false);
-        // setIsCustomerModalOpen(false);
-        // setIsDiscountModalOpen(false);
-        // setOrder([]);
-        // setSelectedProduct(null);
-        // setSelectedAddOn(null);
-        // setSelectedPaymentMethod(null);
-        // setCashAmountGiven('');
-        // setReceiptImage(null);
-        // setSelectedCustomer(null);
-        // setSelectedPrintOptions([]);
-        // setOrderType('dine-in');
-        // setBeeperNumber('');
-    };
+
 
     // Safe conversion to numeric value
-    const safeNumber = (value: any): number => {
+    const safeNumber = (value: unknown): number => {
         if (value === undefined || value === null) return 0;
         const num = Number(value);
         return isNaN(num) ? 0 : num;
@@ -647,9 +581,15 @@ export default function Pos() {
                 alert('Please enter an amount that covers the total.');
                 return;
             }
-        } else if (method.id.toLowerCase() === 'debit' && !receiptImage) {
+        } else if ((method.id.toLowerCase() === 'debit' || method.id.toLowerCase() === 'g-cash') && !receiptImage) {
             alert('Please upload a receipt for this payment.');
             return;
+        } else if (method.id.toLowerCase() === 'split') {
+            const problem = cashGcashSplitProblem(amount);
+            if (problem) {
+                alert(problem);
+                return;
+            }
         } else if (usesAllowance(method.id)) {
             if (!scannedEmployee) {
                 alert('Scan the employee QR before continuing.');
@@ -908,7 +848,7 @@ export default function Pos() {
                 <CustomizationModal
                     product={selectedProduct}
                     onClose={() => setSelectedProduct(null)}
-                    onAddToOrder={(customizations: any, variant?: 'hot' | 'iced') => 
+                    onAddToOrder={(customizations, variant) => 
                         addToOrder(selectedProduct, customizations, variant)
                     }
                 />

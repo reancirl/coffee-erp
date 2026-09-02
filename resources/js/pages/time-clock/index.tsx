@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Clock, LogIn, LogOut, Calendar, Timer, User, AlertCircle, CheckCircle, Coffee, MapPin } from 'lucide-react';
+import { Clock, LogIn, LogOut, Calendar, Timer, User, CheckCircle, Coffee } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

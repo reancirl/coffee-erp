@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, Package, Plus, Minus, Search, Filter, Download, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { AlertTriangle, Package, Plus, Search, Download, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -94,6 +94,8 @@ const mockInventoryData = [
     },
 ];
 
+type InventoryItem = (typeof mockInventoryData)[number];
+
 const getStatusBadge = (status: string, currentStock: number, minStock: number) => {
     if (currentStock === 0) {
         return <Badge variant="destructive" className="flex items-center gap-1"><AlertCircle className="w-3 h-3" />Out of Stock</Badge>;
@@ -111,7 +113,7 @@ export default function InventoryIndex() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedStatus, setSelectedStatus] = useState('all');
     const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [adjustmentType, setAdjustmentType] = useState('add');
     const [adjustmentQuantity, setAdjustmentQuantity] = useState('');
     const [adjustmentReason, setAdjustmentReason] = useState('');
@@ -139,7 +141,7 @@ export default function InventoryIndex() {
     const criticalItems = mockInventoryData.filter(item => item.currentStock <= item.minStock * 0.5).length;
     const totalValue = mockInventoryData.reduce((sum, item) => sum + (item.currentStock * item.cost), 0);
 
-    const handleAdjustment = (item: any) => {
+    const handleAdjustment = (item: InventoryItem) => {
         setSelectedItem(item);
         setIsAdjustmentModalOpen(true);
         setAdjustmentQuantity('');

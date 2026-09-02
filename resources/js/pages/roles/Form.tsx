@@ -25,7 +25,7 @@ interface Props {
 }
 
 export default function RoleForm({ permissions, role }: Props) {
-    const { data, setData, post, patch, processing, errors, reset } = useForm({
+    const { data, setData, post, patch, processing, errors } = useForm({
         name: role?.name || '',
         permissions: role?.permissions.map(p => p.id) || [],
     });

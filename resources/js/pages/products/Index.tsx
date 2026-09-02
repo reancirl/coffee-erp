@@ -4,7 +4,6 @@ import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit, Trash2, Plus, Search, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -97,7 +96,7 @@ const getPriceDisplay = (product: Product): string => {
     return formatCurrency(product.price);
 };
 
-export default function Index({ products, categories, filters }: Props) {
+export default function Index({ products, filters }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     
     const deleteProduct = (id: number, name: string) => {

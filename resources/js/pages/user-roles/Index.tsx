@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Edit, UserPlus, Shield, Search } from 'lucide-react';
+import { Users, Edit, Shield, Search } from 'lucide-react';
 import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { useState } from 'react';
 
@@ -24,15 +24,14 @@ interface User {
 interface Props {
     users: {
         data: User[];
-        links: any[];
-        meta: any;
+        links: Array<{ url?: string; label: string; active: boolean }>;
+        meta: Record<string, unknown>;
     };
     roles: Role[];
 }
 
 export default function UserRolesIndex({ users, roles }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedRole, setSelectedRole] = useState<string>('');
 
     const handleQuickAssign = (userId: number, roleId: string) => {
         router.post(route('user-roles.assign-role', userId), {

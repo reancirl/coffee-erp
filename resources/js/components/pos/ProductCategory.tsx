@@ -9,7 +9,7 @@ interface ProductCategoryProps {
 
 const ProductCategory: React.FC<ProductCategoryProps> = ({ title, products, onProductClick }) => {
     // Safe price formatting helper
-    const formatPrice = (price: any): string => {
+    const formatPrice = (price: unknown): string => {
         // Handle case where price is undefined, null, or not a number
         if (price === undefined || price === null || isNaN(Number(price))) {
             return '0.00';

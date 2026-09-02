@@ -2,9 +2,9 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
+import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Calculator, Folder, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp, CalendarRange, CalendarX2, Banknote, Coffee } from 'lucide-react';
+import { Calculator, LayoutGrid, Users, Receipt, FileText, Wallet, Package, FolderOpen, Shield, UserCheck, ChefHat, Archive, Clock, Calendar, UserCog, Truck, ShoppingCart, ClipboardList, TrendingUp, CalendarRange, CalendarX2, Banknote, Coffee } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // Define navigation groups with their items
@@ -236,7 +236,7 @@ const navigationGroups: NavGroup[] = [
 const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
-    const { auth } = usePage().props as any;
+    const { auth } = usePage<SharedData>().props;
     const accessibleModules = auth?.accessibleModules || [];
     
     // Filter navigation groups and items based on user's accessible modules
@@ -248,9 +248,7 @@ export function AppSidebar() {
                 .map(({ module, ...item }) => item) // Remove module property from final items
         }))
         .filter(group => group.items.length > 0); // Only show groups that have accessible items
-    
-    // Flatten all items for the NavMain component (it expects a flat array)
-    const mainNavItems: NavItem[] = filteredGroups.flatMap(group => group.items);
+
 
     return (
         <Sidebar collapsible="icon" variant="inset">
