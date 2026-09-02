@@ -6,11 +6,6 @@ interface ProductSales {
     total_sales: number;
 }
 
-interface HourlySales {
-    count: number;
-    total: number;
-}
-
 interface PaymentMethodTotal {
     count: number;
     total: number;

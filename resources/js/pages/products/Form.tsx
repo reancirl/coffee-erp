@@ -4,11 +4,9 @@ import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 import InputError from '@/components/input-error';
@@ -42,6 +40,12 @@ interface Props {
     categories: Category[];
 }
 
+type ProductCustomization = {
+    name: string;
+    options: string[];
+    required: boolean;
+};
+
 type ProductForm = {
     name: string;
     price: number;
@@ -53,11 +57,7 @@ type ProductForm = {
     is_add_on: boolean;
     // 'inherit' defers to the category; the other two override it.
     allowance_eligible: 'inherit' | 'yes' | 'no';
-    customizations: Array<{
-        name: string;
-        options: string[];
-        required: boolean;
-    }>;
+    customizations: ProductCustomization[];
 };
 
 export default function Form({ product, categories }: Props) {
@@ -134,7 +134,7 @@ export default function Form({ product, categories }: Props) {
         setData('customizations', newCustomizations);
     };
 
-    const updateCustomization = (index: number, field: string, value: any) => {
+    const updateCustomization = <K extends keyof ProductCustomization>(index: number, field: K, value: ProductCustomization[K]) => {
         const newCustomizations = [...data.customizations];
         newCustomizations[index] = { ...newCustomizations[index], [field]: value };
         setData('customizations', newCustomizations);

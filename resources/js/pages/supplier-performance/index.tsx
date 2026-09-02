@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Search, Download, Star, Clock, CheckCircle, XCircle, AlertTriangle, Calendar, DollarSign, Package, Eye } from 'lucide-react';
+import { Search, Download, Star, Clock, CheckCircle, XCircle, AlertTriangle, Calendar, Eye } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -99,6 +99,8 @@ const mockPerformanceData = [
     }
 ];
 
+type SupplierPerformance = (typeof mockPerformanceData)[number];
+
 const getPerformanceBadge = (performance: string) => {
     switch (performance) {
         case 'excellent':
@@ -136,7 +138,7 @@ export default function SupplierPerformanceIndex() {
     const [selectedPerformance, setSelectedPerformance] = useState('all');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+    const [selectedSupplier, setSelectedSupplier] = useState<SupplierPerformance | null>(null);
 
     const performances = ['all', 'excellent', 'good', 'needs_improvement', 'poor'];
     const categories = ['all', 'Coffee & Beverages', 'Dairy Products', 'Syrups & Flavoring', 'Packaging & Supplies'];
@@ -154,7 +156,7 @@ export default function SupplierPerformanceIndex() {
     const avgLeadTime = mockPerformanceData.reduce((sum, s) => sum + s.avgLeadTime, 0) / mockPerformanceData.length;
     const totalIssues = mockPerformanceData.reduce((sum, s) => sum + s.issues, 0);
 
-    const handleViewSupplier = (supplier: any) => {
+    const handleViewSupplier = (supplier: SupplierPerformance) => {
         setSelectedSupplier(supplier);
         setIsViewModalOpen(true);
     };

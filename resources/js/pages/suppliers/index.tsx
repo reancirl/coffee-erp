@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Truck, Plus, Search, Filter, Download, Mail, Phone, MapPin, Star, Building, Package, Edit, Trash2, Eye, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Truck, Plus, Search, Download, Mail, Phone, MapPin, Star, Building, Package, Edit, Eye, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -109,6 +109,8 @@ const mockSupplierData = [
     }
 ];
 
+type Supplier = (typeof mockSupplierData)[number];
+
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'active':
@@ -143,7 +145,7 @@ export default function SuppliersIndex() {
     const [selectedStatus, setSelectedStatus] = useState('all');
     const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState(false);
     const [isViewSupplierModalOpen, setIsViewSupplierModalOpen] = useState(false);
-    const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
     const categories = ['all', 'Coffee & Beverages', 'Dairy Products', 'Syrups & Flavoring', 'Packaging & Supplies', 'Equipment'];
     const statuses = ['all', 'active', 'pending', 'inactive'];
@@ -164,7 +166,7 @@ export default function SuppliersIndex() {
     const pendingSuppliers = mockSupplierData.filter(sup => sup.status === 'pending').length;
     const totalSpent = mockSupplierData.reduce((sum, sup) => sum + sup.totalSpent, 0);
 
-    const handleViewSupplier = (supplier: any) => {
+    const handleViewSupplier = (supplier: Supplier) => {
         setSelectedSupplier(supplier);
         setIsViewSupplierModalOpen(true);
     };

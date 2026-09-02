@@ -1,6 +1,5 @@
 import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
 
 type EventPackage = {
     id: number;
@@ -51,9 +50,6 @@ interface PageProps {
     };
 }
 
-const currency = (value: number | string) =>
-    new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(Number(value || 0));
-
 const statusTone: Record<string, { bg: string; text: string; border: string }> = {
     pending: { bg: 'bg-amber-100 dark:bg-amber-950/40', text: 'text-amber-800 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-900' },
     reserved: { bg: 'bg-blue-100 dark:bg-blue-950/40', text: 'text-blue-800 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-900' },
@@ -63,9 +59,7 @@ const statusTone: Record<string, { bg: string; text: string; border: string }> =
 };
 
 export default function EventBookingsIndex() {
-    const { bookings, packages, statuses, filters, flash } = usePage<PageProps>().props;
-
-    const filteredPackages = useMemo(() => [...packages].sort((a, b) => a.cup_count - b.cup_count), [packages]);
+    const { bookings, statuses, filters, flash } = usePage<PageProps>().props;
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Event Bookings', href: '/event-bookings' }]}>
@@ -124,7 +118,7 @@ export default function EventBookingsIndex() {
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {bookings.data.map((booking) => (
-                                    <BookingRow key={booking.id} booking={booking} packages={packages} statuses={statuses} />
+                                    <BookingRow key={booking.id} booking={booking} />
                                 ))}
                             </tbody>
                         </table>
@@ -137,7 +131,7 @@ export default function EventBookingsIndex() {
     );
 }
 
-function BookingRow({ booking, packages, statuses }: { booking: EventBooking; packages: EventPackage[]; statuses: string[] }) {
+function BookingRow({ booking }: { booking: EventBooking }) {
     const form = useForm({
         event_package_id: booking.event_package_id ?? '',
         event_date: booking.event_date,
@@ -153,11 +147,6 @@ function BookingRow({ booking, packages, statuses }: { booking: EventBooking; pa
         status: booking.status,
         notes: booking.notes ?? '',
     });
-
-    const save = () =>
-        form.patch(`/event-bookings/${booking.id}`, {
-            preserveScroll: true,
-        });
 
     const formattedDate = formatDateHuman(booking.event_date);
     const formattedTime = formatTimeHuman(booking.event_start_time);

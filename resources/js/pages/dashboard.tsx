@@ -128,7 +128,6 @@ export default function Dashboard({ salesData }: DashboardProps) {
     const { 
         rangeSales, 
         totalCups, 
-        totalCupsThisWeek, 
         productCounts, 
         foodProductCounts,
         totalFoodItems,

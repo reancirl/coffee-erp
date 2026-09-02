@@ -23,14 +23,14 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
     ineligibleForAllowance,
 }) => {
     // Helper function to safely convert any value to a number
-    const safeNumber = (value: any): number => {
+    const safeNumber = (value: unknown): number => {
         if (value === undefined || value === null) return 0;
         const num = Number(value);
         return isNaN(num) ? 0 : num;
     };
     
     // Helper function for safe price formatting
-    const formatPrice = (price: any): string => {
+    const formatPrice = (price: unknown): string => {
         return safeNumber(price).toFixed(2);
     };
     const calculateTotal = () => {

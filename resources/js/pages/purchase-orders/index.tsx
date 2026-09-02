@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ShoppingCart, Plus, Search, Download, Calendar, Package, DollarSign, Clock, CheckCircle, AlertTriangle, XCircle, Eye, Edit, Trash2 } from 'lucide-react';
+import { ShoppingCart, Plus, Search, Download, Calendar, DollarSign, Clock, CheckCircle, XCircle, Eye, Edit } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -84,6 +84,8 @@ const mockPurchaseOrders = [
     }
 ];
 
+type PurchaseOrder = (typeof mockPurchaseOrders)[number];
+
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'pending':
@@ -112,7 +114,7 @@ export default function PurchaseOrdersIndex() {
     const [selectedStatus, setSelectedStatus] = useState('all');
     const [isCreatePOModalOpen, setIsCreatePOModalOpen] = useState(false);
     const [isViewPOModalOpen, setIsViewPOModalOpen] = useState(false);
-    const [selectedPO, setSelectedPO] = useState<any>(null);
+    const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
 
     const statuses = ['all', 'pending', 'approved', 'received', 'cancelled'];
 
@@ -129,7 +131,7 @@ export default function PurchaseOrdersIndex() {
     const approvedPOs = mockPurchaseOrders.filter(po => po.status === 'approved').length;
     const totalValue = mockPurchaseOrders.reduce((sum, po) => sum + po.totalAmount, 0);
 
-    const handleViewPO = (po: any) => {
+    const handleViewPO = (po: PurchaseOrder) => {
         setSelectedPO(po);
         setIsViewPOModalOpen(true);
     };
@@ -438,7 +440,7 @@ export default function PurchaseOrdersIndex() {
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {selectedPO.items.map((item: any, index: number) => (
+                                                {selectedPO.items.map((item, index) => (
                                                     <TableRow key={index}>
                                                         <TableCell>{item.product}</TableCell>
                                                         <TableCell>{item.quantity} {item.unit}</TableCell>

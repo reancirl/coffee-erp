@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ClipboardList, Plus, Search, Download, Calendar, Package, CheckCircle, AlertTriangle, XCircle, Eye, Edit, Truck } from 'lucide-react';
+import { ClipboardList, Search, Download, Calendar, Package, CheckCircle, AlertTriangle, XCircle, Eye, Truck } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -75,6 +75,8 @@ const mockReceivingOrders = [
     }
 ];
 
+type ReceivingOrder = (typeof mockReceivingOrders)[number];
+
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'pending':
@@ -118,7 +120,7 @@ export default function ReceivingIndex() {
     const [selectedStatus, setSelectedStatus] = useState('all');
     const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [selectedOrder, setSelectedOrder] = useState<ReceivingOrder | null>(null);
 
     const statuses = ['all', 'pending', 'partial', 'completed', 'discrepancy'];
 
@@ -135,12 +137,12 @@ export default function ReceivingIndex() {
     const completedOrders = mockReceivingOrders.filter(o => o.status === 'completed').length;
     const totalDiscrepancies = mockReceivingOrders.reduce((sum, o) => sum + o.discrepancies, 0);
 
-    const handleReceiveOrder = (order: any) => {
+    const handleReceiveOrder = (order: ReceivingOrder) => {
         setSelectedOrder(order);
         setIsReceiveModalOpen(true);
     };
 
-    const handleViewOrder = (order: any) => {
+    const handleViewOrder = (order: ReceivingOrder) => {
         setSelectedOrder(order);
         setIsViewModalOpen(true);
     };
@@ -371,7 +373,7 @@ export default function ReceivingIndex() {
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {selectedOrder.items.map((item: any, index: number) => (
+                                                {selectedOrder.items.map((item, index) => (
                                                     <TableRow key={index}>
                                                         <TableCell>{item.product}</TableCell>
                                                         <TableCell>{item.ordered} {item.unit}</TableCell>
@@ -476,7 +478,7 @@ export default function ReceivingIndex() {
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {selectedOrder.items.map((item: any, index: number) => (
+                                                {selectedOrder.items.map((item, index) => (
                                                     <TableRow key={index}>
                                                         <TableCell>
                                                             <div>{item.product}</div>

@@ -1,4 +1,4 @@
-import { MenuData } from './types';
+import { MenuData, Product } from './types';
 
 // Use simple incremental IDs starting from 1
 let productId = 1;
@@ -84,7 +84,7 @@ export const nonCoffee = [
 }));
 
 // Helper function to check if a product is an add-on
-export const isAddOn = (product: any): boolean => {
+export const isAddOn = (product: Pick<Product, 'name' | 'type'>): boolean => {
     // Primary check: use the explicit type property
     if (product.type !== undefined) {
         return product.type === 'addon';

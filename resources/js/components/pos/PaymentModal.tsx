@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { primaryColor, secondaryColor, accentColor } from './types';
+import { primaryColor, accentColor } from './types';
 
 interface PaymentMethod {
     id: string;
@@ -45,7 +45,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     amount,
     cashAmountGiven,
     setCashAmountGiven,
-    receiptImage,
     setReceiptImage,
     onScanEmployee,
     scannedEmployee,

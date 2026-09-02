@@ -40,7 +40,7 @@ const steps = [
 ];
 
 export default function Welcome() {
-    const { packages, blockedDates, today, flash, auth, errors } = usePage<PageProps>().props;
+    const { packages, blockedDates, today, flash, auth } = usePage<PageProps>().props;
     const isLoggedIn = Boolean(auth?.user);
     const [currentStep, setCurrentStep] = useState(0);
     const [dateWarning, setDateWarning] = useState<string | null>(null);
@@ -757,25 +757,25 @@ type ReviewModalProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSubmit: () => void;
-    formData: typeof formDataShape;
+    formData: BookingFormData;
     selectedPackage: EventPackage | undefined;
     processing: boolean;
 };
 
-// Helper to mirror form shape without pulling state inside component
-const formDataShape = {
-    event_package_id: '',
-    event_date: '',
-    event_start_time: '',
-    duration_minutes: '',
-    event_name: '',
-    event_type: '',
-    venue_address: '',
-    contact_name: '',
-    contact_email: '',
-    contact_phone: '',
-    expected_guests: '',
-    notes: '',
+// Mirrors the booking form's shape without pulling state inside the component.
+type BookingFormData = {
+    event_package_id: string;
+    event_date: string;
+    event_start_time: string;
+    duration_minutes: string;
+    event_name: string;
+    event_type: string;
+    venue_address: string;
+    contact_name: string;
+    contact_email: string;
+    contact_phone: string;
+    expected_guests: string;
+    notes: string;
 };
 
 function ReviewModal({ open, onOpenChange, onSubmit, formData, selectedPackage, processing }: ReviewModalProps) {

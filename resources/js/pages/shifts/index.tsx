@@ -11,8 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, Plus, Search, Filter, Download, Clock, Users, CalendarDays, Edit, Trash2, Eye, AlertCircle, CheckCircle, UserCheck } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Calendar, Plus, Search, Download, Users, Edit, Eye, AlertCircle, CheckCircle, UserCheck } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -99,6 +99,8 @@ const mockShiftData = [
     }
 ];
 
+type Shift = (typeof mockShiftData)[number];
+
 // Mock available employees
 const availableEmployees = [
     { id: 1, name: 'John Doe', position: 'Manager', avatar: null },
@@ -150,7 +152,7 @@ export default function ShiftsIndex() {
     const [selectedStatus, setSelectedStatus] = useState('all');
     const [isCreateShiftModalOpen, setIsCreateShiftModalOpen] = useState(false);
     const [isViewShiftModalOpen, setIsViewShiftModalOpen] = useState(false);
-    const [selectedShift, setSelectedShift] = useState<any>(null);
+    const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
 
     const statuses = ['all', 'scheduled', 'fully_staffed', 'understaffed', 'completed'];
     const positions = ['Manager', 'Shift Supervisor', 'Barista', 'Cashier', 'Kitchen Staff', 'Cleaner'];
@@ -169,7 +171,7 @@ export default function ShiftsIndex() {
     const understaffedShifts = mockShiftData.filter(shift => shift.status === 'understaffed').length;
     const totalEmployeesScheduled = mockShiftData.reduce((sum, shift) => sum + shift.employees.length, 0);
 
-    const handleViewShift = (shift: any) => {
+    const handleViewShift = (shift: Shift) => {
         setSelectedShift(shift);
         setIsViewShiftModalOpen(true);
     };
@@ -506,7 +508,7 @@ export default function ShiftsIndex() {
                                         Assigned Staff ({selectedShift.employees.length})
                                     </h4>
                                     <div className="space-y-2">
-                                        {selectedShift.employees.map((employee: any) => (
+                                        {selectedShift.employees.map((employee) => (
                                             <div key={employee.id} className="flex items-center justify-between p-2 bg-muted rounded">
                                                 <div className="flex items-center gap-2">
                                                     <Avatar className="h-8 w-8">
