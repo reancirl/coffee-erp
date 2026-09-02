@@ -4,13 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-<<<<<<< Updated upstream
-import { Users, Edit, UserPlus, Shield, Search } from 'lucide-react';
-import AppLayout, { withAppShell } from '@/layouts/app-layout';
-=======
 import { Users, Edit, Shield, Search } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
->>>>>>> Stashed changes
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { useState } from 'react';
 
 interface Role {
