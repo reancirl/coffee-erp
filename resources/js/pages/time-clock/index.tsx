@@ -79,7 +79,7 @@ const mockTimeEntries = [
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'clocked_in':
-            return <Badge variant="default" className="bg-green-100 text-green-800 flex items-center gap-1">
+            return <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />Clocked In
             </Badge>;
         case 'clocked_out':
@@ -87,7 +87,7 @@ const getStatusBadge = (status: string) => {
                 <Clock className="w-3 h-3" />Clocked Out
             </Badge>;
         case 'break':
-            return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 flex items-center gap-1">
+            return <Badge variant="outline" className="bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
                 <Coffee className="w-3 h-3" />On Break
             </Badge>;
         default:
@@ -193,7 +193,7 @@ export default function TimeClockIndex() {
                                 <h3 className="text-lg font-semibold">{userStatus.name}</h3>
                                 <p className="text-muted-foreground">{userStatus.position}</p>
                                 {userStatus.isClocked ? (
-                                    <Badge variant="default" className="bg-green-100 text-green-800">
+                                    <Badge variant="default" className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300">
                                         Currently Clocked In
                                     </Badge>
                                 ) : (
@@ -251,10 +251,10 @@ export default function TimeClockIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Currently Clocked In</CardTitle>
-                            <User className="h-4 w-4 text-green-600" />
+                            <User className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{clockedInEmployees}</div>
+                            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{clockedInEmployees}</div>
                             <p className="text-xs text-muted-foreground">
                                 Active employees
                             </p>
@@ -264,7 +264,7 @@ export default function TimeClockIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Hours Today</CardTitle>
-                            <Timer className="h-4 w-4 text-blue-600" />
+                            <Timer className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{totalHoursToday}h</div>
@@ -277,7 +277,7 @@ export default function TimeClockIndex() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Average Hours</CardTitle>
-                            <Calendar className="h-4 w-4 text-purple-600" />
+                            <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{(totalHoursToday / mockTimeEntries.length).toFixed(1)}h</div>
@@ -327,7 +327,7 @@ export default function TimeClockIndex() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    <LogIn className="w-4 h-4 text-green-600" />
+                                                    <LogIn className="w-4 h-4 text-green-600 dark:text-green-400" />
                                                     {new Date(entry.clockIn).toLocaleTimeString('en-US', {
                                                         hour: '2-digit',
                                                         minute: '2-digit'
@@ -337,7 +337,7 @@ export default function TimeClockIndex() {
                                             <TableCell>
                                                 {entry.clockOut ? (
                                                     <div className="flex items-center gap-2">
-                                                        <LogOut className="w-4 h-4 text-red-600" />
+                                                        <LogOut className="w-4 h-4 text-red-600 dark:text-red-400" />
                                                         {new Date(entry.clockOut).toLocaleTimeString('en-US', {
                                                             hour: '2-digit',
                                                             minute: '2-digit'
@@ -364,9 +364,9 @@ export default function TimeClockIndex() {
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
-                                {clockAction === 'in' && <LogIn className="w-5 h-5 text-green-600" />}
-                                {clockAction === 'out' && <LogOut className="w-5 h-5 text-red-600" />}
-                                {clockAction === 'break' && <Coffee className="w-5 h-5 text-yellow-600" />}
+                                {clockAction === 'in' && <LogIn className="w-5 h-5 text-green-600 dark:text-green-400" />}
+                                {clockAction === 'out' && <LogOut className="w-5 h-5 text-red-600 dark:text-red-400" />}
+                                {clockAction === 'break' && <Coffee className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />}
                                 {clockAction === 'in' ? 'Clock In' : clockAction === 'out' ? 'Clock Out' : 'Start Break'}
                             </DialogTitle>
                         </DialogHeader>

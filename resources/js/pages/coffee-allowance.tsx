@@ -135,7 +135,7 @@ export default function CoffeeAllowance({ employee, qr, allowance }: Props) {
                                 <>
                                     {/* Deliberately white in both themes: scanners need
                                         the dark-on-light contrast to read the code. */}
-                                    <div className="rounded-lg border bg-white p-4">
+                                    <div className="rounded-lg border bg-card p-4">
                                         <img
                                             src={imageUrl}
                                             alt="Your coffee allowance QR code"

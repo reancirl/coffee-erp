@@ -122,9 +122,14 @@
 
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
+    /* Surfaces sit *above* the background rather than level with it. When card
+       and background were both 0.145 a card was invisible except for its
+       border, and shadows do not read on a dark page — so every page invented
+       its own `dark:bg-gray-800` to get the separation back. This is the same
+       elevation the sidebar already uses. */
+    --card: oklch(0.205 0 0);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
+    --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(0.985 0 0);
     --primary-foreground: oklch(0.205 0 0);

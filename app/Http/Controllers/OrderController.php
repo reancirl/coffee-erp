@@ -116,6 +116,7 @@ class OrderController extends Controller
             // Split payment fields
             'split_cash_amount' => 'nullable|numeric|min:0',
             'split_gcash_amount' => 'nullable|numeric|min:0',
+            'split_allowance_amount' => 'nullable|numeric|min:0',
             // Employee allowance
             'employee_qr_token' => 'nullable|string|max:255',
         ]);
@@ -127,7 +128,7 @@ class OrderController extends Controller
         // scanner screen decided a moment ago.
         $allowanceEmployee = null;
 
-        if ($paymentMethod === PaymentMethod::EmployeeAllowance) {
+        if ($paymentMethod->usesAllowance()) {
             if (blank($validated['employee_qr_token'] ?? null)) {
                 return back()->withErrors(['payment' => 'Scan the employee QR to use the employee allowance.']);
             }
@@ -141,14 +142,38 @@ class OrderController extends Controller
             }
 
             $allowanceEmployee = $result['user'];
+
+            // Not every product is on the allowance. Checked here, server-side,
+            // because the POS only knows what the menu endpoint told it and
+            // that answer is cached.
+            $ineligible = Product::ineligibleForAllowance(
+                $this->productIdsIn($validated['items'])
+            );
+
+            if ($ineligible->isNotEmpty()) {
+                return back()->withErrors([
+                    'payment' => 'The coffee allowance does not cover '.
+                        $ineligible->pluck('name')->join(', ', ' and ').
+                        '. Remove '.($ineligible->count() === 1 ? 'it' : 'them').
+                        ' or pay another way.',
+                ]);
+            }
         }
 
         // Additional validation for split payment
         if ($paymentMethod->isSplit()) {
-            if (empty($validated['split_cash_amount']) || empty($validated['split_gcash_amount'])) {
+            $isAllowanceSplit = $paymentMethod === PaymentMethod::SplitAllowanceCash;
+
+            if ($isAllowanceSplit) {
+                if (empty($validated['split_allowance_amount']) || empty($validated['split_cash_amount'])) {
+                    return back()->withErrors([
+                        'payment' => 'Both an allowance amount and a cash amount are required for this split.',
+                    ]);
+                }
+            } elseif (empty($validated['split_cash_amount']) || empty($validated['split_gcash_amount'])) {
                 return back()->withErrors(['payment' => 'Both cash and GCash amounts are required for split payment.']);
             }
-            
+
             // Validate that split amounts sum to total (we'll calculate total first)
             $subtotalForValidation = collect($validated['items'])->sum(function ($item) {
                 $itemTotal = $item['price'] * $item['quantity'];
@@ -161,7 +186,9 @@ class OrderController extends Controller
             });
             
             $totalForValidation = $subtotalForValidation - ($validated['discount'] ?? 0);
-            $splitTotal = $validated['split_cash_amount'] + $validated['split_gcash_amount'];
+            $splitTotal = $isAllowanceSplit
+                ? $validated['split_allowance_amount'] + $validated['split_cash_amount']
+                : $validated['split_cash_amount'] + $validated['split_gcash_amount'];
             
             if (abs($splitTotal - $totalForValidation) > 0.01) { // Allow for small floating point differences
                 return back()->withErrors(['payment' => 'Split payment amounts must equal the order total.']);
@@ -198,12 +225,18 @@ class OrderController extends Controller
 
             // Redeeming nothing is not a redemption. Without this the order is
             // refused further down with a confusing "this order needs 0.00".
-            if ($paymentMethod === PaymentMethod::EmployeeAllowance && $total <= 0) {
+            if ($paymentMethod->usesAllowance() && $total <= 0) {
                 throw new InvalidOrderTotalException(
                     'An employee allowance order must total more than zero.',
                     'payment',
                 );
             }
+
+            // How much of this order the allowance is actually paying for.
+            // On a split that is the allowance half; otherwise the lot.
+            $allowanceAmount = $paymentMethod === PaymentMethod::SplitAllowanceCash
+                ? (float) $validated['split_allowance_amount']
+                : $total;
 
             // Create the order
             $order = Order::create([
@@ -220,19 +253,24 @@ class OrderController extends Controller
                 'user_id' => auth()->id(),
                 'allowance_user_id' => $allowanceEmployee?->id,
                 'split_cash_amount' => $paymentMethod->isSplit() ? ($validated['split_cash_amount'] ?? null) : null,
-                'split_gcash_amount' => $paymentMethod->isSplit() ? ($validated['split_gcash_amount'] ?? null) : null,
+                'split_gcash_amount' => $paymentMethod === PaymentMethod::Split
+                    ? ($validated['split_gcash_amount'] ?? null)
+                    : null,
+                'split_allowance_amount' => $paymentMethod === PaymentMethod::SplitAllowanceCash
+                    ? ($validated['split_allowance_amount'] ?? null)
+                    : null,
             ]);
 
             // Draw the money down inside the same transaction as the order.
             // If the balance cannot cover it, the exception rolls the order
             // back with it, so no order exists without its ledger entry.
             if ($allowanceEmployee !== null) {
-                $ledgerEntry = Allowance::redeem($allowanceEmployee, $total, $order, auth()->user());
+                $ledgerEntry = Allowance::redeem($allowanceEmployee, $allowanceAmount, $order, auth()->user());
 
                 if ($ledgerEntry === null) {
                     throw new InsufficientAllowanceException(
                         Allowance::balanceFor($allowanceEmployee)['remaining'],
-                        $total,
+                        $allowanceAmount,
                     );
                 }
             }
@@ -276,7 +314,19 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return redirect()->back()->with('message', 'Order created successfully');
+            $flash = [
+                'message' => 'Order created successfully',
+                'order_number' => $order->order_number,
+            ];
+
+            // Read back after the commit so the slip prints the balance the
+            // ledger actually holds, not the figure the terminal was shown
+            // when the QR was scanned.
+            if ($allowanceEmployee !== null) {
+                $flash['allowance_remaining'] = Allowance::balanceFor($allowanceEmployee)['remaining'];
+            }
+
+            return redirect()->back()->with($flash);
 
         } catch (InvalidOrderTotalException $e) {
             DB::rollBack();
@@ -318,6 +368,30 @@ class OrderController extends Controller
      * @param string $productId Frontend product ID
      * @return int Category ID (1-5) or 0 for non-categorized products
      */
+    /**
+     * Every product referenced by an order payload, add-ons included.
+     *
+     * An add-on is a product too, so a drink that is on the allowance can
+     * still carry something that is not.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, mixed>
+     */
+    private function productIdsIn(array $items): array
+    {
+        $ids = [];
+
+        foreach ($items as $item) {
+            $ids[] = $item['product_id'] ?? null;
+
+            foreach ($item['add_ons'] ?? [] as $addOn) {
+                $ids[] = $addOn['product_id'] ?? null;
+            }
+        }
+
+        return array_filter($ids, fn ($id) => $id !== null);
+    }
+
     private function getCategoryIdFromProductId($productId)
     {
         $id = (int) $productId;

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft } from 'lucide-react';
 import { FormEventHandler } from 'react';
 import InputError from '@/components/input-error';
@@ -14,6 +15,7 @@ interface Category {
     id: number;
     name: string;
     description?: string;
+    allowance_eligible?: boolean;
 }
 
 interface Props {
@@ -23,6 +25,7 @@ interface Props {
 type CategoryForm = {
     name: string;
     description: string;
+    allowance_eligible: boolean;
 };
 
 export default function Form({ category }: Props) {
@@ -42,6 +45,7 @@ export default function Form({ category }: Props) {
     const { data, setData, post, put, processing, errors, reset } = useForm<CategoryForm>({
         name: category?.name || '',
         description: category?.description || '',
+        allowance_eligible: category?.allowance_eligible ?? true,
     });
 
     const submit: FormEventHandler = (e) => {
@@ -110,8 +114,27 @@ export default function Form({ category }: Props) {
                                         rows={4}
                                     />
                                     <InputError message={errors.description} />
-                                    <p className="text-sm text-gray-500 mt-1">
+                                    <p className="text-sm text-muted-foreground mt-1">
                                         Provide a brief description of what products belong to this category.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="allowance_eligible"
+                                            checked={data.allowance_eligible}
+                                            onCheckedChange={(checked) => setData('allowance_eligible', !!checked)}
+                                        />
+                                        <Label htmlFor="allowance_eligible">
+                                            Can be bought with the coffee allowance
+                                        </Label>
+                                    </div>
+                                    <InputError message={errors.allowance_eligible} />
+                                    <p className="text-sm text-muted-foreground">
+                                        Turn this off for things the allowance is not meant to
+                                        cover, such as retail beans or merchandise. Individual
+                                        products can override this.
                                     </p>
                                 </div>
 

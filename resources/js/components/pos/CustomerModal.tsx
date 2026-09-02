@@ -43,9 +43,9 @@ const CustomerModal: React.FC<CustomerModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div
-                className="bg-white p-6 rounded shadow-lg w-96 max-h-[90vh] overflow-y-auto"
+                className="bg-card p-6 rounded shadow-lg w-96 max-h-[90vh] overflow-y-auto"
                 style={{ backgroundColor: primaryColor, color: accentColor }}
             >
                 <h2 className="text-xl font-semibold mb-4">Order Details</h2>

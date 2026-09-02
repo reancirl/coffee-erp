@@ -81,43 +81,43 @@ export function PackageFields({
 
     return (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                 Package name
                 <input
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                     value={form.data.name}
                     onChange={(e) => form.setData('name', e.target.value)}
                     placeholder="50 Cup Cart"
                     required
                 />
-                {form.errors.name && <span className="text-xs text-red-600">{form.errors.name}</span>}
+                {form.errors.name && <span className="text-xs text-red-600 dark:text-red-400">{form.errors.name}</span>}
             </label>
 
-            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                 Cup count
                 <input
                     type="number"
                     min={1}
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                     value={form.data.cup_count}
                     onChange={(e) => form.setData('cup_count', Number(e.target.value))}
                 />
-                {form.errors.cup_count && <span className="text-xs text-red-600">{form.errors.cup_count}</span>}
+                {form.errors.cup_count && <span className="text-xs text-red-600 dark:text-red-400">{form.errors.cup_count}</span>}
             </label>
 
-            <label className="flex flex-col gap-1 text-sm font-medium text-gray-700">
+            <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
                 Price
                 <input
                     type="number"
                     min={0}
                     step="0.01"
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                     value={form.data.price}
                     onChange={(e) => form.setData('price', e.target.value)}
                     placeholder="0.00"
                     required
                 />
-                {form.errors.price && <span className="text-xs text-red-600">{form.errors.price}</span>}
+                {form.errors.price && <span className="text-xs text-red-600 dark:text-red-400">{form.errors.price}</span>}
             </label>
 
             <AvailabilityToggle
@@ -130,41 +130,41 @@ export function PackageFields({
                 error={form.errors.is_active}
             />
 
-            <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+            <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-foreground">
                 Description
                 <textarea
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                     value={form.data.description}
                     onChange={(e) => form.setData('description', e.target.value)}
                     placeholder="What the package includes (beans, milk options, flavors, barista hours)"
                     rows={7}
                 />
-                {form.errors.description && <span className="text-xs text-red-600">{form.errors.description}</span>}
+                {form.errors.description && <span className="text-xs text-red-600 dark:text-red-400">{form.errors.description}</span>}
             </label>
 
-            <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-gray-700">
+            <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-foreground">
                 Internal notes
                 <textarea
-                    className="rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="rounded-lg border border-border px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
                     value={form.data.notes}
                     onChange={(e) => form.setData('notes', e.target.value)}
                     placeholder="Any internal reminders"
                     rows={3}
                 />
-                {form.errors.notes && <span className="text-xs text-red-600">{form.errors.notes}</span>}
+                {form.errors.notes && <span className="text-xs text-red-600 dark:text-red-400">{form.errors.notes}</span>}
             </label>
 
             <div className="md:col-span-2 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-gray-800">Products in this package</p>
-                    <span className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-foreground">Products in this package</p>
+                    <span className="text-xs text-muted-foreground">
                         {hasProducts ? `${selectedProductIds.length} selected` : 'Select at least one product'}
                     </span>
                 </div>
 
                 {copyPackages.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3">
-                        <div className="text-xs font-medium text-gray-800">Copy products from:</div>
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted px-3 py-3">
+                        <div className="text-xs font-medium text-foreground">Copy products from:</div>
                         <Select onValueChange={setCopySourceId} value={copySourceId}>
                             <SelectTrigger className="w-56 text-sm">
                                 <SelectValue placeholder="Choose a package" />
@@ -204,7 +204,7 @@ export function PackageFields({
                                         <div className="max-h-[360px] space-y-2 overflow-y-auto pr-1">
                                             {filteredProducts.map((product) => renderProductRow(product, selectedProductIds, toggleProduct))}
                                             {filteredProducts.length === 0 && (
-                                                <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-4 text-sm text-gray-600">
+                                                <div className="rounded-lg border border-dashed border-border bg-muted px-3 py-4 text-sm text-muted-foreground">
                                                     No products match your search.
                                                 </div>
                                             )}
@@ -217,7 +217,7 @@ export function PackageFields({
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                                 {hasProducts
                                     ? products
                                           .filter((p) => selectedProductIds.includes(p.id))
@@ -228,7 +228,7 @@ export function PackageFields({
                             </div>
                         </div>
                         {products.length === 0 && (
-                            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-4 text-sm text-gray-600">
+                            <div className="rounded-lg border border-dashed border-border bg-muted px-3 py-4 text-sm text-muted-foreground">
                                 No products available. Create products first to assign them to packages.
                             </div>
                         )}
@@ -242,14 +242,14 @@ export function PackageFields({
                             className="max-w-sm"
                         />
                         {products.length === 0 ? (
-                            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-4 text-sm text-gray-600">
+                            <div className="rounded-lg border border-dashed border-border bg-muted px-3 py-4 text-sm text-muted-foreground">
                                 No products available. Create products first to assign them to packages.
                             </div>
                         ) : (
                             <div className="grid gap-2 sm:grid-cols-2">
                                 {filteredProducts.map((product) => renderProductRow(product, selectedProductIds, toggleProduct))}
                                 {filteredProducts.length === 0 && (
-                                    <div className="md:col-span-2 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-4 text-sm text-gray-600">
+                                    <div className="md:col-span-2 rounded-lg border border-dashed border-border bg-muted px-3 py-4 text-sm text-muted-foreground">
                                         No products match your search.
                                     </div>
                                 )}
@@ -257,7 +257,7 @@ export function PackageFields({
                         )}
                     </>
                 )}
-                {form.errors.product_ids && <span className="text-xs text-red-600">{form.errors.product_ids}</span>}
+                {form.errors.product_ids && <span className="text-xs text-red-600 dark:text-red-400">{form.errors.product_ids}</span>}
             </div>
         </div>
     );
@@ -268,12 +268,12 @@ function renderProductRow(product: ProductOption, selectedIds: number[], toggle:
     return (
         <label
             key={product.id}
-            className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 shadow-sm"
+            className="flex items-start gap-3 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm"
         >
             <Checkbox checked={isChecked} onCheckedChange={() => toggle(product.id)} className="mt-0.5" />
             <div className="flex flex-col">
-                <span className="font-semibold text-gray-900">{product.name}</span>
-                {product.price !== undefined && <span className="text-xs text-gray-600">{currency(product.price)}</span>}
+                <span className="font-semibold text-foreground">{product.name}</span>
+                {product.price !== undefined && <span className="text-xs text-muted-foreground">{currency(product.price)}</span>}
             </div>
         </label>
     );
@@ -297,12 +297,12 @@ function AvailabilityToggle({
     error?: string;
 }) {
     return (
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3">
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted px-3 py-3">
             <div className="flex flex-col">
-                <span className="text-sm font-medium text-gray-800">{label}</span>
-                {helpText && <span className="text-xs text-gray-500">{helpText}</span>}
-                {disabled && disabledReason && <span className="text-xs text-red-600">{disabledReason}</span>}
-                {error && <span className="text-xs text-red-600">{error}</span>}
+                <span className="text-sm font-medium text-foreground">{label}</span>
+                {helpText && <span className="text-xs text-muted-foreground">{helpText}</span>}
+                {disabled && disabledReason && <span className="text-xs text-red-600 dark:text-red-400">{disabledReason}</span>}
+                {error && <span className="text-xs text-red-600 dark:text-red-400">{error}</span>}
             </div>
             <button
                 type="button"
@@ -316,14 +316,14 @@ function AvailabilityToggle({
                 }}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border transition-colors duration-200 ${
                     disabled
-                        ? 'cursor-not-allowed border-gray-200 bg-gray-100 opacity-70'
+                        ? 'cursor-not-allowed border-border bg-muted opacity-70'
                         : checked
                         ? 'border-primary bg-primary'
-                        : 'border-gray-300 bg-gray-200'
+                        : 'border-border bg-muted'
                 }`}
             >
                 <span
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-background shadow-sm transition-transform duration-200 ${
                         checked ? 'translate-x-5' : 'translate-x-1'
                     }`}
                 />

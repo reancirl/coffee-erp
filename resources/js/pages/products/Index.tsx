@@ -12,6 +12,7 @@ interface Category {
     id: number;
     name: string;
     description?: string;
+    allowance_eligible?: boolean;
 }
 
 interface Product {
@@ -24,6 +25,7 @@ interface Product {
         iced?: number;
     };
     is_add_on: boolean;
+    allowance_eligible?: boolean | null;
     customizations?: Array<{
         name: string;
         options: string[];
@@ -33,6 +35,13 @@ interface Product {
     created_at: string;
     updated_at: string;
 }
+
+/**
+ * Display only. The order endpoint is the authority; this mirrors its rule so
+ * the list can show which products the allowance will refuse.
+ */
+const onAllowance = (product: Product): boolean =>
+    product.allowance_eligible ?? product.category_relation?.allowance_eligible ?? true;
 
 interface PaginatedProducts {
     data: Product[];
@@ -139,14 +148,14 @@ export default function Index({ products, categories, filters }: Props) {
                 </div>
 
                 {/* Search and Filters */}
-                <div className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
+                <div className="bg-card rounded-lg shadow-sm border p-4 space-y-4">
                     <form onSubmit={handleSearchSubmit} className="flex gap-4 items-end">
                         <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 Search Products
                             </label>
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                                 <Input
                                     type="text"
                                     placeholder="Search by product name or category..."
@@ -171,11 +180,11 @@ export default function Index({ products, categories, filters }: Props) {
                     </form>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 text-gray-900">
+                <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="p-6 text-foreground">
                         {products.data.length === 0 ? (
                             <div className="text-center py-8">
-                                <p className="text-gray-500 mb-4">No products found.</p>
+                                <p className="text-muted-foreground mb-4">No products found.</p>
                                 <Link href={route('products.create')}>
                                     <Button>Create Your First Product</Button>
                                 </Link>
@@ -183,36 +192,41 @@ export default function Index({ products, categories, filters }: Props) {
                         ) : (
                             <>
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
+                                    <table className="min-w-full divide-y divide-border">
+                                        <thead className="bg-muted">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                                     Name
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                                     Category
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                                     Price
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                                     Type
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                                     Customizations
                                                 </th>
-                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                                                     Actions
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
+                                        <tbody className="bg-card divide-y divide-border">
                                             {products.data.map((product) => (
-                                                <tr key={product.id} className="hover:bg-gray-50">
+                                                <tr key={product.id} className="hover:bg-muted">
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-gray-900">
+                                                        <div className="text-sm font-medium text-foreground">
                                                             {product.name}
                                                         </div>
+                                                        {!onAllowance(product) && (
+                                                            <div className="text-xs text-amber-700 dark:text-amber-300">
+                                                                Not on allowance
+                                                            </div>
+                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         {product.category_relation ? (
@@ -220,11 +234,11 @@ export default function Index({ products, categories, filters }: Props) {
                                                                 {product.category_relation.name}
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-gray-400">No category</span>
+                                                            <span className="text-muted-foreground">No category</span>
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-900">
+                                                        <div className="text-sm text-foreground">
                                                             {getPriceDisplay(product)}
                                                         </div>
                                                     </td>
@@ -239,7 +253,7 @@ export default function Index({ products, categories, filters }: Props) {
                                                                 {product.customizations.length} option{product.customizations.length > 1 ? 's' : ''}
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-gray-400">None</span>
+                                                            <span className="text-muted-foreground">None</span>
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -253,7 +267,7 @@ export default function Index({ products, categories, filters }: Props) {
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => deleteProduct(product.id, product.name)}
-                                                                className="text-red-600 hover:text-red-700"
+                                                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
                                                             </Button>
@@ -272,7 +286,7 @@ export default function Index({ products, categories, filters }: Props) {
                                             {products.links[0]?.url && (
                                                 <Link
                                                     href={products.links[0].url || '#'}
-                                                    className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                                    className="relative inline-flex items-center rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                                                 >
                                                     Previous
                                                 </Link>
@@ -280,7 +294,7 @@ export default function Index({ products, categories, filters }: Props) {
                                             {products.links[products.links.length - 1]?.url && (
                                                 <Link
                                                     href={products.links[products.links.length - 1].url || '#'}
-                                                    className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                                    className="relative ml-3 inline-flex items-center rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                                                 >
                                                     Next
                                                 </Link>
@@ -288,7 +302,7 @@ export default function Index({ products, categories, filters }: Props) {
                                         </div>
                                         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                                             <div>
-                                                <p className="text-sm text-gray-700">
+                                                <p className="text-sm text-foreground">
                                                     Showing{' '}
                                                     <span className="font-medium">
                                                         {(products.current_page - 1) * products.per_page + 1}
@@ -311,7 +325,7 @@ export default function Index({ products, categories, filters }: Props) {
                                                                 className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                                                                     link.active
                                                                         ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
-                                                                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0'
+                                                                        : 'text-foreground ring-1 ring-inset ring-ring hover:bg-muted focus:outline-offset-0'
                                                                 } ${
                                                                     index === 0 ? 'rounded-l-md' : ''
                                                                 } ${

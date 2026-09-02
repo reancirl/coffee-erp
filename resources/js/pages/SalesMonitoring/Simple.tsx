@@ -191,14 +191,14 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold">Sales Monitoring</h1>
-                        <p className="text-gray-600">
+                        <p className="text-muted-foreground">
                             Daily cash flow tracking and end-of-day reconciliation
                         </p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                         currentMonitoring.status === 'open' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300' 
+                            : 'bg-muted text-foreground'
                     }`}>
                         {currentMonitoring.status === 'open' ? 'Active' : 'Closed'}
                     </span>
@@ -226,7 +226,7 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                     <Wallet className="h-4 w-4 text-blue-500" />
                                     <span className="text-sm font-medium">Opening Balance</span>
                                 </div>
-                                <p className="text-2xl font-bold text-blue-600">
+                                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                     {formatCurrency(currentMonitoring.opening_balance)}
                                 </p>
                             </div>
@@ -237,17 +237,17 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                     <DollarSign className="h-4 w-4 text-green-500" />
                                     <span className="text-sm font-medium">Total Sales</span>
                                 </div>
-                                <p className="text-2xl font-bold text-green-600">
+                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                                     {formatCurrency(currentMonitoring.total_sales)}
                                 </p>
-                                <div className="text-xs text-gray-500 space-y-1">
+                                <div className="text-xs text-muted-foreground space-y-1">
                                     <div>Cash: {formatCurrency(currentMonitoring.total_cash)}</div>
                                     <div>GCash: {formatCurrency(currentMonitoring.total_gcash)}</div>
                                     {Number(currentMonitoring.allowance_sales) > 0 && (
                                         <div>Employee Allowance: {formatCurrency(currentMonitoring.allowance_sales)}</div>
                                     )}
                                     {Number(currentMonitoring.other_sales) > 0 && (
-                                        <div className="text-amber-600">
+                                        <div className="text-amber-600 dark:text-amber-400">
                                             Unrecognised: {formatCurrency(currentMonitoring.other_sales)}
                                         </div>
                                     )}
@@ -260,7 +260,7 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                     <Banknote className="h-4 w-4 text-indigo-500" />
                                     <span className="text-sm font-medium">Remittances</span>
                                 </div>
-                                <p className="text-2xl font-bold text-indigo-600">
+                                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                                     {formatCurrency(
                                         (currentMonitoring.remittances || []).reduce((sum, r) => sum + (r.amount || 0), 0),
                                     )}
@@ -278,11 +278,11 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-green-600">Cash In:</span>
+                                        <span className="text-green-600 dark:text-green-400">Cash In:</span>
                                         <span>{formatCurrency(currentMonitoring.cash_in)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-red-600">Cash Out:</span>
+                                        <span className="text-red-600 dark:text-red-400">Cash Out:</span>
                                         <span>{formatCurrency(currentMonitoring.cash_out)}</span>
                                     </div>
                                 </div>
@@ -306,8 +306,8 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                                 <span>{formatCurrency(currentMonitoring.actual_balance)}</span>
                                             </div>
                                             <div className={`flex justify-between text-sm font-medium ${
-                                                currentMonitoring.variance === 0 ? 'text-green-600' : 
-                                                currentMonitoring.variance > 0 ? 'text-blue-600' : 'text-red-600'
+                                                currentMonitoring.variance === 0 ? 'text-green-600 dark:text-green-400' : 
+                                                currentMonitoring.variance > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'
                                             }`}>
                                                 <span>Variance:</span>
                                                 <span>{formatCurrency(currentMonitoring.variance)}</span>
@@ -425,8 +425,8 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4">
-                                    <div className="p-4 bg-gray-50 rounded-lg">
-                                        <div className="text-sm text-gray-600 mb-2">Expected Balance:</div>
+                                    <div className="p-4 bg-muted rounded-lg">
+                                        <div className="text-sm text-muted-foreground mb-2">Expected Balance:</div>
                                         <div className="text-2xl font-bold">
                                             {formatCurrency(currentMonitoring.expected_balance)}
                                         </div>
@@ -443,11 +443,11 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                         />
                                     </div>
                                     {actualBalance && (
-                                        <div className="p-3 bg-blue-50 rounded-lg">
-                                            <div className="text-sm text-gray-600">Variance:</div>
+                                        <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
+                                            <div className="text-sm text-muted-foreground">Variance:</div>
                                             <div className={`text-lg font-semibold ${
-                                                (parseFloat(actualBalance) - currentMonitoring.expected_balance) === 0 ? 'text-green-600' :
-                                                (parseFloat(actualBalance) - currentMonitoring.expected_balance) > 0 ? 'text-blue-600' : 'text-red-600'
+                                                (parseFloat(actualBalance) - currentMonitoring.expected_balance) === 0 ? 'text-green-600 dark:text-green-400' :
+                                                (parseFloat(actualBalance) - currentMonitoring.expected_balance) > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'
                                             }`}>
                                                 {formatCurrency(parseFloat(actualBalance) - currentMonitoring.expected_balance)}
                                             </div>
@@ -509,7 +509,7 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                         onChange={(e) => remittanceForm.setData('amount', e.target.value)}
                                         placeholder="0.00"
                                     />
-                                    <p className="mt-1 text-xs text-gray-500">Available: {formatCurrency(availableCash)}</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">Available: {formatCurrency(availableCash)}</p>
                                 </div>
                                 <div>
                                     <Label>Reference (optional)</Label>
@@ -563,7 +563,7 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                     </CardHeader>
                     <CardContent>
                         {(currentMonitoring.remittances?.length || 0) === 0 ? (
-                            <p className="text-sm text-gray-600">No remittances recorded yet.</p>
+                            <p className="text-sm text-muted-foreground">No remittances recorded yet.</p>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
@@ -580,19 +580,19 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                     </thead>
                                     <tbody>
                                         {currentMonitoring.remittances?.map((remit) => (
-                                            <tr key={remit.id} className="border-b hover:bg-gray-50">
+                                            <tr key={remit.id} className="border-b hover:bg-muted">
                                                 <td className="px-3 py-2">
-                                                    <div className="font-medium text-gray-900">{remit.destination}</div>
-                                                    {remit.notes && <div className="text-xs text-gray-600">{remit.notes}</div>}
+                                                    <div className="font-medium text-foreground">{remit.destination}</div>
+                                                    {remit.notes && <div className="text-xs text-muted-foreground">{remit.notes}</div>}
                                                 </td>
                                                 <td className="px-3 py-2">{remit.method}</td>
-                                                <td className="px-3 py-2 text-gray-700">{remit.reference || '—'}</td>
-                                                <td className="px-3 py-2 font-semibold text-gray-900">{formatCurrency(remit.amount)}</td>
+                                                <td className="px-3 py-2 text-foreground">{remit.reference || '—'}</td>
+                                                <td className="px-3 py-2 font-semibold text-foreground">{formatCurrency(remit.amount)}</td>
                                                 <td className="px-3 py-2">
                                                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
                                                         remit.status === 'confirmed'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-amber-100 text-amber-800'
+                                                            ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300'
+                                                            : 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'
                                                     }`}>
                                                         {remit.status === 'confirmed' ? (
                                                             <>
@@ -614,7 +614,7 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                                             View
                                                         </a>
                                                     ) : (
-                                                        <span className="text-gray-500">—</span>
+                                                        <span className="text-muted-foreground">—</span>
                                                     )}
                                                 </td>
                                                 <td className="px-3 py-2 text-right">
@@ -656,7 +656,7 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                 </thead>
                                 <tbody>
                                     {recentMonitoring.map((monitoring) => (
-                                        <tr key={monitoring.id} className="border-b hover:bg-gray-50">
+                                        <tr key={monitoring.id} className="border-b hover:bg-muted">
                                             <td className="p-2 font-medium">
                                                 {formatDate(monitoring.monitoring_date)}
                                             </td>
@@ -664,8 +664,8 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                             <td className="p-2">{formatCurrency(monitoring.total_sales)}</td>
                                             <td className="p-2">
                                                 <div className="text-xs">
-                                                    <div className="text-green-600">+{formatCurrency(monitoring.cash_in)}</div>
-                                                    <div className="text-red-600">-{formatCurrency(monitoring.cash_out)}</div>
+                                                    <div className="text-green-600 dark:text-green-400">+{formatCurrency(monitoring.cash_in)}</div>
+                                                    <div className="text-red-600 dark:text-red-400">-{formatCurrency(monitoring.cash_out)}</div>
                                                 </div>
                                             </td>
                                             <td className="p-2">{formatCurrency(monitoring.expected_balance)}</td>
@@ -678,8 +678,8 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                             <td className="p-2">
                                                 {monitoring.actual_balance !== null ? (
                                                     <span className={
-                                                        monitoring.variance === 0 ? 'text-green-600' :
-                                                        monitoring.variance > 0 ? 'text-blue-600' : 'text-red-600'
+                                                        monitoring.variance === 0 ? 'text-green-600 dark:text-green-400' :
+                                                        monitoring.variance > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'
                                                     }>
                                                         {formatCurrency(monitoring.variance)}
                                                     </span>
@@ -688,8 +688,8 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
                                             <td className="p-2">
                                                 <span className={`px-2 py-1 rounded-full text-xs ${
                                                     monitoring.status === 'open' 
-                                                        ? 'bg-green-100 text-green-800' 
-                                                        : 'bg-gray-100 text-gray-800'
+                                                        ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300' 
+                                                        : 'bg-muted text-foreground'
                                                 }`}>
                                                     {monitoring.status}
                                                 </span>

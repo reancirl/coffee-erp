@@ -23,7 +23,8 @@ class Order extends Model
         'order_type',
         'beeper_number',
         'split_cash_amount',
-        'split_gcash_amount'
+        'split_gcash_amount',
+        'split_allowance_amount'
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class Order extends Model
         'total' => 'decimal:2',
         'split_cash_amount' => 'decimal:2',
         'split_gcash_amount' => 'decimal:2',
+        'split_allowance_amount' => 'decimal:2',
     ];
 
     public function items(): HasMany

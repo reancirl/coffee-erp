@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Coffee, Users, CheckCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Clock, Coffee, Users, CheckCircle, RefreshCw } from 'lucide-react';
 
 interface OrderItem {
     id: number;
@@ -133,9 +133,9 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
 
     const getTimeElapsedColor = (timeElapsed: string) => {
         const minutes = parseInt(timeElapsed.replace(/[^\d]/g, ''));
-        if (minutes > 15) return 'text-red-600 bg-red-50';
-        if (minutes > 10) return 'text-orange-600 bg-orange-50';
-        return 'text-green-600 bg-green-50';
+        if (minutes > 15) return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40';
+        if (minutes > 10) return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40';
+        return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40';
     };
 
     const formatCustomizations = (customizations?: { [key: string]: string }) => {
@@ -148,10 +148,18 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
     return (
         <>
             <Head title="Kitchen Queue" />
-            <div className="p-6 bg-gray-50 min-h-screen">
+            <div className="p-6 bg-background min-h-screen">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">Kitchen Queue</h1>
-                    <p className="text-gray-600 mt-2">
+                    {/* This page renders outside AppLayout, so there is no sidebar to
+                        navigate back with. */}
+                    <Link href="/dashboard" className="mb-2 inline-block">
+                        <Button variant="ghost" size="sm" className="-ml-2 gap-2">
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to Dashboard
+                        </Button>
+                    </Link>
+                    <h1 className="text-3xl font-bold text-foreground">Kitchen Queue</h1>
+                    <p className="text-muted-foreground mt-2">
                         Orders are displayed in first-in-first-out order. Triple-click an order to mark as completed.
                     </p>
                     <div className="mt-4 flex items-center justify-between">
@@ -177,8 +185,8 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
                 {orders.length === 0 ? (
                     <div className="text-center py-12">
                         <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                        <h2 className="text-xl font-semibold text-gray-900 mb-2">All caught up!</h2>
-                        <p className="text-gray-600">No pending orders in the queue.</p>
+                        <h2 className="text-xl font-semibold text-foreground mb-2">All caught up!</h2>
+                        <p className="text-muted-foreground">No pending orders in the queue.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -186,7 +194,7 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
                             <Card
                                 key={order.id}
                                 className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                                    clickCounts[order.id] > 0 ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                                    clickCounts[order.id] > 0 ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950/40' : ''
                                 } ${completingOrders.has(order.id) ? 'opacity-50' : ''}`}
                                 onClick={() => handleOrderClick(order.id)}
                             >
@@ -201,7 +209,7 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
                                         </Badge>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             {getOrderTypeIcon(order.order_type)}
                                             <span className="capitalize">{order.order_type}</span>
                                             {order.beeper_number && (
@@ -211,11 +219,11 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
                                             )}
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-lg font-bold text-green-600">
+                                            <div className="text-lg font-bold text-green-600 dark:text-green-400">
                                                 ₱{Number(order.total).toFixed(2)}
                                             </div>
                                             {Number(order.discount) > 0 && (
-                                                <div className="text-xs text-gray-500">
+                                                <div className="text-xs text-muted-foreground">
                                                     Discount: -₱{Number(order.discount).toFixed(2)}
                                                 </div>
                                             )}
@@ -227,7 +235,7 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
                                         {order.items.map((item, index) => (
                                             <div key={index} className="border-l-2 border-coffee-600 pl-3">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="font-medium text-gray-900">
+                                                    <span className="font-medium text-foreground">
                                                         {item.product_name}
                                                     </span>
                                                     <Badge variant="outline" className="text-xs">
@@ -235,20 +243,20 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
                                                     </Badge>
                                                 </div>
                                                 {item.variant && (
-                                                    <p className="text-sm text-gray-600 capitalize">
+                                                    <p className="text-sm text-muted-foreground capitalize">
                                                         {item.variant}
                                                     </p>
                                                 )}
                                                 {formatCustomizations(item.customizations) && (
-                                                    <p className="text-xs text-gray-500">
+                                                    <p className="text-xs text-muted-foreground">
                                                         {formatCustomizations(item.customizations)}
                                                     </p>
                                                 )}
                                                 {item.add_ons.length > 0 && (
                                                     <div className="mt-1">
-                                                        <p className="text-xs font-medium text-gray-700">Add-ons:</p>
+                                                        <p className="text-xs font-medium text-foreground">Add-ons:</p>
                                                         {item.add_ons.map((addOn, addOnIndex) => (
-                                                            <p key={addOnIndex} className="text-xs text-gray-600 ml-2">
+                                                            <p key={addOnIndex} className="text-xs text-muted-foreground ml-2">
                                                                 • {addOn.product_name}
                                                                 {addOn.variant && ` (${addOn.variant})`}
                                                                 {formatCustomizations(addOn.customizations) && 
@@ -261,9 +269,9 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
                                             </div>
                                         ))}
                                         {order.notes && (
-                                            <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                                                <p className="text-xs font-medium text-yellow-800">Notes:</p>
-                                                <p className="text-sm text-yellow-700">{order.notes}</p>
+                                            <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-900 rounded">
+                                                <p className="text-xs font-medium text-yellow-800 dark:text-yellow-300">Notes:</p>
+                                                <p className="text-sm text-yellow-700 dark:text-yellow-300">{order.notes}</p>
                                             </div>
                                         )}
                                     </div>

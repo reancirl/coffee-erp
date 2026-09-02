@@ -54,6 +54,14 @@ class HandleInertiaRequests extends Middleware
                 'location' => $request->url(),
             ],
             'sidebarOpen' => $request->cookie('sidebar_state') === 'true',
+            // Deliberately narrow: only what the POS reads back to print a
+            // slip. Controllers elsewhere flash 'success' and 'error' that
+            // nothing has ever shared, so widening this would switch on
+            // banners across several pages at once.
+            'flash' => [
+                'order_number' => $request->session()->get('order_number'),
+                'allowance_remaining' => $request->session()->get('allowance_remaining'),
+            ],
         ];
     }
 

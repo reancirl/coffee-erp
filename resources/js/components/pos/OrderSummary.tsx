@@ -8,6 +8,9 @@ interface OrderSummaryProps {
     onProceedToPayment: () => void;
     discountSelections: { [key: number]: boolean };
     discountType: string;
+    // Products the coffee allowance does not cover. Flagged in the cart so a
+    // cashier sees the problem before choosing how to pay.
+    ineligibleForAllowance?: Set<number>;
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -17,6 +20,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
     onProceedToPayment,
     discountSelections,
     discountType,
+    ineligibleForAllowance,
 }) => {
     // Helper function to safely convert any value to a number
     const safeNumber = (value: any): number => {
@@ -79,7 +83,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             {/* Scrollable order items section */}
             <div className="flex-grow overflow-auto mb-3" style={{ maxHeight: 'calc(100vh - 340px)' }}>
                 {order.length === 0 ? (
-                    <p className="text-gray-300">No items added.</p>
+                    <p className="text-muted-foreground">No items added.</p>
                 ) : (
                     <ul className="pr-1">
                         {order.map((item) => (
@@ -97,11 +101,16 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
                                             </span>
                                             {/* Display variant badge if it's in selectedVariant or in customizations */}
                                             {(item.selectedVariant || (item.selectedCustomizations && item.selectedCustomizations['Variant'])) && (
-                                                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">
+                                                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300">
                                                     {item.name.toLowerCase() === 'cookies' 
                                                         ? item.selectedCustomizations?.['Variant'] // For cookies, show the actual variant
                                                         : (item.selectedVariant === 'hot' || item.selectedCustomizations?.['Variant'] === 'Hot' ? 'Hot' : 'Iced') // For other products
                                                     }
+                                                </span>
+                                            )}
+                                            {ineligibleForAllowance?.has(item.id) && (
+                                                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200">
+                                                    Not on allowance
                                                 </span>
                                             )}
                                         </div>
@@ -125,7 +134,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
                                             e.stopPropagation();
                                             onRemoveItem(item);
                                         }}
-                                        className="text-red-500 hover:text-red-700 text-2xl font-bold"
+                                        className="text-red-500 hover:text-red-700 dark:hover:text-red-300 text-2xl font-bold"
                                         style={{ color: accentColor }}
                                         title="Remove item"
                                     >

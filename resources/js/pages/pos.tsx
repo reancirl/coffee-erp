@@ -1,5 +1,6 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import ProductCategory from '../components/pos/ProductCategory';
 import OrderSummary from '../components/pos/OrderSummary';
 import CustomizationModal from '../components/pos/CustomizationModal';
@@ -7,16 +8,19 @@ import DiscountModal from '../components/pos/DiscountModal';
 import PaymentModal from '../components/pos/PaymentModal';
 import EmployeeQrScanner, { type ScannedEmployee } from '../components/pos/EmployeeQrScanner';
 import CustomerModal from '../components/pos/CustomerModal';
-import PrintModal from '../components/pos/PrintModal';
+import PrintModal, { type ReceiptPayment } from '../components/pos/PrintModal';
 import AddOnModal from '../components/pos/AddOnModal';
 import { paymentMethods } from '../components/pos/data';
-import { Product, MenuData, primaryColor } from '../components/pos/types';
+import { Product, MenuData, primaryColor, accentColor } from '../components/pos/types';
 
 interface PageProps {
     flash: {
         success?: string;
         order_number?: string;
         message?: string;
+        // Read back from the ledger after the sale, so the slip prints the
+        // real remaining balance rather than the terminal's stale copy.
+        allowance_remaining?: number | null;
     };
     [key: string]: any; // Allow other page props
 }
@@ -59,6 +63,9 @@ export default function Pos() {
     const [beeperNumber, setBeeperNumber] = useState<string>("");
     // Save the current order for printing after submission
     const [savedOrderForPrinting, setSavedOrderForPrinting] = useState<Product[]>([]);
+    // Same idea for the payment: captured at submit time, because the terminal
+    // is reset for the next customer as soon as the slip is dismissed.
+    const [savedPaymentForPrinting, setSavedPaymentForPrinting] = useState<ReceiptPayment | null>(null);
 
     
     // API data state
@@ -76,6 +83,8 @@ export default function Pos() {
     // Split payment state
     const [splitCashAmount, setSplitCashAmount] = useState<string>('');
     const [splitGcashAmount, setSplitGcashAmount] = useState<string>('');
+    // The allowance half of an Allowance + Cash split.
+    const [splitAllowanceAmount, setSplitAllowanceAmount] = useState<string>('');
     
     // Helper function to check if product is an add-on
     const isAddOn = (product: any): boolean => {
@@ -135,6 +144,58 @@ export default function Pos() {
         }
     }, [flash]);
 
+    // Which products the allowance cannot pay for. Read off the menu rather
+    // than off the cart, so it holds however an item got added.
+    const ineligibleForAllowance = new Set<number>();
+    Object.values(menuData).forEach((products) =>
+        products.forEach((product) => {
+            if (product.allowance_eligible === false) {
+                ineligibleForAllowance.add(product.id);
+            }
+        })
+    );
+
+    const ineligibleNames = Array.from(
+        new Set(
+            order
+                .flatMap((item) => [item, ...(item.addOns ?? [])])
+                .filter((item) => ineligibleForAllowance.has(item.id))
+                .map((item) => item.name)
+        )
+    );
+
+    // Same wording the order endpoint uses when it refuses, so the cashier
+    // does not see two different explanations for one rule.
+    const usesAllowance = (methodId?: string) =>
+        methodId === 'employee-allowance' || methodId === 'allowance-cash';
+
+    // Why this Allowance + Cash split cannot go through, or null if it can.
+    const allowanceSplitProblem = (total: number): string | null => {
+        const fromAllowance = Number(splitAllowanceAmount);
+        const fromCash = Number(splitCashAmount);
+
+        if (!splitAllowanceAmount || !splitCashAmount) {
+            return 'Enter how much comes from the allowance and how much is cash.';
+        }
+        if (fromAllowance <= 0 || fromCash <= 0) {
+            return 'Both parts must be more than zero. Use a single payment method instead.';
+        }
+        const remaining = scannedEmployee?.allowance?.remaining ?? 0;
+        if (fromAllowance > remaining + 0.01) {
+            return `Only \u20b1${remaining.toFixed(2)} is left on this allowance.`;
+        }
+        if (Math.abs(fromAllowance + fromCash - total) > 0.01) {
+            return `The allowance and cash amounts must add up to \u20b1${total.toFixed(2)}.`;
+        }
+        return null;
+    };
+
+    const allowanceBlockedReason = (): string | null =>
+        ineligibleNames.length === 0
+            ? null
+            : `The coffee allowance does not cover ${ineligibleNames.join(', ')}. ` +
+              `Remove ${ineligibleNames.length === 1 ? 'it' : 'them'} or pay another way.`;
+
     const handlePayment = () => {
         const total = Number(calculateFinalTotal());
         if (!selectedPaymentMethod) {
@@ -152,10 +213,22 @@ export default function Pos() {
                 alert('Please take a picture of the transaction receipt.');
                 return;
             }
-        } else if (selectedPaymentMethod.id === 'employee-allowance') {
+        } else if (usesAllowance(selectedPaymentMethod.id)) {
             if (!scannedEmployee) {
                 alert('Scan the employee QR before confirming this payment.');
                 return;
+            }
+            const blocked = allowanceBlockedReason();
+            if (blocked) {
+                alert(blocked);
+                return;
+            }
+            if (selectedPaymentMethod.id === 'allowance-cash') {
+                const problem = allowanceSplitProblem(total);
+                if (problem) {
+                    alert(problem);
+                    return;
+                }
             }
         } else if (selectedPaymentMethod.id === 'split') {
             const cashAmount = Number(splitCashAmount);
@@ -256,7 +329,7 @@ export default function Pos() {
         if (receiptImage) form.append('receipt_image', receiptImage)
         
         // The server re-validates this token before accepting the payment.
-        if (selectedPaymentMethod?.id === 'employee-allowance' && scannedEmployee) {
+        if (usesAllowance(selectedPaymentMethod?.id) && scannedEmployee) {
             form.append('employee_qr_token', scannedEmployee.token)
         }
 
@@ -265,9 +338,51 @@ export default function Pos() {
             form.append('split_cash_amount', splitCashAmount)
             form.append('split_gcash_amount', splitGcashAmount)
         }
+
+        if (selectedPaymentMethod?.id === 'allowance-cash') {
+            form.append('split_allowance_amount', splitAllowanceAmount)
+            form.append('split_cash_amount', splitCashAmount)
+        }
       
         // Save current order for printing
         setSavedOrderForPrinting([...order]);
+
+        // ...and how it was paid. The employee block is attached only for an
+        // allowance sale, so a scan that was abandoned for another method
+        // cannot leak someone's balance onto an unrelated slip.
+        const printedTotal = Number(calculateFinalTotal());
+        const isCash = selectedPaymentMethod!.id === 'cash';
+        const cashGiven = Number(cashAmountGiven);
+        const hasCashGiven = isCash && cashAmountGiven !== '' && !isNaN(cashGiven);
+        const isAllowance = usesAllowance(selectedPaymentMethod!.id);
+        const isAllowanceSplit = selectedPaymentMethod!.id === 'allowance-cash';
+        const drawnFromAllowance = isAllowanceSplit ? Number(splitAllowanceAmount) : printedTotal;
+
+        setSavedPaymentForPrinting({
+            method: selectedPaymentMethod!.name,
+            methodId: selectedPaymentMethod!.id,
+            total: printedTotal,
+            cashGiven: hasCashGiven ? cashGiven : null,
+            change: hasCashGiven ? cashGiven - printedTotal : null,
+            splitCash:
+                selectedPaymentMethod!.id === 'split' || isAllowanceSplit
+                    ? Number(splitCashAmount)
+                    : null,
+            splitGcash: selectedPaymentMethod!.id === 'split' ? Number(splitGcashAmount) : null,
+            splitAllowance: isAllowanceSplit ? Number(splitAllowanceAmount) : null,
+            employee:
+                isAllowance && scannedEmployee
+                    ? {
+                          name: scannedEmployee.name,
+                          code: scannedEmployee.employee_code,
+                          // Fallback only; the server's figure replaces this
+                          // once the order comes back.
+                          remaining: scannedEmployee.allowance
+                              ? scannedEmployee.allowance.remaining - drawnFromAllowance
+                              : null,
+                      }
+                    : null,
+        });
         
         // Send as multipart
         router.post('/orders', form, {
@@ -535,9 +650,23 @@ export default function Pos() {
         } else if (method.id.toLowerCase() === 'debit' && !receiptImage) {
             alert('Please upload a receipt for this payment.');
             return;
-        } else if (method.id === 'employee-allowance' && !scannedEmployee) {
-            alert('Scan the employee QR before continuing.');
-            return;
+        } else if (usesAllowance(method.id)) {
+            if (!scannedEmployee) {
+                alert('Scan the employee QR before continuing.');
+                return;
+            }
+            const blocked = allowanceBlockedReason();
+            if (blocked) {
+                alert(blocked);
+                return;
+            }
+            if (method.id === 'allowance-cash') {
+                const problem = allowanceSplitProblem(amount);
+                if (problem) {
+                    alert(problem);
+                    return;
+                }
+            }
         }
         
         setSelectedPaymentMethod(method);
@@ -545,9 +674,23 @@ export default function Pos() {
         setIsCustomerModalOpen(true);
     };
 
+    // The balance the server read back after the sale wins over the estimate
+    // taken at submit time; a concurrent redemption or adjustment would have
+    // moved it.
+    const receiptPayment: ReceiptPayment | null =
+        savedPaymentForPrinting && savedPaymentForPrinting.employee && typeof flash?.allowance_remaining === 'number'
+            ? {
+                  ...savedPaymentForPrinting,
+                  employee: {
+                      ...savedPaymentForPrinting.employee,
+                      remaining: flash.allowance_remaining,
+                  },
+              }
+            : savedPaymentForPrinting;
+
     return (
         <div
-            className="h-screen w-screen p-4"
+            className="flex h-screen w-screen flex-col p-4"
             style={{ backgroundColor: primaryColor }}
         >
             <Head title="POS" />
@@ -561,11 +704,24 @@ export default function Pos() {
             
             {/* Error Message */}
             {error && (
-                <div className="fixed top-4 left-4 bg-red-500 text-white p-4 rounded-md shadow-lg z-50">
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white p-4 rounded-md shadow-lg z-50">
                     {error}
                 </div>
             )}
-            <div className="flex flex-col lg:flex-row h-full">
+            {/* The till fills the screen with no sidebar, so this is the only way out. */}
+            <header className="mb-3 flex shrink-0 items-center">
+                <Link href="/dashboard">
+                    <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-opacity hover:opacity-80"
+                        style={{ color: accentColor, borderColor: accentColor }}
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Dashboard
+                    </button>
+                </Link>
+            </header>
+            <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
                 {/* Product List Section */}
                 <div
                     className="lg:w-2/3 w-full p-4 border-b lg:border-b-0 lg:border-r overflow-y-auto"
@@ -574,7 +730,7 @@ export default function Pos() {
                     {/* Loading State */}
                     {isLoading ? (
                         <div className="flex justify-center items-center h-32 my-4">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground"></div>
                         </div>
                     ) : (
                         <>
@@ -723,6 +879,7 @@ export default function Pos() {
                     onProceedToPayment={handleProceedToPayment}
                     discountSelections={discountSelections}
                     discountType={discountType}
+                    ineligibleForAllowance={ineligibleForAllowance}
                 />
             </div>
 
@@ -786,6 +943,8 @@ export default function Pos() {
                 setSplitCashAmount={setSplitCashAmount}
                 splitGcashAmount={splitGcashAmount}
                 setSplitGcashAmount={setSplitGcashAmount}
+                splitAllowanceAmount={splitAllowanceAmount}
+                setSplitAllowanceAmount={setSplitAllowanceAmount}
             />
 
             <EmployeeQrScanner
@@ -819,13 +978,18 @@ export default function Pos() {
                     setReceiptImage(null);
                     setScannedEmployee(null);
                     setSelectedCustomer(null);
+                    setSavedPaymentForPrinting(null);
+                    setSplitCashAmount('');
+                    setSplitGcashAmount('');
+                    setSplitAllowanceAmount('');
                     setBeeperNumber(''); // Clear beeper number when transaction is done
                 }}
                 orderType={orderType}
                 beeperNumber={beeperNumber}
                 order={savedOrderForPrinting}
-                orderNumber={flash?.order_number || 'N/A'}
+                orderNumber={flash?.order_number || ''}
                 totalAmount={Number(calculateFinalTotal())}
+                payment={receiptPayment}
             />
         </div>
     );

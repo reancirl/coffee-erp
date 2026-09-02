@@ -157,7 +157,7 @@ export default function RolesIndex({ roles }: Props) {
                         <Button variant="outline" onClick={() => setDeleteRole(null)}>
                             Cancel
                         </Button>
-                        <Button onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <Button variant="destructive" onClick={handleDelete}>
                             Delete
                         </Button>
                     </DialogFooter>

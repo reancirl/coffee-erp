@@ -44,15 +44,15 @@ export default function EventPackageEdit() {
             <div className="flex flex-col gap-6 p-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm uppercase tracking-wide text-gray-500">Event packages</p>
-                        <h1 className="text-2xl font-semibold text-gray-900">Edit {eventPackage.name}</h1>
+                        <p className="text-sm uppercase tracking-wide text-muted-foreground">Event packages</p>
+                        <h1 className="text-2xl font-semibold text-foreground">Edit {eventPackage.name}</h1>
                     </div>
                     <Link href="/event-packages">
                         <Button variant="outline">Back to list</Button>
                     </Link>
                 </div>
 
-                <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();

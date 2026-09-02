@@ -81,7 +81,7 @@ export default function Show({ product }: Props) {
                             </Button>
                         </Link>
                         <div className="flex items-center gap-3">
-                            <Package className="h-8 w-8 text-blue-600" />
+                            <Package className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                             <h2 className="text-2xl font-bold">{product.name}</h2>
                         </div>
                     </div>
@@ -101,36 +101,36 @@ export default function Show({ product }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <h4 className="font-medium text-gray-700">Product Name</h4>
+                                <h4 className="font-medium text-foreground">Product Name</h4>
                                 <p className="text-lg">{product.name}</p>
                             </div>
 
                             <div>
-                                <h4 className="font-medium text-gray-700">Category</h4>
+                                <h4 className="font-medium text-foreground">Category</h4>
                                 {product.category_relation ? (
                                     <Badge variant="secondary" className="text-sm">
                                         {product.category_relation.name}
                                     </Badge>
                                 ) : (
-                                    <span className="text-gray-400">No category assigned</span>
+                                    <span className="text-muted-foreground">No category assigned</span>
                                 )}
                             </div>
 
                             <div>
-                                <h4 className="font-medium text-gray-700">Type</h4>
+                                <h4 className="font-medium text-foreground">Type</h4>
                                 <Badge variant={product.is_add_on ? "outline" : "default"}>
                                     {product.is_add_on ? 'Add-on Item' : 'Regular Product'}
                                 </Badge>
                             </div>
 
                             <div>
-                                <h4 className="font-medium text-gray-700">Created</h4>
-                                <p className="text-sm text-gray-600">{formatDate(product.created_at)}</p>
+                                <h4 className="font-medium text-foreground">Created</h4>
+                                <p className="text-sm text-muted-foreground">{formatDate(product.created_at)}</p>
                             </div>
 
                             <div>
-                                <h4 className="font-medium text-gray-700">Last Updated</h4>
-                                <p className="text-sm text-gray-600">{formatDate(product.updated_at)}</p>
+                                <h4 className="font-medium text-foreground">Last Updated</h4>
+                                <p className="text-sm text-muted-foreground">{formatDate(product.updated_at)}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -143,17 +143,17 @@ export default function Show({ product }: Props) {
                         <CardContent className="space-y-4">
                             {product.prices?.hot || product.prices?.iced ? (
                                 <div>
-                                    <h4 className="font-medium text-gray-700 mb-3">Variant Pricing</h4>
+                                    <h4 className="font-medium text-foreground mb-3">Variant Pricing</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="text-center p-4 border rounded-lg">
-                                            <h5 className="font-medium text-gray-600">Hot</h5>
-                                            <p className="text-xl font-bold text-orange-600">
+                                            <h5 className="font-medium text-muted-foreground">Hot</h5>
+                                            <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
                                                 {product.prices.hot ? formatCurrency(product.prices.hot) : 'N/A'}
                                             </p>
                                         </div>
                                         <div className="text-center p-4 border rounded-lg">
-                                            <h5 className="font-medium text-gray-600">Iced</h5>
-                                            <p className="text-xl font-bold text-blue-600">
+                                            <h5 className="font-medium text-muted-foreground">Iced</h5>
+                                            <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                                                 {product.prices.iced ? formatCurrency(product.prices.iced) : 'N/A'}
                                             </p>
                                         </div>
@@ -161,8 +161,8 @@ export default function Show({ product }: Props) {
                                 </div>
                             ) : (
                                 <div>
-                                    <h4 className="font-medium text-gray-700">Base Price</h4>
-                                    <p className="text-2xl font-bold text-green-600">{formatCurrency(product.price)}</p>
+                                    <h4 className="font-medium text-foreground">Base Price</h4>
+                                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(product.price)}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -192,7 +192,7 @@ export default function Show({ product }: Props) {
                                         </div>
                                         <div className="space-y-1">
                                             {customization.options.map((option, optionIndex) => (
-                                                <div key={optionIndex} className="text-sm text-gray-600">
+                                                <div key={optionIndex} className="text-sm text-muted-foreground">
                                                     • {option}
                                                 </div>
                                             ))}
@@ -212,7 +212,7 @@ export default function Show({ product }: Props) {
                         </CardHeader>
                         <CardContent>
                             <div className="text-center py-8">
-                                <p className="text-gray-500">No customization options available for this product.</p>
+                                <p className="text-muted-foreground">No customization options available for this product.</p>
                                 <Link href={route('products.edit', product.id)}>
                                     <Button variant="outline" className="mt-4">
                                         Add Customizations

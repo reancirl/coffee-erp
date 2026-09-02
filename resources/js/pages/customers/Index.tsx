@@ -45,21 +45,21 @@ export default function Index({ customers }: Props) {
                     </Link>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 text-gray-900">
+                <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg">
+                    <div className="p-6 text-foreground">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-border">
+                                <thead className="bg-muted">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Known Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loyalty Points</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Known Name</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Email</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Phone</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Loyalty Points</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-card divide-y divide-border">
                                     {customers.map((customer) => (
                                         <tr key={customer.id}>
                                             <td className="px-6 py-4 whitespace-nowrap">{customer.known_name}</td>
@@ -72,13 +72,13 @@ export default function Index({ customers }: Props) {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <Link
                                                     href={route('customers.edit', customer.id)}
-                                                    className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-200 mr-3"
                                                 >
                                                     Edit
                                                 </Link>
                                                 <button
                                                     onClick={() => deleteCustomer(customer.id)}
-                                                    className="text-red-600 hover:text-red-900"
+                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-200"
                                                 >
                                                     Delete
                                                 </button>

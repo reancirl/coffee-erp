@@ -20,13 +20,19 @@ interface PaymentModalProps {
     setReceiptImage: (file: File | null) => void;
     // Employee allowance
     onScanEmployee: () => void;
-    scannedEmployee: { name: string; employee_code: string | null } | null;
+    scannedEmployee: {
+        name: string;
+        employee_code: string | null;
+        allowance: { remaining: number } | null;
+    } | null;
     clearScannedEmployee: () => void;
     // Split payment props
     splitCashAmount: string;
     setSplitCashAmount: (amount: string) => void;
     splitGcashAmount: string;
     setSplitGcashAmount: (amount: string) => void;
+    splitAllowanceAmount: string;
+    setSplitAllowanceAmount: (amount: string) => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -48,6 +54,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setSplitCashAmount,
     splitGcashAmount,
     setSplitGcashAmount,
+    splitAllowanceAmount,
+    setSplitAllowanceAmount,
 }) => {
     // Create a ref for the cash input field
     const cashInputRef = useRef<HTMLInputElement>(null);
@@ -64,9 +72,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
             <div
-                className="bg-white p-6 rounded shadow-lg w-96"
+                className="bg-card p-6 rounded shadow-lg w-96"
                 style={{ backgroundColor: primaryColor, color: accentColor }}
             >
                 <h2 className="text-xl font-semibold mb-4">Select Payment Method</h2>
@@ -78,7 +86,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                             className={`p-4 border rounded cursor-pointer text-center ${
                                 selectedPaymentMethod?.id === method.id
                                     ? 'bg-blue-500 text-white border-blue-500'
-                                    : 'bg-gray-200 text-black'
+                                    : 'bg-muted text-foreground'
                             }`}
                         >
                             {method.name}
@@ -131,7 +139,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </div>
                 )}
 
-                {selectedPaymentMethod?.id === 'employee-allowance' && (
+                {(selectedPaymentMethod?.id === 'employee-allowance' ||
+                    selectedPaymentMethod?.id === 'allowance-cash') && (
                     <div className="mt-4">
                         <label className="block mb-2">Employee</label>
                         {scannedEmployee ? (
@@ -139,8 +148,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                                 <div>
                                     <div className="font-semibold">{scannedEmployee.name}</div>
                                     {scannedEmployee.employee_code && (
-                                        <div className="font-mono text-sm text-gray-600">
+                                        <div className="font-mono text-sm text-muted-foreground">
                                             {scannedEmployee.employee_code}
+                                        </div>
+                                    )}
+                                    {scannedEmployee.allowance && (
+                                        <div className="text-sm text-muted-foreground">
+                                            ₱{scannedEmployee.allowance.remaining.toFixed(2)} left
+                                            this month
                                         </div>
                                     )}
                                 </div>
@@ -156,11 +171,100 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                             <button
                                 type="button"
                                 onClick={onScanEmployee}
-                                className="w-full rounded border-2 border-dashed p-4 text-sm text-gray-600 hover:bg-gray-50"
+                                className="w-full rounded border-2 border-dashed p-4 text-sm text-muted-foreground hover:bg-muted"
                             >
                                 Scan Employee QR
                             </button>
                         )}
+                    </div>
+                )}
+
+                {selectedPaymentMethod?.id === 'allowance-cash' && scannedEmployee && (
+                    <div className="mt-4">
+                        <h3 className="text-lg font-semibold mb-3">Allowance + Cash</h3>
+
+                        {(() => {
+                            const remaining = scannedEmployee.allowance?.remaining ?? 0;
+                            const fromAllowance = parseFloat(splitAllowanceAmount || '0');
+                            const fromCash = parseFloat(splitCashAmount || '0');
+                            const covers = Math.min(remaining, amount);
+
+                            return (
+                                <>
+                                    {/* The usual case is "spend what is left, pay the
+                                        rest in cash", so offer exactly that. */}
+                                    {!splitAllowanceAmount && covers > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSplitAllowanceAmount(covers.toFixed(2));
+                                                setSplitCashAmount((amount - covers).toFixed(2));
+                                            }}
+                                            className="mb-3 w-full rounded border-2 border-dashed p-3 text-sm hover:bg-muted"
+                                        >
+                                            Use ₱{covers.toFixed(2)} of allowance and take ₱
+                                            {(amount - covers).toFixed(2)} in cash
+                                        </button>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block mb-2">From Allowance</label>
+                                            <input
+                                                type="number"
+                                                value={splitAllowanceAmount}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    setSplitAllowanceAmount(value);
+                                                    const rest = amount - parseFloat(value || '0');
+                                                    setSplitCashAmount(rest > 0 ? rest.toFixed(2) : '0');
+                                                }}
+                                                className="w-full p-2 border rounded"
+                                                placeholder="Enter allowance amount"
+                                                min="0"
+                                                max={Math.min(remaining, amount)}
+                                                step="0.01"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block mb-2">Cash Amount</label>
+                                            <input
+                                                type="number"
+                                                value={splitCashAmount}
+                                                onChange={(e) => setSplitCashAmount(e.target.value)}
+                                                className="w-full p-2 border rounded bg-muted text-foreground"
+                                                placeholder="Auto-calculated"
+                                                readOnly
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {splitAllowanceAmount && (
+                                        <div className="mt-3 p-3 bg-muted rounded text-foreground">
+                                            <p className="text-sm">
+                                                <strong>Allowance:</strong> ₱{fromAllowance.toFixed(2)} +
+                                                <strong> Cash:</strong> ₱{fromCash.toFixed(2)} =
+                                                <strong> Total:</strong> ₱
+                                                {(fromAllowance + fromCash).toFixed(2)}
+                                            </p>
+                                            {fromAllowance > remaining + 0.01 && (
+                                                <p className="text-red-500 text-sm mt-1">
+                                                    Only ₱{remaining.toFixed(2)} is left on this
+                                                    allowance.
+                                                </p>
+                                            )}
+                                            {Math.abs(fromAllowance + fromCash - amount) > 0.01 && (
+                                                <p className="text-red-500 text-sm mt-1">
+                                                    The two amounts must add up to ₱
+                                                    {amount.toFixed(2)}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
                 )}
 
@@ -195,7 +299,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                                     type="number"
                                     value={splitGcashAmount}
                                     onChange={(e) => setSplitGcashAmount(e.target.value)}
-                                    className="w-full p-2 border rounded bg-gray-100 text-black"
+                                    className="w-full p-2 border rounded bg-muted text-foreground"
                                     placeholder="Auto-calculated"
                                     readOnly
                                 />
@@ -203,7 +307,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         </div>
                         
                         {splitCashAmount && splitGcashAmount && (
-                            <div className="mt-3 p-3 bg-gray-100 rounded text-black">
+                            <div className="mt-3 p-3 bg-muted rounded text-foreground">
                                 <p className="text-sm">
                                     <strong>Cash:</strong> ₱{parseFloat(splitCashAmount || '0').toFixed(2)} + 
                                     <strong> GCash:</strong> ₱{parseFloat(splitGcashAmount || '0').toFixed(2)} = 
@@ -222,7 +326,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 <div className="mt-6 flex justify-end space-x-2">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                        className="px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80"
                     >
                         Cancel
                     </button>
@@ -234,7 +338,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                                 (!cashAmountGiven || parseFloat(cashAmountGiven) < amount)) ||
                             (selectedPaymentMethod?.id === 'split' && 
                                 (!splitCashAmount || !splitGcashAmount || 
-                                 (parseFloat(splitCashAmount || '0') + parseFloat(splitGcashAmount || '0')) !== amount))}
+                                 (parseFloat(splitCashAmount || '0') + parseFloat(splitGcashAmount || '0')) !== amount)) ||
+                            (selectedPaymentMethod?.id === 'allowance-cash' &&
+                                (!scannedEmployee ||
+                                 !splitAllowanceAmount ||
+                                 parseFloat(splitAllowanceAmount || '0') <= 0 ||
+                                 parseFloat(splitCashAmount || '0') <= 0 ||
+                                 parseFloat(splitAllowanceAmount || '0') >
+                                     (scannedEmployee.allowance?.remaining ?? 0) + 0.01 ||
+                                 Math.abs(
+                                     parseFloat(splitAllowanceAmount || '0') +
+                                         parseFloat(splitCashAmount || '0') -
+                                         amount
+                                 ) > 0.01))}
                     >
                         Complete Payment
                     </button>

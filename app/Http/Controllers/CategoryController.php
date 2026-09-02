@@ -47,9 +47,12 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
             'description' => 'nullable|string|max:1000',
+            'allowance_eligible' => 'boolean',
         ]);
 
         Category::create($validated);
+
+        ProductController::forgetPosMenu();
 
         return redirect()->route('categories.index')
             ->with('success', 'Category created successfully.');
@@ -88,9 +91,13 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
             'description' => 'nullable|string|max:1000',
+            'allowance_eligible' => 'boolean',
         ]);
 
         $category->update($validated);
+
+        // Eligibility rides on the cached POS menu, so it has to go.
+        ProductController::forgetPosMenu();
 
         return redirect()->route('categories.index')
             ->with('success', 'Category updated successfully.');
@@ -108,6 +115,8 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
+        ProductController::forgetPosMenu();
 
         return redirect()->route('categories.index')
             ->with('success', 'Category deleted successfully.');

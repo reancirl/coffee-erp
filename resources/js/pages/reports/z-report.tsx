@@ -60,16 +60,16 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Z-Report" />
 
-      <div className="font-sans text-gray-800 p-6 space-y-8">
+      <div className="font-sans text-foreground p-6 space-y-8">
         {/* Header */}
         <div className="flex justify-between items-center">
           <h2 className="text-3xl font-bold">Z-Report</h2>
         </div>
 
         {/* Selector */}
-        <div className="bg-white shadow-sm rounded-lg p-6">
+        <div className="bg-card shadow-sm rounded-lg p-6">
           <div className="mb-6 flex items-center gap-4">
-            <label htmlFor="date" className="text-base font-medium text-gray-700">
+            <label htmlFor="date" className="text-base font-medium text-foreground">
               Select Date for Z-Report:
             </label>
             <input
@@ -77,7 +77,7 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
               type="date"
               value={date}
               onChange={handleDateChange}
-              className="border rounded-md px-4 py-2 text-base text-gray-800 focus:outline-none focus:ring"
+              className="border rounded-md px-4 py-2 text-base text-foreground focus:outline-none focus:ring"
             />
             <button
               onClick={generateReport}
@@ -88,7 +88,7 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
           </div>
 
           {!reportData && (
-            <div className="text-center text-gray-500 py-10">
+            <div className="text-center text-muted-foreground py-10">
               Select a date and click "Generate Report" to view the Z-Report for that day.
             </div>
           )}
@@ -97,7 +97,7 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
             <>
               {/* Title & Print */}
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-semibold text-gray-900">
+                <h3 className="text-2xl font-semibold text-foreground">
                   Z-Report for{' '}
                   {new Date(reportData.date).toLocaleDateString('en-US', {
                     weekday: 'long',
@@ -108,7 +108,7 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
                 </h3>
                 <div>
                   {isPrinting ? (
-                    <span className="bg-gray-400 text-white font-semibold px-5 py-2 rounded-md opacity-50 cursor-not-allowed">
+                    <span className="bg-muted text-muted-foreground font-semibold px-5 py-2 rounded-md opacity-50 cursor-not-allowed">
                       Printing...
                     </span>
                   ) : (
@@ -122,44 +122,44 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
               </div>
 
               {/* Summary */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 bg-gray-50 p-6 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 bg-muted p-6 rounded-lg">
                 {[
                   { label: 'Total Orders', value: reportData.totalOrders },
                   { label: 'Gross Sales', value: formatCurrency(reportData.grossSales) },
-                  { label: 'Discounts', value: `-${formatCurrency(reportData.discounts)}`, textColor: 'text-red-600' },
-                  { label: 'Net Sales', value: formatCurrency(reportData.netSales), textColor: 'text-green-600' },
+                  { label: 'Discounts', value: `-${formatCurrency(reportData.discounts)}`, textColor: 'text-red-600 dark:text-red-400' },
+                  { label: 'Net Sales', value: formatCurrency(reportData.netSales), textColor: 'text-green-600 dark:text-green-400' },
                 ].map((item, idx) => (
                   <div key={idx} className="space-y-1">
-                    <p className="text-base text-gray-600">{item.label}</p>
-                    <p className={`text-xl font-bold ${item.textColor || 'text-gray-900'}`}>{item.value}</p>
+                    <p className="text-base text-muted-foreground">{item.label}</p>
+                    <p className={`text-xl font-bold ${item.textColor || 'text-foreground'}`}>{item.value}</p>
                   </div>
                 ))}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Payment Methods */}
-                <div className="bg-white border rounded-lg p-6">
+                <div className="bg-card border rounded-lg p-6">
                   <h4 className="text-xl font-semibold mb-4">Sales by Payment Method</h4>
-                  <table className="min-w-full divide-y divide-gray-200">
+                  <table className="min-w-full divide-y divide-border">
                     <thead>
                       <tr>
-                        <th className="px-6 py-3 text-left text-base font-medium text-gray-700 uppercase tracking-wide">
+                        <th className="px-6 py-3 text-left text-base font-medium text-foreground uppercase tracking-wide">
                           Method
                         </th>
-                        <th className="px-6 py-3 text-left text-base font-medium text-gray-700 uppercase tracking-wide">
+                        <th className="px-6 py-3 text-left text-base font-medium text-foreground uppercase tracking-wide">
                           Orders
                         </th>
-                        <th className="px-6 py-3 text-right text-base font-medium text-gray-700 uppercase tracking-wide">
+                        <th className="px-6 py-3 text-right text-base font-medium text-foreground uppercase tracking-wide">
                           Amount
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-border">
                       {Object.entries(reportData.paymentMethodTotals).map(([method, data], idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-6 py-3 text-base text-gray-800">{method}</td>
-                          <td className="px-6 py-3 text-base text-gray-800">{data.count}</td>
-                          <td className="px-6 py-3 text-base text-gray-800 text-right">
+                        <tr key={idx} className="hover:bg-muted">
+                          <td className="px-6 py-3 text-base text-foreground">{method}</td>
+                          <td className="px-6 py-3 text-base text-foreground">{data.count}</td>
+                          <td className="px-6 py-3 text-base text-foreground text-right">
                             {formatCurrency(data.total)}
                           </td>
                         </tr>
@@ -169,28 +169,28 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
                 </div>
 
                 {/* Top Products */}
-                <div className="bg-white border rounded-lg p-6">
+                <div className="bg-card border rounded-lg p-6">
                   <h4 className="text-xl font-semibold mb-4">Products Sold</h4>
-                  <table className="min-w-full divide-y divide-gray-200">
+                  <table className="min-w-full divide-y divide-border">
                     <thead>
                       <tr>
-                        <th className="px-6 py-3 text-left text-base font-medium text-gray-700 uppercase tracking-wide">
+                        <th className="px-6 py-3 text-left text-base font-medium text-foreground uppercase tracking-wide">
                           Product
                         </th>
-                        <th className="px-6 py-3 text-right text-base font-medium text-gray-700 uppercase tracking-wide">
+                        <th className="px-6 py-3 text-right text-base font-medium text-foreground uppercase tracking-wide">
                           Qty
                         </th>
-                        <th className="px-6 py-3 text-right text-base font-medium text-gray-700 uppercase tracking-wide">
+                        <th className="px-6 py-3 text-right text-base font-medium text-foreground uppercase tracking-wide">
                           Amount
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-border">
                       {reportData.allProductsSold && reportData.allProductsSold.map((product, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-6 py-3 text-base text-gray-800">{product.product_name}</td>
-                          <td className="px-6 py-3 text-base text-gray-800 text-right">{product.quantity_sold}</td>
-                          <td className="px-6 py-3 text-base text-gray-800 text-right">
+                        <tr key={idx} className="hover:bg-muted">
+                          <td className="px-6 py-3 text-base text-foreground">{product.product_name}</td>
+                          <td className="px-6 py-3 text-base text-foreground text-right">{product.quantity_sold}</td>
+                          <td className="px-6 py-3 text-base text-foreground text-right">
                             {formatCurrency(product.total_sales)}
                           </td>
                         </tr>
