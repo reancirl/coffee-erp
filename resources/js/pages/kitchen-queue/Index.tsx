@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Coffee, Users, CheckCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Clock, Coffee, Users, CheckCircle, RefreshCw } from 'lucide-react';
 
 interface OrderItem {
     id: number;
@@ -150,6 +150,14 @@ export default function KitchenQueue({ orders: initialOrders }: Props) {
             <Head title="Kitchen Queue" />
             <div className="p-6 bg-background min-h-screen">
                 <div className="mb-6">
+                    {/* This page renders outside AppLayout, so there is no sidebar to
+                        navigate back with. */}
+                    <Link href="/dashboard" className="mb-2 inline-block">
+                        <Button variant="ghost" size="sm" className="-ml-2 gap-2">
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to Dashboard
+                        </Button>
+                    </Link>
                     <h1 className="text-3xl font-bold text-foreground">Kitchen Queue</h1>
                     <p className="text-muted-foreground mt-2">
                         Orders are displayed in first-in-first-out order. Triple-click an order to mark as completed.

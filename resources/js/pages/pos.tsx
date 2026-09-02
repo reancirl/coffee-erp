@@ -1,5 +1,6 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import ProductCategory from '../components/pos/ProductCategory';
 import OrderSummary from '../components/pos/OrderSummary';
 import CustomizationModal from '../components/pos/CustomizationModal';
@@ -10,7 +11,7 @@ import CustomerModal from '../components/pos/CustomerModal';
 import PrintModal, { type ReceiptPayment } from '../components/pos/PrintModal';
 import AddOnModal from '../components/pos/AddOnModal';
 import { paymentMethods } from '../components/pos/data';
-import { Product, MenuData, primaryColor } from '../components/pos/types';
+import { Product, MenuData, primaryColor, accentColor } from '../components/pos/types';
 
 interface PageProps {
     flash: {
@@ -689,7 +690,7 @@ export default function Pos() {
 
     return (
         <div
-            className="h-screen w-screen p-4"
+            className="flex h-screen w-screen flex-col p-4"
             style={{ backgroundColor: primaryColor }}
         >
             <Head title="POS" />
@@ -703,11 +704,24 @@ export default function Pos() {
             
             {/* Error Message */}
             {error && (
-                <div className="fixed top-4 left-4 bg-red-500 text-white p-4 rounded-md shadow-lg z-50">
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white p-4 rounded-md shadow-lg z-50">
                     {error}
                 </div>
             )}
-            <div className="flex flex-col lg:flex-row h-full">
+            {/* The till fills the screen with no sidebar, so this is the only way out. */}
+            <header className="mb-3 flex shrink-0 items-center">
+                <Link href="/dashboard">
+                    <button
+                        type="button"
+                        className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-opacity hover:opacity-80"
+                        style={{ color: accentColor, borderColor: accentColor }}
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Dashboard
+                    </button>
+                </Link>
+            </header>
+            <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
                 {/* Product List Section */}
                 <div
                     className="lg:w-2/3 w-full p-4 border-b lg:border-b-0 lg:border-r overflow-y-auto"
