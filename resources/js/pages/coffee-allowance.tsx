@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { Coffee, Printer } from 'lucide-react';
@@ -290,3 +290,5 @@ export default function CoffeeAllowance({ employee, qr, allowance }: Props) {
         </AppLayout>
     );
 }
+
+CoffeeAllowance.layout = withAppShell;

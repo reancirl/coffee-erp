@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Edit, UserPlus, Shield, Search } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { useState } from 'react';
 
 interface Role {
@@ -204,3 +204,5 @@ export default function UserRolesIndex({ users, roles }: Props) {
         </AppLayout>
     );
 }
+
+UserRolesIndex.layout = withAppShell;

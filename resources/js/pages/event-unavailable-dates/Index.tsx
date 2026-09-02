@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -146,3 +146,5 @@ function DateRow({ date }: { date: BlockedDate }) {
         </div>
     );
 }
+
+EventUnavailableDates.layout = withAppShell;

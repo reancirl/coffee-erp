@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { PackageFields, PackageFormPayload, ProductOption } from './PackageFormFields';
@@ -79,3 +79,5 @@ export default function EventPackageEdit() {
         </AppLayout>
     );
 }
+
+EventPackageEdit.layout = withAppShell;

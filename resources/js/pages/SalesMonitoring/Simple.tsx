@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -705,3 +705,5 @@ export default function SalesMonitoringSimple({ currentMonitoring, recentMonitor
         </AppLayout>
     );
 }
+
+SalesMonitoringSimple.layout = withAppShell;

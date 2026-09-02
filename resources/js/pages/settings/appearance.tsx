@@ -6,7 +6,7 @@ import { type Appearance, useAppearance } from '@/hooks/use-appearance';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -67,3 +67,5 @@ export default function Appearance() {
         </AppLayout>
     );
 }
+
+Appearance.layout = withAppShell;

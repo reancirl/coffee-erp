@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 
@@ -280,3 +280,5 @@ function formatTimeHuman(timeStr?: string | null): string | null {
         minute: '2-digit',
     });
 }
+
+EventBookingsIndex.layout = withAppShell;

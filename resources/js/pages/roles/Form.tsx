@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Save } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { FormEventHandler } from 'react';
 
 interface Permission {
@@ -162,3 +162,5 @@ export default function RoleForm({ permissions, role }: Props) {
         </AppLayout>
     );
 }
+
+RoleForm.layout = withAppShell;

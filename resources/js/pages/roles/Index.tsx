@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Users, Shield } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { useState } from 'react';
 import {
     Dialog,
@@ -166,3 +166,5 @@ export default function RolesIndex({ roles }: Props) {
         </AppLayout>
     );
 }
+
+RolesIndex.layout = withAppShell;

@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import React, { useCallback, useMemo } from 'react';
@@ -501,3 +501,5 @@ export default function Dashboard({ salesData }: DashboardProps) {
         </AppLayout>
     );
 }
+
+Dashboard.layout = withAppShell;

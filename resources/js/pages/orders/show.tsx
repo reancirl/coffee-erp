@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -309,3 +309,5 @@ export default function Show({ order }: Props) {
         </AppLayout>
     );
 }
+
+Show.layout = withAppShell;

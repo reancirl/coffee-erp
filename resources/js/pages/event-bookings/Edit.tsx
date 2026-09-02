@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 
 type EventPackage = {
@@ -242,3 +242,5 @@ export default function EditBooking() {
         </AppLayout>
     );
 }
+
+EditBooking.layout = withAppShell;
