@@ -1,0 +1,58 @@
+name: deploy staging
+
+on:
+  push:
+    branches:
+      - develop
+  # Lets you redeploy the current develop from the Actions tab without
+  # inventing a commit.
+  workflow_dispatch:
+
+# One deploy at a time. A second push waits rather than racing the first
+# through composer and migrations.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+          tools: composer:v2
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy Environment File
+        run: cp .env.example .env
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Tests
+        run: ./vendor/bin/phpunit
+
+  deploy:
+    # Nothing reaches staging that the suite has not passed.
+    needs: test
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_PORT || 22 }}
+          # Fail the job if any step of the deploy fails.
+          script_stop: true
+          command_timeout: 20m
+          script: |
+            cd ${{ secrets.STAGING_PATH }}
+            ./deploy.sh
