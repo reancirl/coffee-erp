@@ -1,8 +1,15 @@
-import { Head } from '@inertiajs/react';
-import { useForm } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft } from 'lucide-react';
+import { FormEventHandler } from 'react';
+import InputError from '@/components/input-error';
 
 interface Customer {
     id?: number;
@@ -21,19 +28,33 @@ interface Props {
     customer?: Customer;
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Customers',
-        href: '/customers',
-    },
-    {
-        title: 'Create Customer',
-        href: '/customers/create',
-    },
-];
+type CustomerForm = {
+    known_name: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+    date_of_birth: string;
+    loyalty_points_balance: number;
+    membership_tier: string;
+    notes: string;
+};
 
 export default function Form({ customer }: Props) {
-    const { data, setData, post, put, processing, errors } = useForm({
+    const isEditing = !!customer;
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Customers',
+            href: '/customers',
+        },
+        {
+            title: isEditing ? 'Edit Customer' : 'Create Customer',
+            href: isEditing ? `/customers/${customer.id}/edit` : '/customers/create',
+        },
+    ];
+
+    const { data, setData, post, put, processing, errors, reset } = useForm<CustomerForm>({
         known_name: customer?.known_name || '',
         first_name: customer?.first_name || '',
         last_name: customer?.last_name || '',
@@ -45,182 +66,172 @@ export default function Form({ customer }: Props) {
         notes: customer?.notes || '',
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        if (customer?.id) {
-            put(route('customers.update', customer.id));
+
+        if (isEditing) {
+            put(route('customers.update', customer.id), {
+                onSuccess: () => reset(),
+            });
         } else {
-            post(route('customers.store'));
+            post(route('customers.store'), {
+                onSuccess: () => reset(),
+            });
         }
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={customer ? "Edit Customer" : "Create Customer"} />
+            <Head title={isEditing ? 'Edit Customer' : 'Create Customer'} />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold">
-                        {customer ? "Edit Customer" : "Create New Customer"}
-                    </h2>
-                    <Link
-                        href={route('customers.index')}
-                        className="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-bold py-2 px-4 rounded"
-                    >
-                        Back
+                <div className="flex items-center gap-4">
+                    <Link href={route('customers.index')}>
+                        <Button variant="outline" size="sm">
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Back to Customers
+                        </Button>
                     </Link>
+                    <h2 className="text-2xl font-bold">
+                        {isEditing ? 'Edit Customer' : 'Create New Customer'}
+                    </h2>
                 </div>
 
-                <div className="bg-card overflow-hidden shadow-sm sm:rounded-lg">
-                    <div className="p-6 text-foreground">
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label htmlFor="known_name" className="block text-sm font-medium text-foreground">
-                                        Known Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="known_name"
-                                        value={data.known_name}
-                                        onChange={(e) => setData('known_name', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
-                                    />
-                                    {errors.known_name && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.known_name}</p>
-                                    )}
+                <div className="max-w-2xl">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Customer Information</CardTitle>
+                            <CardDescription>
+                                {isEditing
+                                    ? 'Update the customer details below'
+                                    : 'Enter the details for the new customer'
+                                }
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={submit} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <Label htmlFor="known_name">Known Name</Label>
+                                        <Input
+                                            id="known_name"
+                                            type="text"
+                                            value={data.known_name}
+                                            onChange={(e) => setData('known_name', e.target.value)}
+                                            required
+                                            placeholder="Enter known name"
+                                        />
+                                        <InputError message={errors.known_name} />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="first_name">First Name</Label>
+                                        <Input
+                                            id="first_name"
+                                            type="text"
+                                            value={data.first_name}
+                                            onChange={(e) => setData('first_name', e.target.value)}
+                                            required
+                                            placeholder="Enter first name"
+                                        />
+                                        <InputError message={errors.first_name} />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="last_name">Last Name</Label>
+                                        <Input
+                                            id="last_name"
+                                            type="text"
+                                            value={data.last_name}
+                                            onChange={(e) => setData('last_name', e.target.value)}
+                                            required
+                                            placeholder="Enter last name"
+                                        />
+                                        <InputError message={errors.last_name} />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="email">Email</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            placeholder="Enter email address"
+                                        />
+                                        <InputError message={errors.email} />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="phone_number">Phone Number</Label>
+                                        <Input
+                                            id="phone_number"
+                                            type="tel"
+                                            value={data.phone_number}
+                                            onChange={(e) => setData('phone_number', e.target.value)}
+                                            placeholder="Enter phone number"
+                                        />
+                                        <InputError message={errors.phone_number} />
+                                    </div>
+
+                                    <div>
+                                        <Label htmlFor="date_of_birth">Date of Birth</Label>
+                                        <Input
+                                            id="date_of_birth"
+                                            type="date"
+                                            value={data.date_of_birth}
+                                            onChange={(e) => setData('date_of_birth', e.target.value)}
+                                        />
+                                        <InputError message={errors.date_of_birth} />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <Label htmlFor="membership_tier">Membership Tier</Label>
+                                        <Select
+                                            value={data.membership_tier || 'none'}
+                                            onValueChange={(value) => setData('membership_tier', value === 'none' ? '' : value)}
+                                        >
+                                            <SelectTrigger id="membership_tier">
+                                                <SelectValue placeholder="Select a tier" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">No Tier</SelectItem>
+                                                <SelectItem value="bronze">Bronze</SelectItem>
+                                                <SelectItem value="silver">Silver</SelectItem>
+                                                <SelectItem value="gold">Gold</SelectItem>
+                                                <SelectItem value="platinum">Platinum</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError message={errors.membership_tier} />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <Label htmlFor="notes">Notes</Label>
+                                        <Textarea
+                                            id="notes"
+                                            value={data.notes}
+                                            onChange={(e) => setData('notes', e.target.value)}
+                                            placeholder="Enter any notes about this customer (optional)"
+                                            rows={3}
+                                        />
+                                        <InputError message={errors.notes} />
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label htmlFor="first_name" className="block text-sm font-medium text-foreground">
-                                        First Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="first_name"
-                                        value={data.first_name}
-                                        onChange={(e) => setData('first_name', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
-                                    />
-                                    {errors.first_name && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.first_name}</p>
-                                    )}
+                                <div className="flex items-center justify-end space-x-2">
+                                    <Link href={route('customers.index')}>
+                                        <Button variant="outline" type="button">
+                                            Cancel
+                                        </Button>
+                                    </Link>
+                                    <Button type="submit" disabled={processing}>
+                                        {processing ? 'Saving...' : (isEditing ? 'Update Customer' : 'Create Customer')}
+                                    </Button>
                                 </div>
-
-                                <div>
-                                    <label htmlFor="last_name" className="block text-sm font-medium text-foreground">
-                                        Last Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="last_name"
-                                        value={data.last_name}
-                                        onChange={(e) => setData('last_name', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
-                                    />
-                                    {errors.last_name && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.last_name}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                                        Email
-                                    </label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
-                                    />
-                                    {errors.email && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="phone_number" className="block text-sm font-medium text-foreground">
-                                        Phone Number
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        id="phone_number"
-                                        value={data.phone_number}
-                                        onChange={(e) => setData('phone_number', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
-                                    />
-                                    {errors.phone_number && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone_number}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="date_of_birth" className="block text-sm font-medium text-foreground">
-                                        Date of Birth
-                                    </label>
-                                    <input
-                                        type="date"
-                                        id="date_of_birth"
-                                        value={data.date_of_birth}
-                                        onChange={(e) => setData('date_of_birth', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
-                                    />
-                                    {errors.date_of_birth && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date_of_birth}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="membership_tier" className="block text-sm font-medium text-foreground">
-                                        Membership Tier
-                                    </label>
-                                    <select
-                                        id="membership_tier"
-                                        value={data.membership_tier}
-                                        onChange={(e) => setData('membership_tier', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
-                                    >
-                                        <option value="">Select Tier</option>
-                                        <option value="bronze">Bronze</option>
-                                        <option value="silver">Silver</option>
-                                        <option value="gold">Gold</option>
-                                        <option value="platinum">Platinum</option>
-                                    </select>
-                                    {errors.membership_tier && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.membership_tier}</p>
-                                    )}
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label htmlFor="notes" className="block text-sm font-medium text-foreground">
-                                        Notes
-                                    </label>
-                                    <textarea
-                                        id="notes"
-                                        value={data.notes}
-                                        onChange={(e) => setData('notes', e.target.value)}
-                                        rows={3}
-                                        className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-10"
-                                    />
-                                    {errors.notes && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.notes}</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end">
-                                <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-                                >
-                                    {processing ? 'Saving...' : 'Save Customer'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                            </form>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </AppLayout>
     );
-} 
+}
