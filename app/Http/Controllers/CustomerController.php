@@ -12,14 +12,26 @@ class CustomerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::where('tenant_id', Auth::user()->tenant_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Customer::where('tenant_id', Auth::user()->tenant_id);
+
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('known_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('first_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('phone_number', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        $customers = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return Inertia::render('customers/Index', [
             'customers' => $customers,
+            'filters' => $request->only(['search']),
         ]);
     }
 
