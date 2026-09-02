@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
@@ -208,3 +208,5 @@ export default function ZReport({ reportData }: { reportData?: ZReportData }) {
     </AppLayout>
   );
 }
+
+ZReport.layout = withAppShell;

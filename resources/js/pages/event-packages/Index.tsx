@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -178,3 +178,5 @@ export default function EventPackagesIndex() {
         </AppLayout>
     );
 }
+
+EventPackagesIndex.layout = withAppShell;

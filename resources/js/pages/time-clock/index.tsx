@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
@@ -425,3 +425,5 @@ export default function TimeClockIndex() {
         </AppLayout>
     );
 }
+
+TimeClockIndex.layout = withAppShell;

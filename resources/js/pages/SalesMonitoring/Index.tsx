@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -457,3 +457,5 @@ export default function CashMonitoringIndex({ currentMonitoring, recentMonitorin
         </AppLayout>
     );
 }
+
+CashMonitoringIndex.layout = withAppShell;

@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import AppLayout, { withAppShell } from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { Fragment, useState } from 'react';
@@ -461,3 +461,5 @@ export default function Index({ orders, filters, products }: Props) {
         </AppLayout>
     );
 }
+
+Index.layout = withAppShell;
